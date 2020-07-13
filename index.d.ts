@@ -1,1 +1,1 @@
-export * from "./type/init.d.ts";
+export * from "./type/init";

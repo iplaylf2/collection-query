@@ -4,7 +4,7 @@ import {
   Predicate,
   AsyncPredicate,
   Action,
-} from "../../util";
+} from "../../../util";
 import AsyncPull from "./async-pull";
 
 export async function* map<T, K>(s: AsyncPull<T>, f: Selector<T, K>) {

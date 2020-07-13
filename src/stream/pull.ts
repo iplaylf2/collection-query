@@ -1,5 +1,5 @@
-import { Action, Selector, Predicate, Aggregate } from "../util";
 import Pull from "./pull/pull";
+import { Action, Selector, Predicate, Aggregate } from "../util";
 import * as core from "./pull/core";
 
 export function forEach<T>(s: Pull<T>, f: Action<T>) {
@@ -99,3 +99,5 @@ export function last<T>(s: Pull<T>) {
   }
   return last;
 }
+
+export { Pull as PullStream };

@@ -1,4 +1,4 @@
-import AsyncPull from "./async-pull/async-pull";
+import AsyncPull from "./pull/async/async-pull";
 import {
   Action,
   AsyncAction,
@@ -7,7 +7,7 @@ import {
   Aggregate,
   AsyncAggregate,
 } from "../util";
-import * as core from "./async-pull/core";
+import * as core from "./pull/async/core";
 
 export async function forEach<T>(s: AsyncPull<T>, f: Action<T>) {
   for await (const x of s) {
