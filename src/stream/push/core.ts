@@ -1,6 +1,7 @@
-import { EmitForm } from "./emitter";
+import { EmitForm, Emitter } from "./emitter";
 import { Selector, Predicate } from "../../util";
 import { PushType } from "./push-type";
+import Push from "./push";
 
 export function map<T, K>(emit: EmitForm<K, never>, f: Selector<T, K>) {
   return (x: T) => {
@@ -74,3 +75,21 @@ export function skipWhile<T>(emit: EmitForm<T, never>, f: Predicate<T>) {
     }
   };
 }
+
+export function concat<T, Te>(
+  emitter1: Emitter<T, Te>,
+  emitter2: Emitter<T, Te>,
+  emit:EmitForm<T,Te>
+) {
+  const cancel1= emitter1.emit((t,x)=>{
+    switch(t){
+      case PushType.Next:
+        break;
+      case PushType.Complete:
+        break;
+      case PushType.Error:
+        break;
+    }
+  })
+}
+
