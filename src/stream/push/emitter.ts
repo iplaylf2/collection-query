@@ -1,9 +1,5 @@
-import { PushItem, PushType } from "./push-type";
-import { Action } from "../../util";
-
-export interface EmitForm<T, Te> {
-  (...x: PushItem<T, Te>): void;
-}
+import { EmitForm, EmitItem, EmitType } from "./type";
+import { Action } from "../../type";
 
 interface EmitterContext<T, Te> {
   open: boolean;
@@ -13,16 +9,18 @@ interface EmitterContext<T, Te> {
 export class Emitter<T, Te = any> {
   static receive<T, Te>(
     context: EmitterContext<T, Te>,
-    ...[t, v]: PushItem<T, Te>
+    ...[t, v]: EmitItem<T, Te>
   ) {
     if (context.open) {
       switch (t) {
-        case PushType.Next:
+        case EmitType.Next:
           Emitter.next(context, v as T);
           break;
-        case PushType.Complete:
+        case EmitType.Complete:
+          Emitter.complete(context);
           break;
-        case PushType.Error:
+        case EmitType.Error:
+          Emitter.error(context, v as Te);
           break;
       }
     }
@@ -30,7 +28,7 @@ export class Emitter<T, Te = any> {
 
   static next<T>(context: EmitterContext<T, never>, v: T) {
     try {
-      context.emit(PushType.Next, v);
+      context.emit(EmitType.Next, v);
     } catch (e) {
       Emitter.cancel(context);
       throw e;
@@ -40,13 +38,13 @@ export class Emitter<T, Te = any> {
   static complete(context: EmitterContext<never, never>) {
     const { emit } = context;
     Emitter.cancel(context);
-    emit(PushType.Complete);
+    emit(EmitType.Complete);
   }
 
   static error<T>(context: EmitterContext<never, T>, e: T) {
     const { emit } = context;
     Emitter.cancel(context);
-    emit(PushType.Error, e);
+    emit(EmitType.Error, e);
   }
 
   static cancel(context: EmitterContext<never, never>) {
@@ -63,11 +61,11 @@ export class Emitter<T, Te = any> {
       emit: receiver,
     };
 
-    const receive = (Emitter.receive as any).bind(null, context);
+    const receiver2 = (Emitter.receive as any).bind(null, context);
     const cancel = Emitter.cancel.bind(null, context);
 
     try {
-      this.executor(receive);
+      this.executor(receiver2);
     } catch (e) {
       if (context.open) {
         Emitter.error(context, e);

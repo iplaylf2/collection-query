@@ -1,0 +1,1 @@
+export type IterateItem<T> = [false, T] | [true];

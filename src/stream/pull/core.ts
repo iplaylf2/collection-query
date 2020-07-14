@@ -1,4 +1,4 @@
-import { Selector, Predicate } from "../../util";
+import { Selector, Predicate } from "../../type";
 import Pull from "./pull";
 
 export function* map<T, K>(s: Pull<T>, f: Selector<T, K>) {

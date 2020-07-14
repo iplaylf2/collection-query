@@ -1,18 +1,17 @@
-import { EmitForm, Emitter } from "./emitter";
-import { Selector, Predicate, Action } from "../../util";
-import { PushType } from "./push-type";
-import Push from "./push";
+import { EmitForm, EmitType } from "./type";
+import { Selector, Predicate } from "../../type";
+import { Emitter } from "./emitter";
 
 export function map<T, K>(emit: EmitForm<K, never>, f: Selector<T, K>) {
   return (x: T) => {
-    emit(PushType.Next, f(x));
+    emit(EmitType.Next, f(x));
   };
 }
 
 export function filter<T>(emit: EmitForm<T, never>, f: Predicate<T>) {
   return (x: T) => {
     if (f(x)) {
-      emit(PushType.Next, x);
+      emit(EmitType.Next, x);
     }
   };
 }
@@ -20,7 +19,7 @@ export function filter<T>(emit: EmitForm<T, never>, f: Predicate<T>) {
 export function remove<T>(emit: EmitForm<T, never>, f: Predicate<T>) {
   return (x: T) => {
     if (!f(x)) {
-      emit(PushType.Next, x);
+      emit(EmitType.Next, x);
     }
   };
 }
@@ -29,9 +28,9 @@ export function take<T>(emit: EmitForm<T, never>, n: number) {
   return (x: T) => {
     if (n > 0) {
       n--;
-      emit(PushType.Next, x);
+      emit(EmitType.Next, x);
     } else {
-      emit(PushType.Complete);
+      emit(EmitType.Complete);
     }
   };
 }
@@ -39,9 +38,9 @@ export function take<T>(emit: EmitForm<T, never>, n: number) {
 export function takeWhile<T>(emit: EmitForm<T, never>, f: Predicate<T>) {
   return (x: T) => {
     if (f(x)) {
-      emit(PushType.Next, x);
+      emit(EmitType.Next, x);
     } else {
-      emit(PushType.Complete);
+      emit(EmitType.Complete);
     }
   };
 }
@@ -54,10 +53,10 @@ export function skip<T>(emit: EmitForm<T, never>, n: number) {
         n--;
       } else {
         skip = false;
-        emit(PushType.Next, x);
+        emit(EmitType.Next, x);
       }
     } else {
-      emit(PushType.Next, x);
+      emit(EmitType.Next, x);
     }
   };
 }
@@ -68,10 +67,10 @@ export function skipWhile<T>(emit: EmitForm<T, never>, f: Predicate<T>) {
     if (skip) {
       if (!f(x)) {
         skip = false;
-        emit(PushType.Next, x);
+        emit(EmitType.Next, x);
       }
     } else {
-      emit(PushType.Next, x);
+      emit(EmitType.Next, x);
     }
   };
 }
@@ -85,14 +84,14 @@ export function concat<T, Te>(
 
   const cancel1 = emitter1.emit((t, x?) => {
     switch (t) {
-      case PushType.Next:
-        emit(PushType.Next, x as T);
+      case EmitType.Next:
+        emit(EmitType.Next, x as T);
         break;
-      case PushType.Complete:
+      case EmitType.Complete:
         cancel2 = emitter2.emit(emit);
         break;
-      case PushType.Error:
-        emit(PushType.Error, x as Te);
+      case EmitType.Error:
+        emit(EmitType.Error, x as Te);
         break;
     }
   });
@@ -116,7 +115,7 @@ export function zip<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T[], Te>) {
   const total = ee.length;
 
   if (total === 0) {
-    emit(PushType.Complete);
+    emit(EmitType.Complete);
     return () => {};
   }
 
@@ -154,7 +153,7 @@ export function zip<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T[], Te>) {
 
     zipEmitter.cancel = emitter.emit((t, x?) => {
       switch (t) {
-        case PushType.Next:
+        case EmitType.Next:
           zipEmitter.count++;
 
           if (zipEmitter.count > zipCacheTop) {
@@ -179,11 +178,11 @@ export function zip<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T[], Te>) {
             if (cache.count === total) {
               zipCacheBenchmark++;
               zipCacheList.shift();
-              emit(PushType.Next, cache.zip);
+              emit(EmitType.Next, cache.zip);
 
               if (zipCacheBenchmark - 1 === limit) {
                 isCancel = true;
-                emit(PushType.Complete);
+                emit(EmitType.Complete);
               }
             }
 
@@ -194,7 +193,7 @@ export function zip<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T[], Te>) {
           }
 
           break;
-        case PushType.Complete:
+        case EmitType.Complete:
           limit = zipEmitter.count;
 
           var allComplete = true;
@@ -211,16 +210,16 @@ export function zip<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T[], Te>) {
 
           if (allComplete) {
             isCancel = true;
-            emit(PushType.Complete);
+            emit(EmitType.Complete);
           } else {
             zipCacheList.splice(limit - zipCacheBenchmark + 1);
           }
 
           break;
-        case PushType.Error:
+        case EmitType.Error:
           isCancel = true;
           cancel();
-          emit(PushType.Error, x as Te);
+          emit(EmitType.Error, x as Te);
 
           break;
       }

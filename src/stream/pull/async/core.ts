@@ -3,8 +3,7 @@ import {
   AsyncSelector,
   Predicate,
   AsyncPredicate,
-  Action,
-} from "../../../util";
+} from "../../../type";
 import AsyncPull from "./async-pull";
 
 export async function* map<T, K>(s: AsyncPull<T>, f: Selector<T, K>) {
@@ -155,91 +154,4 @@ export async function* zip<T>(ss: AsyncPull<T>[]) {
   }
 }
 
-type PullItem<T> = [false, T] | [true];
-
-enum RaceStatus {
-  Next,
-  Pending,
-  Race,
-  Done,
-}
-
-export async function* race<T>(ss: AsyncPull<T>[]) {
-  const ii = ss.map((s) => s[Symbol.asyncIterator]());
-  let pp: [
-    {
-      iterator: AsyncIterableIterator<T>;
-      status: RaceStatus;
-    },
-    Promise<IteratorResult<T, T>>
-  ][] = ii.map((i) => [
-    {
-      iterator: i,
-      status: RaceStatus.Next,
-    },
-    i.next(),
-  ]);
-
-  const total = ss.length;
-  let doneCount = 0;
-
-  while (true) {
-    let race: Action<PullItem<T>>,
-      racing = true;
-
-    const rasePromise = new Promise<PullItem<T>>((resolve) => (race = resolve));
-
-    pp = pp.map(([o, p]) => {
-      const tryRace = function (x: IteratorResult<T, T>) {
-        if (racing) {
-          racing = false;
-          race([false, x.value]);
-
-          o.status = RaceStatus.Next;
-          return o.iterator.next();
-        } else {
-          return x;
-        }
-      };
-
-      switch (o.status) {
-        case RaceStatus.Next:
-          o.status = RaceStatus.Pending;
-
-          return [
-            o,
-            p.then((x) => {
-              if (x.done) {
-                o.status = RaceStatus.Done;
-
-                doneCount++;
-                if (doneCount === total) {
-                  race([true]);
-                }
-
-                return x;
-              } else {
-                o.status = RaceStatus.Race;
-
-                return tryRace(x);
-              }
-            }),
-          ];
-        case RaceStatus.Pending:
-          return [o, p];
-        case RaceStatus.Race:
-          return [o, p.then(tryRace)];
-        case RaceStatus.Done:
-          return [o, p];
-      }
-    });
-
-    const [done, value] = await rasePromise;
-
-    if (done) {
-      break;
-    } else {
-      yield value;
-    }
-  }
-}
+export * from "./core/race";

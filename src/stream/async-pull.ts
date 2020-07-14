@@ -6,7 +6,7 @@ import {
   AsyncPredicate,
   Aggregate,
   AsyncAggregate,
-} from "../util";
+} from "../type";
 import * as core from "./pull/async/core";
 
 export async function forEach<T>(s: AsyncPull<T>, f: Action<T>) {

@@ -1,5 +1,5 @@
 import Pull from "./pull/pull";
-import { Action, Selector, Predicate, Aggregate } from "../util";
+import { Action, Selector, Predicate, Aggregate } from "../type";
 import * as core from "./pull/core";
 
 export function forEach<T>(s: Pull<T>, f: Action<T>) {
