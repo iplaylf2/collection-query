@@ -155,6 +155,8 @@ export async function* zip<T>(ss: AsyncPull<T>[]) {
   }
 }
 
+type PullItem<T> = [false, T] | [true];
+
 enum RaceStatus {
   Next,
   Pending,
@@ -182,12 +184,10 @@ export async function* race<T>(ss: AsyncPull<T>[]) {
   let doneCount = 0;
 
   while (true) {
-    let race: Action<[boolean, T]>,
+    let race: Action<PullItem<T>>,
       racing = true;
 
-    const rasePromise = new Promise<[boolean, T]>(
-      (resolve) => (race = resolve)
-    );
+    const rasePromise = new Promise<PullItem<T>>((resolve) => (race = resolve));
 
     pp = pp.map(([o, p]) => {
       const tryRace = function (x: IteratorResult<T, T>) {
@@ -214,7 +214,7 @@ export async function* race<T>(ss: AsyncPull<T>[]) {
 
                 doneCount++;
                 if (doneCount === total) {
-                  race([true] as any);
+                  race([true]);
                 }
 
                 return x;
