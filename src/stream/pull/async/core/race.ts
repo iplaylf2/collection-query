@@ -24,13 +24,14 @@ export async function* race<T>(ss: AsyncPull<T>[]) {
 
 class RaceDispatcher<T> {
   static startRound<T>(dispatcher: RaceDispatcher<T>, start: () => void) {
-    dispatcher.roundResult = new Promise(
+    const roundResult = new Promise<IterateItem<T>>(
       (resolve) => (dispatcher.dispatch = resolve)
     );
-    dispatcher.isRoundEnd = false;
+
+    dispatcher.idle = true;
     start();
 
-    return dispatcher.roundResult;
+    return roundResult;
   }
 
   constructor(total: number) {
@@ -70,13 +71,11 @@ class RaceDispatcher<T> {
   private async costRound() {
     while (true) {
       await this.roundStart;
-      if (this.isRoundEnd) {
-        await this.roundResult;
-      } else {
-        this.isRoundEnd = true;
-        return;
+      if (this.idle) {
+        break;
       }
     }
+    this.idle = false;
   }
 
   private async race(x: T) {
@@ -88,6 +87,5 @@ class RaceDispatcher<T> {
   private dispatch!: Action<IterateItem<T>>;
   private count: number;
   private roundStart!: Promise<any>;
-  private roundResult!: Promise<IterateItem<T>>;
-  private isRoundEnd!: boolean;
+  private idle!: boolean;
 }
