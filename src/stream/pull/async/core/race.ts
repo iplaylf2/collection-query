@@ -5,8 +5,6 @@ import { IterateItem } from "../../type";
 export async function* race<T>(ss: AsyncPull<T>[]) {
   const dispatcher = new RaceDispatcher<T>(ss.length);
 
-  dispatcher.prepareRound();
-
   const ii = ss.map((s) => s[Symbol.asyncIterator]());
   for (const i of ii) {
     dispatcher.join(i);
@@ -19,8 +17,6 @@ export async function* race<T>(ss: AsyncPull<T>[]) {
     if (done) {
       return;
     }
-
-    dispatcher.prepareRound();
 
     yield x;
   }
@@ -39,13 +35,7 @@ class RaceDispatcher<T> {
 
   constructor(total: number) {
     this.count = total;
-  }
-
-  prepareRound() {
-    this.roundStart = new Promise(
-      (resolve) =>
-        (this.startRound = () => RaceDispatcher.startRound(this, resolve))
-    );
+    this.prepareRound();
   }
 
   async join(i: AsyncIterableIterator<T>) {
@@ -61,6 +51,13 @@ class RaceDispatcher<T> {
   }
 
   startRound!: () => Promise<IterateItem<T>>;
+
+  private prepareRound() {
+    this.roundStart = new Promise(
+      (resolve) =>
+        (this.startRound = () => RaceDispatcher.startRound(this, resolve))
+    );
+  }
 
   private async leave() {
     this.count--;
@@ -85,6 +82,7 @@ class RaceDispatcher<T> {
   private async race(x: T) {
     await this.costRound();
     this.dispatch([false, x]);
+    this.prepareRound();
   }
 
   private dispatch!: Action<IterateItem<T>>;
