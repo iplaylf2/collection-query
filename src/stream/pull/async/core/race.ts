@@ -3,33 +3,49 @@ import { Action } from "../../../../type";
 import { IterateItem } from "../../type";
 
 export async function* race<T>(ss: AsyncPull<T>[]) {
-  const raceContext = new RaceContext<T>(ss.length);
-  let startRound: Action<Action<IterateItem<T>>>;
-  raceContext.roundStart = new Promise((resolve) => (startRound = resolve));
+  const dispatcher = new RaceDispatcher<T>(ss.length);
+
+  dispatcher.prepareRound();
 
   const ii = ss.map((s) => s[Symbol.asyncIterator]());
   for (const i of ii) {
-    raceContext.join(i);
+    dispatcher.join(i);
   }
 
   while (true) {
-    raceContext.isRoundEnd = false;
-    raceContext.round = new Promise((resolve) => startRound(resolve));
+    const roundResult = dispatcher.startRound();
 
-    const [done, x] = await raceContext.round;
+    const [done, x] = await roundResult;
     if (done) {
       return;
     }
 
-    yield x;
+    dispatcher.prepareRound();
 
-    raceContext.roundStart = new Promise((resolve) => (startRound = resolve));
+    yield x;
   }
 }
 
-class RaceContext<T> {
+class RaceDispatcher<T> {
+  static startRound<T>(dispatcher: RaceDispatcher<T>, start: () => void) {
+    dispatcher.roundResult = new Promise(
+      (resolve) => (dispatcher.dispatch = resolve)
+    );
+    dispatcher.isRoundEnd = false;
+    start();
+
+    return dispatcher.roundResult;
+  }
+
   constructor(total: number) {
     this.count = total;
+  }
+
+  prepareRound() {
+    this.roundStart = new Promise(
+      (resolve) =>
+        (this.startRound = () => RaceDispatcher.startRound(this, resolve))
+    );
   }
 
   async join(i: AsyncIterableIterator<T>) {
@@ -44,31 +60,36 @@ class RaceContext<T> {
     }
   }
 
-  leave() {
+  startRound!: () => Promise<IterateItem<T>>;
+
+  private async leave() {
     this.count--;
     if (this.count === 0) {
-      this.raceResolve([true]);
+      await this.costRound();
+      this.dispatch([true]);
     }
   }
 
-  async race(x: T) {
+  private async costRound() {
     while (true) {
-      this.raceResolve = await this.roundStart;
+      await this.roundStart;
       if (this.isRoundEnd) {
-        await this.round;
+        await this.roundResult;
       } else {
         this.isRoundEnd = true;
-        break;
+        return;
       }
     }
-
-    this.raceResolve([false, x]);
   }
 
-  raceResolve!: Action<IterateItem<T>>;
-  roundStart!: Promise<Action<IterateItem<T>>>;
-  isRoundEnd!: boolean;
-  round!: Promise<any>;
+  private async race(x: T) {
+    await this.costRound();
+    this.dispatch([false, x]);
+  }
 
+  private dispatch!: Action<IterateItem<T>>;
   private count: number;
+  private roundStart!: Promise<any>;
+  private roundResult!: Promise<IterateItem<T>>;
+  private isRoundEnd!: boolean;
 }
