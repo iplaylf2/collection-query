@@ -22,12 +22,12 @@ export async function* race<T>(ss: AsyncPull<T>[]) {
 
 class RaceDispatcher<T> {
   static startRound<T>(dispatcher: RaceDispatcher<T>, start: () => void) {
-    let handleValue!: Action<IterateItem<T>>, handleError!: Action<any>;
+    let handleResult!: Action<IterateItem<T>>, handleError!: Action<any>;
     const roundResult = new Promise<IterateItem<T>>(
-      (resolve, reject) => ((handleValue = resolve), (handleError = reject))
+      (resolve, reject) => ((handleResult = resolve), (handleError = reject))
     );
 
-    dispatcher.setRoundResult = handleValue;
+    dispatcher.setRoundResult = handleResult;
     dispatcher.setRoundError = handleError;
     dispatcher.idle = true;
     start();
