@@ -76,12 +76,12 @@ class RaceDispatcher<T> {
       }
     }
     this.idle = false;
+    this.prepareRound();
   }
 
   private async race(x: T) {
     await this.costRound();
     this.dispatch([false, x]);
-    this.prepareRound();
   }
 
   private dispatch!: Action<IterateItem<T>>;
