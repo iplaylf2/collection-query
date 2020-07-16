@@ -3,17 +3,11 @@ import { Action } from "../../../../type";
 import { IterateItem } from "../../type";
 
 export async function* race<T>(ss: AsyncPull<T>[]) {
-  const dispatcher = new RaceDispatcher<T>(ss.length);
-
   const ii = ss.map((s) => s[Symbol.asyncIterator]());
-  for (const i of ii) {
-    dispatcher.join(i);
-  }
+  const dispatcher = new RaceDispatcher<T>(ii);
 
   while (true) {
-    const roundResult = dispatcher.startRound();
-
-    const [done, x] = await roundResult;
+    const [done, x] = await dispatcher.startRound();
     if (done) {
       return;
     }
@@ -24,26 +18,44 @@ export async function* race<T>(ss: AsyncPull<T>[]) {
 
 class RaceDispatcher<T> {
   static startRound<T>(dispatcher: RaceDispatcher<T>, start: () => void) {
-    let handle: Action<IterateItem<T>>;
+    let handleValue!: Action<IterateItem<T>>, handleError!: Action<any>;
     const roundResult = new Promise<IterateItem<T>>(
-      (resolve) => (handle = resolve)
+      (resolve, reject) => ((handleValue = resolve), (handleError = reject))
     );
 
-    dispatcher.dispatch = handle!;
+    dispatcher.setRoundResult = handleValue;
+    dispatcher.setRoundError = handleError;
     dispatcher.idle = true;
     start();
 
     return roundResult;
   }
 
-  constructor(total: number) {
-    this.count = total;
+  constructor(ii: AsyncIterableIterator<T>[]) {
     this.prepareRound();
+    this.joinAll(ii);
   }
 
-  async join(i: AsyncIterableIterator<T>) {
+  startRound!: () => Promise<IterateItem<T>>;
+
+  private joinAll(ii: AsyncIterableIterator<T>[]) {
+    this.count = ii.length;
+    for (const i of ii) {
+      this.join(i);
+    }
+  }
+
+  private async join(i: AsyncIterableIterator<T>) {
     while (true) {
-      const { done, value } = await i.next();
+      let x: IteratorResult<T>;
+      try {
+        x = await i.next();
+      } catch (e) {
+        this.crash(e);
+        throw e;
+      }
+
+      const { done, value } = x;
       if (done) {
         this.leave();
         return;
@@ -53,19 +65,22 @@ class RaceDispatcher<T> {
     }
   }
 
-  startRound!: () => Promise<IterateItem<T>>;
-
   private prepareRound() {
     let handle: () => void;
     this.roundStart = new Promise((resolve) => (handle = resolve));
     this.startRound = () => RaceDispatcher.startRound(this, handle);
   }
 
+  private async crash(e: any) {
+    await this.costRound();
+    this.setRoundError(e);
+  }
+
   private async leave() {
     this.count--;
     if (this.count === 0) {
       await this.costRound();
-      this.dispatch([true]);
+      this.setRoundResult([true]);
     }
   }
 
@@ -82,11 +97,13 @@ class RaceDispatcher<T> {
 
   private async race(x: T) {
     await this.costRound();
-    this.dispatch([false, x]);
+    this.setRoundResult([false, x]);
   }
 
-  private dispatch!: Action<IterateItem<T>>;
-  private count: number;
+  private setRoundResult!: Action<IterateItem<T>>;
+  private setRoundError!: Action<any>;
+
+  private count!: number;
   private roundStart!: Promise<any>;
   private idle!: boolean;
 }
