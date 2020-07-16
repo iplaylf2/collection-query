@@ -139,19 +139,6 @@ export async function* concat<T>(s1: AsyncPull<T>, s2: AsyncPull<T>) {
   }
 }
 
-export async function* zip<T>(ss: AsyncPull<T>[]) {
-  const ii = ss.map((s) => s[Symbol.asyncIterator]());
-
-  while (true) {
-    const iiResult = await Promise.all(ii.map((i) => i.next()));
-    const done = iiResult.some(({ done }) => done);
-    if (done) {
-      break;
-    } else {
-      const result: T[] = iiResult.map(({ value }) => value);
-      yield result;
-    }
-  }
-}
+export * from "./core/zip"
 
 export * from "./core/race";
