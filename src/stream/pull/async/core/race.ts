@@ -3,6 +3,10 @@ import { Action } from "../../../../type";
 import { IterateItem } from "../../type";
 
 export async function* race<T>(ss: AsyncPull<T>[]) {
+  if (ss.length === 0) {
+    return;
+  }
+
   const ii = ss.map((s) => s[Symbol.asyncIterator]());
   const dispatcher = new RaceDispatcher<T>(ii);
 
