@@ -16,7 +16,7 @@ export async function* race<T>(ss: AsyncPull<T>[]) {
       return;
     }
 
-    yield x;
+    yield x as T;
   }
 }
 
