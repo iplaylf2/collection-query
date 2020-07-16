@@ -88,6 +88,11 @@ class RaceDispatcher<T> {
     }
   }
 
+  private async race(x: T) {
+    await this.costRound();
+    this.setRoundResult([false, x]);
+  }
+
   private async costRound() {
     while (true) {
       await this.roundStart;
@@ -97,11 +102,6 @@ class RaceDispatcher<T> {
     }
     this.idle = false;
     this.prepareRound();
-  }
-
-  private async race(x: T) {
-    await this.costRound();
-    this.setRoundResult([false, x]);
   }
 
   private setRoundResult!: Action<IterateItem<T>>;
