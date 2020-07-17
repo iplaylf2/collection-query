@@ -64,19 +64,19 @@ export class Emitter<T, Te = any> {
     const receiver2 = (Emitter.receive as any).bind(null, context);
     const cancel = Emitter.cancel.bind(null, context);
 
-    (async () => {
-      await Promise.resolve();
-
-      try {
-        this.executor(receiver2);
-      } catch {
-        if (context.open) {
-          cancel();
-        }
-      }
-    })();
+    this.execute(receiver2, cancel);
 
     return cancel;
+  }
+
+  private async execute(receiver: EmitForm<T, Te>, cancel: Action<void>) {
+    await Promise.resolve();
+
+    try {
+      this.executor(receiver);
+    } catch {
+      cancel();
+    }
   }
 
   private executor: Action<EmitForm<T, Te>>;
