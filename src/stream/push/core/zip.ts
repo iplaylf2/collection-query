@@ -40,44 +40,52 @@ class ZipCollector<T, Te> {
     return (t, x?) => {
       switch (t) {
         case EmitType.Next:
-          {
-            const [full, content] = linkedZip.zip(index, x as T);
-            if (full) {
-              this.emit(EmitType.Next, content);
-            }
-
-            linkedZip = linkedZip.getNext();
-            linkedZip.checkIn(index);
-
-            if (linkedZip.broken) {
-              this.cancelList[index]();
-
-              if (linkedZip.isAllCheckIn()) {
-                this.emit(EmitType.Complete);
-              }
-            }
-          }
+          linkedZip = this.handleNext(index, linkedZip, x as T);
           break;
         case EmitType.Complete:
-          {
-            const [full, checkInList] = linkedZip.break();
-            for (const index of checkInList) {
-              this.cancelList[index]();
-            }
-
-            if (full) {
-              this.emit(EmitType.Complete);
-            }
-          }
+          this.handleComplete(linkedZip);
           break;
         case EmitType.Error:
-          {
-            this.cancel();
-            this.emit(EmitType.Error, x as Te);
-          }
+          this.handleError(x as Te);
           break;
       }
     };
+  }
+
+  private handleNext(index: number, linkedZip: LinkedZip<T>, x: T) {
+    const [full, content] = linkedZip.zip(index, x);
+    if (full) {
+      this.emit(EmitType.Next, content);
+    }
+
+    linkedZip = linkedZip.getNext();
+    linkedZip.checkIn(index);
+
+    if (linkedZip.broken) {
+      this.cancelList[index]();
+
+      if (linkedZip.isAllCheckIn()) {
+        this.emit(EmitType.Complete);
+      }
+    }
+
+    return linkedZip;
+  }
+
+  private handleComplete(linkedZip: LinkedZip<T>) {
+    const [full, checkInList] = linkedZip.break();
+    for (const index of checkInList) {
+      this.cancelList[index]();
+    }
+
+    if (full) {
+      this.emit(EmitType.Complete);
+    }
+  }
+
+  private handleError(x: Te) {
+    this.cancel();
+    this.emit(EmitType.Error, x);
   }
 
   private emit: EmitForm<T[], Te>;
