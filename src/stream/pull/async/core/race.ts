@@ -21,7 +21,7 @@ export async function* race<T>(ss: AsyncPull<T>[]) {
 }
 
 class RaceDispatcher<T> {
-  static startRound<T>(dispatcher: RaceDispatcher<T>, start: () => void) {
+  static startRound<T>(dispatcher: RaceDispatcher<T>, start: Action<void>) {
     let handleResult!: Action<IterateItem<T>>, handleError!: Action<any>;
     const roundResult = new Promise<IterateItem<T>>(
       (resolve, reject) => ((handleResult = resolve), (handleError = reject))
@@ -70,7 +70,7 @@ class RaceDispatcher<T> {
   }
 
   private prepareRound() {
-    let handle: () => void;
+    let handle: Action<void>;
     this.roundStart = new Promise((resolve) => (handle = resolve));
     this.startRound = () => RaceDispatcher.startRound(this, handle);
   }

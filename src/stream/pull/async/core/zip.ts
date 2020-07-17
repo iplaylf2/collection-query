@@ -99,7 +99,7 @@ class ZipCollector<T> {
 
   private readonly ii!: AsyncIterableIterator<T>[];
   private readonly total!: number;
+  private readonly zipContent!: T[];
   private close!: boolean;
   private count!: number;
-  private zipContent!: T[];
 }
