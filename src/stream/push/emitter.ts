@@ -64,13 +64,17 @@ export class Emitter<T, Te = any> {
     const receiver2 = (Emitter.receive as any).bind(null, context);
     const cancel = Emitter.cancel.bind(null, context);
 
-    try {
-      this.executor(receiver2);
-    } catch (e) {
-      if (context.open) {
-        Emitter.error(context, e);
+    (async () => {
+      await Promise.resolve();
+
+      try {
+        this.executor(receiver2);
+      } catch {
+        if (context.open) {
+          cancel();
+        }
       }
-    }
+    })();
 
     return cancel;
   }
