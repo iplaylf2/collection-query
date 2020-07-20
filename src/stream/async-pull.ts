@@ -21,52 +21,76 @@ export async function forEachAsync<T>(s: AsyncPull<T>, f: AsyncAction<T>) {
   }
 }
 
-export async function map<T>(s: AsyncPull<T>, f: Action<T>) {
-  return new AsyncPull(() => core.map(s, f));
+export async function map<T>(f: Action<T>) {
+  return function (s: AsyncPull<T>) {
+    return new AsyncPull(() => core.map(s, f));
+  };
 }
 
-export async function mapAsync<T>(s: AsyncPull<T>, f: AsyncAction<T>) {
-  return new AsyncPull(() => core.mapAsync(s, f));
+export async function mapAsync<T>(f: AsyncAction<T>) {
+  return function (s: AsyncPull<T>) {
+    return new AsyncPull(() => core.mapAsync(s, f));
+  };
 }
 
-export async function filter<T>(s: AsyncPull<T>, f: Predicate<T>) {
-  return new AsyncPull(() => core.filter(s, f));
+export async function filter<T>(f: Predicate<T>) {
+  return function (s: AsyncPull<T>) {
+    return new AsyncPull(() => core.filter(s, f));
+  };
 }
 
-export async function filterAsync<T>(s: AsyncPull<T>, f: AsyncPredicate<T>) {
-  return new AsyncPull(() => core.filterAsync(s, f));
+export async function filterAsync<T>(f: AsyncPredicate<T>) {
+  return function (s: AsyncPull<T>) {
+    return new AsyncPull(() => core.filterAsync(s, f));
+  };
 }
 
-export async function remove<T>(s: AsyncPull<T>, f: Predicate<T>) {
-  return new AsyncPull(() => core.remove(s, f));
+export async function remove<T>(f: Predicate<T>) {
+  return function (s: AsyncPull<T>) {
+    return new AsyncPull(() => core.remove(s, f));
+  };
 }
 
-export async function removeAsync<T>(s: AsyncPull<T>, f: AsyncPredicate<T>) {
-  return new AsyncPull(() => core.removeAsync(s, f));
+export async function removeAsync<T>(f: AsyncPredicate<T>) {
+  return function (s: AsyncPull<T>) {
+    return new AsyncPull(() => core.removeAsync(s, f));
+  };
 }
 
-export async function take<T>(s: AsyncPull<T>, n: number) {
-  return new AsyncPull(() => core.take(s, n));
+export async function take<T>(n: number) {
+  return function (s: AsyncPull<T>) {
+    return new AsyncPull(() => core.take(s, n));
+  };
 }
 
-export async function takeWhile<T>(s: AsyncPull<T>, f: Predicate<T>) {
-  return new AsyncPull(() => core.takeWhile(s, f));
+export async function takeWhile<T>(f: Predicate<T>) {
+  return function (s: AsyncPull<T>) {
+    return new AsyncPull(() => core.takeWhile(s, f));
+  };
 }
 
-export async function takeWhileAsync<T>(s: AsyncPull<T>, f: AsyncPredicate<T>) {
-  return new AsyncPull(() => core.takeWhileAsync(s, f));
+export async function takeWhileAsync<T>(f: AsyncPredicate<T>) {
+  return function (s: AsyncPull<T>) {
+    return new AsyncPull(() => core.takeWhileAsync(s, f));
+  };
 }
 
-export async function skip<T>(s: AsyncPull<T>, n: number) {
-  return new AsyncPull(() => core.skip(s, n));
+export async function skip<T>(n: number) {
+  return function (s: AsyncPull<T>) {
+    return new AsyncPull(() => core.skip(s, n));
+  };
 }
 
-export async function skipWhile<T>(s: AsyncPull<T>, f: Predicate<T>) {
-  return new AsyncPull(() => core.skipWhile(s, f));
+export async function skipWhile<T>(f: Predicate<T>) {
+  return function (s: AsyncPull<T>) {
+    return new AsyncPull(() => core.skipWhile(s, f));
+  };
 }
 
-export async function skipWhileAsync<T>(s: AsyncPull<T>, f: AsyncPredicate<T>) {
-  return new AsyncPull(() => core.skipWhileAsync(s, f));
+export async function skipWhileAsync<T>(f: AsyncPredicate<T>) {
+  return function (s: AsyncPull<T>) {
+    return new AsyncPull(() => core.skipWhileAsync(s, f));
+  };
 }
 
 export async function concat<T>(s1: AsyncPull<T>, s2: AsyncPull<T>) {

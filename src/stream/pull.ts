@@ -8,32 +8,46 @@ export function forEach<T>(s: Pull<T>, f: Action<T>) {
   }
 }
 
-export function map<T, K>(s: Pull<T>, f: Selector<T, K>) {
-  return new Pull(() => core.map(s, f));
+export function map<T, K>(f: Selector<T, K>) {
+  return function (s: Pull<T>) {
+    return new Pull(() => core.map(s, f));
+  };
 }
 
-export function filter<T>(s: Pull<T>, f: Predicate<T>) {
-  return new Pull(() => core.filter(s, f));
+export function filter<T>(f: Predicate<T>) {
+  return function (s: Pull<T>) {
+    return new Pull(() => core.filter(s, f));
+  };
 }
 
-export function remove<T>(s: Pull<T>, f: Predicate<T>) {
-  return new Pull(() => core.remove(s, f));
+export function remove<T>(f: Predicate<T>) {
+  return function (s: Pull<T>) {
+    return new Pull(() => core.remove(s, f));
+  };
 }
 
-export function take<T>(s: Pull<T>, n: number) {
-  return new Pull(() => core.take(s, n));
+export function take<T>(n: number) {
+  return function (s: Pull<T>) {
+    return new Pull(() => core.take(s, n));
+  };
 }
 
-export function takeWhile<T>(s: Pull<T>, f: Predicate<T>) {
-  return new Pull(() => core.takeWhile(s, f));
+export function takeWhile<T>(f: Predicate<T>) {
+  return function (s: Pull<T>) {
+    return new Pull(() => core.takeWhile(s, f));
+  };
 }
 
-export function* skip<T>(s: Pull<T>, n: number) {
-  return new Pull(() => core.skip(s, n));
+export function* skip<T>(n: number) {
+  return function (s: Pull<T>) {
+    return new Pull(() => core.skip(s, n));
+  };
 }
 
-export function skipWhile<T>(s: Pull<T>, f: Predicate<T>) {
-  return new Pull(() => core.skipWhile(s, f));
+export function skipWhile<T>(f: Predicate<T>) {
+  return function (s: Pull<T>) {
+    return new Pull(() => core.skipWhile(s, f));
+  };
 }
 
 export function concat<T>(s1: Pull<T>, s2: Pull<T>) {
