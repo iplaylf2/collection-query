@@ -3,24 +3,30 @@ import { EmitForm, EmitType } from "../type";
 import { Action } from "../../../type";
 
 export function zip<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T[], Te>) {
-  const zipCollector = new ZipCollector(emit);
+  if (ee.length === 0) {
+    emit(EmitType.Complete);
+    return;
+  }
 
-  zipCollector.start(ee);
+  const zipCollector = new ZipCollector(ee, emit);
+
+  zipCollector.start();
 
   return zipCollector.cancel.bind(zipCollector);
 }
 
 class ZipCollector<T, Te> {
-  constructor(emit: EmitForm<T[], Te>) {
+  constructor(ee: Emitter<T, Te>[], emit: EmitForm<T[], Te>) {
+    this.ee = ee;
     this.emit = emit;
     this.cancelList = [];
   }
 
-  start(ee: Emitter<T, Te>[]) {
-    const linkedZip = new LinkedZip<T>(ee.length);
+  start() {
+    const linkedZip = new LinkedZip<T>(this.ee.length);
 
     let index = 0;
-    for (const emitter of ee) {
+    for (const emitter of this.ee) {
       linkedZip.checkIn(index);
 
       const receiver = this.collect(index, linkedZip);
@@ -90,7 +96,8 @@ class ZipCollector<T, Te> {
 
   private emit: EmitForm<T[], Te>;
 
-  private cancelList: Action<void>[];
+  private readonly ee: Emitter<T, Te>[];
+  private readonly cancelList: Action<void>[];
 }
 
 class LinkedZip<T> {
