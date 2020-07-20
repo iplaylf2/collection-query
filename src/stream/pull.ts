@@ -113,5 +113,3 @@ export function last<T>(s: Pull<T>) {
   }
   return last;
 }
-
-export { Pull as PullStream };
