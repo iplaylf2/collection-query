@@ -1,5 +1,4 @@
-import { Emitter } from "../emitter";
-import { EmitForm, EmitType } from "../type";
+import { Emitter, EmitForm, EmitType, EmitItem } from "../type";
 import { Action } from "../../../type";
 
 export function race<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T, Te>) {
@@ -26,7 +25,7 @@ class RaceDispatch<T, Te> {
   start() {
     for (const emitter of this.ee) {
       const receiver = this.join.bind(this);
-      const cancel = emitter.emit(receiver);
+      const cancel = emitter(receiver);
 
       this.cancelList.push(cancel);
     }
@@ -38,7 +37,7 @@ class RaceDispatch<T, Te> {
     }
   }
 
-  private join(t: EmitType, x?: T | Te) {
+  private join(...[t, x]: EmitItem<T, Te>) {
     switch (t) {
       case EmitType.Next:
         this.handleNext(x as T);

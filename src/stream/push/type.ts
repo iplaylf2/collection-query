@@ -1,3 +1,5 @@
+import { Action } from "../../type";
+
 export enum EmitType {
   Next,
   Complete,
@@ -11,4 +13,8 @@ export type EmitItem<T, Te> =
 
 export interface EmitForm<T, Te> {
   (...x: EmitItem<T, Te>): void;
+}
+
+export interface Emitter<T, Te> {
+  (emit: EmitForm<T, Te>): Action<void>;
 }

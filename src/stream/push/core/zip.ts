@@ -1,5 +1,4 @@
-import { Emitter } from "../emitter";
-import { EmitForm, EmitType } from "../type";
+import { Emitter, EmitForm, EmitType } from "../type";
 import { Action } from "../../../type";
 
 export function zip<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T[], Te>) {
@@ -30,7 +29,7 @@ class ZipCollector<T, Te> {
       linkedZip.checkIn(index);
 
       const receiver = this.collect(index, linkedZip);
-      const cancel = emitter.emit(receiver);
+      const cancel = emitter(receiver);
 
       this.cancelList.push(cancel);
     }

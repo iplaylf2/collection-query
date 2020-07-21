@@ -1,6 +1,5 @@
-import { EmitForm, EmitType } from "./type";
-import { Selector, Predicate } from "../../type";
-import { Emitter } from "./emitter";
+import { EmitForm, EmitType, Emitter } from "./type";
+import { Selector, Predicate, Action } from "../../type";
 
 export function map<T, K>(emit: EmitForm<K, never>, f: Selector<T, K>) {
   return (x: T) => {
@@ -80,15 +79,15 @@ export function concat<T, Te>(
   emitter2: Emitter<T, Te>,
   emit: EmitForm<T, Te>
 ) {
-  let cancel2 = function () {};
+  let cancel2: Action<void> = function () {};
 
-  const cancel1 = emitter1.emit((t, x?) => {
+  const cancel1 = emitter1((t, x?) => {
     switch (t) {
       case EmitType.Next:
         emit(EmitType.Next, x as T);
         break;
       case EmitType.Complete:
-        cancel2 = emitter2.emit(emit);
+        cancel2 = emitter2(emit);
         break;
       case EmitType.Error:
         emit(EmitType.Error, x as Te);
@@ -105,3 +104,4 @@ export function concat<T, Te>(
 }
 
 export * from "./core/zip";
+export * from "./core/race";
