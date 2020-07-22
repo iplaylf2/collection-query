@@ -8,43 +8,43 @@ export function forEach<T>(s: Func<IterableIterator<T>>, f: Action<T>) {
 }
 
 export function map<T, K>(f: Selector<T, K>) {
-  return function (s: Func<IterableIterator<T>>) {
+  return function (s: Func<IterableIterator<T>>): Func<IterableIterator<K>> {
     return () => core.map(s(), f);
   };
 }
 
 export function filter<T>(f: Predicate<T>) {
-  return function (s: Func<IterableIterator<T>>) {
+  return function (s: Func<IterableIterator<T>>): Func<IterableIterator<T>> {
     return () => core.filter(s(), f);
   };
 }
 
 export function remove<T>(f: Predicate<T>) {
-  return function (s: Func<IterableIterator<T>>) {
+  return function (s: Func<IterableIterator<T>>): Func<IterableIterator<T>> {
     return () => core.remove(s(), f);
   };
 }
 
 export function take<T>(n: number) {
-  return function (s: Func<IterableIterator<T>>) {
+  return function (s: Func<IterableIterator<T>>): Func<IterableIterator<T>> {
     return () => core.take(s(), n);
   };
 }
 
 export function takeWhile<T>(f: Predicate<T>) {
-  return function (s: Func<IterableIterator<T>>) {
+  return function (s: Func<IterableIterator<T>>): Func<IterableIterator<T>> {
     return () => core.takeWhile(s(), f);
   };
 }
 
 export function* skip<T>(n: number) {
-  return function (s: Func<IterableIterator<T>>) {
+  return function (s: Func<IterableIterator<T>>): Func<IterableIterator<T>> {
     return () => core.skip(s(), n);
   };
 }
 
 export function skipWhile<T>(f: Predicate<T>) {
-  return function (s: Func<IterableIterator<T>>) {
+  return function (s: Func<IterableIterator<T>>): Func<IterableIterator<T>> {
     return () => core.skipWhile(s(), f);
   };
 }
@@ -52,11 +52,17 @@ export function skipWhile<T>(f: Predicate<T>) {
 export function concat<T>(
   s1: Func<IterableIterator<T>>,
   s2: Func<IterableIterator<T>>
-) {
+): Func<IterableIterator<T>> {
   return () => core.concat(s1, s2);
 }
 
-export function zip<T>(ss: Func<IterableIterator<T>>[]) {
+export function concatAll<T>([s, ...ss]: Func<IterableIterator<T>>[]) {
+  return ss.reduce((r, s) => concat(r, s), s);
+}
+
+export function zip<T>(
+  ss: Func<IterableIterator<T>>[]
+): Func<IterableIterator<T[]>> {
   return () => core.zip(ss);
 }
 
