@@ -1,3 +1,19 @@
+export interface Action<T> {
+  (x: T): void;
+}
+
+export interface AsyncAction<T> {
+  (x: T): Promise<void>;
+}
+
+export interface Func<T> {
+  (): T;
+}
+
+export interface AsyncFunc<T> {
+  (): Promise<T>;
+}
+
 export interface Selector<T, K> {
   (x: T): K;
 }
@@ -12,14 +28,6 @@ export interface Predicate<T> {
 
 export interface AsyncPredicate<T> {
   (x: T): Promise<boolean>;
-}
-
-export interface Action<T> {
-  (x: T): void;
-}
-
-export interface AsyncAction<T> {
-  (x: T): Promise<void>;
 }
 
 export interface Aggregate<T, K> {
