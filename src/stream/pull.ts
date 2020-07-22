@@ -8,45 +8,38 @@ export function forEach<T>(s: Func<IterableIterator<T>>, f: Action<T>) {
 }
 
 export function map<T, K>(f: Selector<T, K>) {
-  return function (s: Func<IterableIterator<T>>): Func<IterableIterator<K>> {
-    return () => core.map(s(), f);
-  };
+  return (s: Func<IterableIterator<T>>): Func<IterableIterator<K>> => () =>
+    core.map(s(), f);
 }
 
 export function filter<T>(f: Predicate<T>) {
-  return function (s: Func<IterableIterator<T>>): Func<IterableIterator<T>> {
-    return () => core.filter(s(), f);
-  };
+  return (s: Func<IterableIterator<T>>): Func<IterableIterator<T>> => () =>
+    core.filter(s(), f);
 }
 
 export function remove<T>(f: Predicate<T>) {
-  return function (s: Func<IterableIterator<T>>): Func<IterableIterator<T>> {
-    return () => core.remove(s(), f);
-  };
+  return (s: Func<IterableIterator<T>>): Func<IterableIterator<T>> => () =>
+    core.remove(s(), f);
 }
 
 export function take<T>(n: number) {
-  return function (s: Func<IterableIterator<T>>): Func<IterableIterator<T>> {
-    return () => core.take(s(), n);
-  };
+  return (s: Func<IterableIterator<T>>): Func<IterableIterator<T>> => () =>
+    core.take(s(), n);
 }
 
 export function takeWhile<T>(f: Predicate<T>) {
-  return function (s: Func<IterableIterator<T>>): Func<IterableIterator<T>> {
-    return () => core.takeWhile(s(), f);
-  };
+  return (s: Func<IterableIterator<T>>): Func<IterableIterator<T>> => () =>
+    core.takeWhile(s(), f);
 }
 
 export function* skip<T>(n: number) {
-  return function (s: Func<IterableIterator<T>>): Func<IterableIterator<T>> {
-    return () => core.skip(s(), n);
-  };
+  return (s: Func<IterableIterator<T>>): Func<IterableIterator<T>> => () =>
+    core.skip(s(), n);
 }
 
 export function skipWhile<T>(f: Predicate<T>) {
-  return function (s: Func<IterableIterator<T>>): Func<IterableIterator<T>> {
-    return () => core.skipWhile(s(), f);
-  };
+  return (s: Func<IterableIterator<T>>): Func<IterableIterator<T>> => () =>
+    core.skipWhile(s(), f);
 }
 
 export function concat<T>(

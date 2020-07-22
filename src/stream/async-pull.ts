@@ -30,99 +30,75 @@ export async function forEachAsync<T>(
 }
 
 export function map<T, K>(f: Selector<T, K>) {
-  return function (
+  return (
     s: Func<AsyncIterableIterator<T>>
-  ): Func<AsyncIterableIterator<K>> {
-    return () => core.map(s(), f);
-  };
+  ): Func<AsyncIterableIterator<K>> => () => core.map(s(), f);
 }
 
 export function mapAsync<T, K>(f: AsyncSelector<T, K>) {
-  return function (
+  return (
     s: Func<AsyncIterableIterator<T>>
-  ): Func<AsyncIterableIterator<K>> {
-    return () => core.mapAsync(s(), f);
-  };
+  ): Func<AsyncIterableIterator<K>> => () => core.mapAsync(s(), f);
 }
 
 export function filter<T>(f: Predicate<T>) {
-  return function (
+  return (
     s: Func<AsyncIterableIterator<T>>
-  ): Func<AsyncIterableIterator<T>> {
-    return () => core.filter(s(), f);
-  };
+  ): Func<AsyncIterableIterator<T>> => () => core.filter(s(), f);
 }
 
 export function filterAsync<T>(f: AsyncPredicate<T>) {
-  return function (
+  return (
     s: Func<AsyncIterableIterator<T>>
-  ): Func<AsyncIterableIterator<T>> {
-    return () => core.filterAsync(s(), f);
-  };
+  ): Func<AsyncIterableIterator<T>> => () => core.filterAsync(s(), f);
 }
 
 export function remove<T>(f: Predicate<T>) {
-  return function (
+  return (
     s: Func<AsyncIterableIterator<T>>
-  ): Func<AsyncIterableIterator<T>> {
-    return () => core.remove(s(), f);
-  };
+  ): Func<AsyncIterableIterator<T>> => () => core.remove(s(), f);
 }
 
 export function removeAsync<T>(f: AsyncPredicate<T>) {
-  return function (
+  return (
     s: Func<AsyncIterableIterator<T>>
-  ): Func<AsyncIterableIterator<T>> {
-    return () => core.removeAsync(s(), f);
-  };
+  ): Func<AsyncIterableIterator<T>> => () => core.removeAsync(s(), f);
 }
 
 export function take<T>(n: number) {
-  return function (
+  return (
     s: Func<AsyncIterableIterator<T>>
-  ): Func<AsyncIterableIterator<T>> {
-    return () => core.take(s(), n);
-  };
+  ): Func<AsyncIterableIterator<T>> => () => core.take(s(), n);
 }
 
 export function takeWhile<T>(f: Predicate<T>) {
-  return function (
+  return (
     s: Func<AsyncIterableIterator<T>>
-  ): Func<AsyncIterableIterator<T>> {
-    return () => core.takeWhile(s(), f);
-  };
+  ): Func<AsyncIterableIterator<T>> => () => core.takeWhile(s(), f);
 }
 
 export function takeWhileAsync<T>(f: AsyncPredicate<T>) {
-  return function (
+  return (
     s: Func<AsyncIterableIterator<T>>
-  ): Func<AsyncIterableIterator<T>> {
-    return () => core.takeWhileAsync(s(), f);
-  };
+  ): Func<AsyncIterableIterator<T>> => () => core.takeWhileAsync(s(), f);
 }
 
 export function skip<T>(n: number) {
-  return function (
+  return (
     s: Func<AsyncIterableIterator<T>>
-  ): Func<AsyncIterableIterator<T>> {
-    return () => core.skip(s(), n);
-  };
+  ): Func<AsyncIterableIterator<T>> => () => core.skip(s(), n);
 }
 
 export function skipWhile<T>(f: Predicate<T>) {
-  return function (
+  return (
     s: Func<AsyncIterableIterator<T>>
-  ): Func<AsyncIterableIterator<T>> {
-    return () => core.skipWhile(s(), f);
-  };
+  ): Func<AsyncIterableIterator<T>> => () => core.skipWhile(s(), f);
 }
 
 export function skipWhileAsync<T>(f: AsyncPredicate<T>) {
-  return function (
+  return (
     s: Func<AsyncIterableIterator<T>>
-  ): Func<AsyncIterableIterator<T>> {
-    return () => core.skipWhileAsync(s(), f);
-  };
+  ): Func<AsyncIterableIterator<T>> => () => core.skipWhileAsync(s(), f);
 }
 
 export function concat<T>(
