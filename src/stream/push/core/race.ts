@@ -4,7 +4,7 @@ import { Action } from "../../../type";
 export function race<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T, Te>) {
   if (ee.length === 0) {
     emit(EmitType.Complete);
-    return;
+    return () => {};
   }
 
   const raceDispatch = new RaceDispatch(ee, emit);

@@ -4,7 +4,7 @@ import { Action } from "../../../type";
 export function zip<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T[], Te>) {
   if (ee.length === 0) {
     emit(EmitType.Complete);
-    return;
+    return () => {};
   }
 
   const zipCollector = new ZipCollector(ee, emit);
