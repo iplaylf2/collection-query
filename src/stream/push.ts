@@ -1,8 +1,9 @@
-import { Selector, Predicate } from "../type";
+import { Selector, Predicate, Aggregate } from "../type";
 import { Emitter } from "./push/type";
 import { relayNext } from "./push/relay-next";
 import * as core from "./push/core";
 import { relay } from "./push/relay";
+import { reduce as _reduce } from "./push/reduce";
 
 export function map<T, Te, K>(f: Selector<T, K>) {
   return (s: Emitter<T, Te>): Emitter<K, Te> =>
@@ -54,3 +55,34 @@ export function race<T, Te>(ss: Emitter<T, Te>[]): Emitter<T, Te> {
   return relay((emit) => core.race(ss, emit));
 }
 
+export function reduce<T, K>(
+  s: Emitter<T>,
+  f: Aggregate<T, K>,
+  v: K
+): Promise<K> {
+  return _reduce(s, (x, j) => core.reduce(x, j, f, v));
+}
+
+export function count(s: Emitter<any>): Promise<number> {
+  return _reduce(s, core.count);
+}
+
+export function include<T>(s: Emitter<T>, v: T): Promise<boolean> {
+  return _reduce(s, (x, j) => core.include(x, j, v));
+}
+
+export function every<T>(s: Emitter<T>, f: Predicate<T>): Promise<boolean> {
+  return _reduce(s, (x, j) => core.every(x, j, f));
+}
+
+export function some<T>(s: Emitter<T>, f: Predicate<T>): Promise<boolean> {
+  return _reduce(s, (x, j) => core.some(x, j, f));
+}
+
+export function first<T>(s: Emitter<T>): Promise<T | void> {
+  return _reduce(s, core.first);
+}
+
+export function last<T>(s: Emitter<T>): Promise<T | void> {
+  return _reduce(s, core.last);
+}

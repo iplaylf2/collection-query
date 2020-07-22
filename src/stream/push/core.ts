@@ -146,7 +146,7 @@ export function count(resolve: Action<number>, reject: Action<any>) {
 }
 
 export function include<T>(
-  resolve: Action<Boolean>,
+  resolve: Action<boolean>,
   reject: Action<any>,
   v: T
 ) {
@@ -168,7 +168,7 @@ export function include<T>(
 }
 
 export function every<T>(
-  resolve: Action<Boolean>,
+  resolve: Action<boolean>,
   reject: Action<any>,
   f: Predicate<T>
 ) {
@@ -190,7 +190,7 @@ export function every<T>(
 }
 
 export function some<T>(
-  resolve: Action<Boolean>,
+  resolve: Action<boolean>,
   reject: Action<any>,
   f: Predicate<T>
 ) {
