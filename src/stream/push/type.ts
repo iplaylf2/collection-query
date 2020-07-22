@@ -15,6 +15,6 @@ export interface EmitForm<T, Te> {
   (...x: EmitItem<T, Te>): void;
 }
 
-export interface Emitter<T, Te> {
+export interface Emitter<T, Te = never> {
   (emit: EmitForm<T, Te>): Action<void>;
 }
