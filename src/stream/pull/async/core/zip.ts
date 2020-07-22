@@ -1,13 +1,11 @@
-import AsyncPull from "../async-pull";
 import { Action } from "../../../../type";
 import { IterateItem } from "../../type";
 
-export async function* zip<T>(ss: AsyncPull<T>[]) {
-  if (ss.length === 0) {
+export async function* zip<T>(ii: AsyncIterableIterator<T>[]) {
+  if (ii.length === 0) {
     return;
   }
 
-  const ii = ss.map((s) => s[Symbol.asyncIterator]());
   const zipCollector = new ZipCollector(ii);
 
   while (true) {

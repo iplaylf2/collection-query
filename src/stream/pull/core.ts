@@ -1,30 +1,29 @@
 import { Selector, Predicate } from "../../type";
-import Pull from "./pull";
 
-export function* map<T, K>(s: Pull<T>, f: Selector<T, K>) {
-  for (const x of s) {
+export function* map<T, K>(iterator: IterableIterator<T>, f: Selector<T, K>) {
+  for (const x of iterator) {
     yield f(x);
   }
 }
 
-export function* filter<T>(s: Pull<T>, f: Predicate<T>) {
-  for (const x of s) {
+export function* filter<T>(iterator: IterableIterator<T>, f: Predicate<T>) {
+  for (const x of iterator) {
     if (f(x)) {
       yield x;
     }
   }
 }
 
-export function* remove<T>(s: Pull<T>, f: Predicate<T>) {
-  for (const x of s) {
+export function* remove<T>(iterator: IterableIterator<T>, f: Predicate<T>) {
+  for (const x of iterator) {
     if (!f(x)) {
       yield x;
     }
   }
 }
 
-export function* take<T>(s: Pull<T>, n: number) {
-  for (const x of s) {
+export function* take<T>(iterator: IterableIterator<T>, n: number) {
+  for (const x of iterator) {
     if (n > 0) {
       n--;
       yield x;
@@ -34,8 +33,8 @@ export function* take<T>(s: Pull<T>, n: number) {
   }
 }
 
-export function* takeWhile<T>(s: Pull<T>, f: Predicate<T>) {
-  for (const x of s) {
+export function* takeWhile<T>(iterator: IterableIterator<T>, f: Predicate<T>) {
+  for (const x of iterator) {
     if (f(x)) {
       yield x;
     } else {
@@ -44,11 +43,10 @@ export function* takeWhile<T>(s: Pull<T>, f: Predicate<T>) {
   }
 }
 
-export function* skip<T>(s: Pull<T>, n: number) {
-  const i = s[Symbol.iterator]();
+export function* skip<T>(iterator: IterableIterator<T>, n: number) {
   while (true) {
     if (n > 0) {
-      const { done } = i.next();
+      const { done } = iterator.next();
       if (done) {
         break;
       } else {
@@ -58,32 +56,32 @@ export function* skip<T>(s: Pull<T>, n: number) {
       break;
     }
   }
-  yield* i;
+  yield* iterator;
 }
 
-export function* skipWhile<T>(s: Pull<T>, f: Predicate<T>) {
-  const i = s[Symbol.iterator]();
+export function* skipWhile<T>(iterator: IterableIterator<T>, f: Predicate<T>) {
   while (true) {
-    const { value, done } = i.next();
+    const { value, done } = iterator.next();
     if (done || !f(value)) {
       break;
     }
   }
-  yield* i;
+  yield* iterator;
 }
 
-export function* concat<T>(s1: Pull<T>, s2: Pull<T>) {
-  for (const x of s1) {
+export function* concat<T>(
+  iterator1: IterableIterator<T>,
+  iterator2: IterableIterator<T>
+) {
+  for (const x of iterator1) {
     yield x;
   }
-  for (const x of s2) {
+  for (const x of iterator2) {
     yield x;
   }
 }
 
-export function* zip<T>(ss: Pull<T>[]) {
-  const ii = ss.map((s) => s[Symbol.iterator]());
-
+export function* zip<T>(ii: IterableIterator<T>[]) {
   while (true) {
     const iiResult = ii.map((i) => i.next());
     const done = iiResult.some(({ done }) => done);
