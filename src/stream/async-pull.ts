@@ -150,7 +150,7 @@ export async function reduceAsync<T, K>(
   return r;
 }
 
-export async function count<T>(s: Func<AsyncIterableIterator<T>>) {
+export async function count(s: Func<AsyncIterableIterator<any>>) {
   var n = 0;
   for await (const _x of s()) {
     n++;

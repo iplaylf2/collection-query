@@ -71,7 +71,7 @@ export function reduce<T, K>(
   return r;
 }
 
-export function count<T>(s: Func<IterableIterator<T>>) {
+export function count(s: Func<IterableIterator<any>>) {
   let n = 0;
   for (const _x of s()) {
     n++;
