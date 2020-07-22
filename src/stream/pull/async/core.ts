@@ -3,6 +3,7 @@ import {
   AsyncSelector,
   Predicate,
   AsyncPredicate,
+  Func,
 } from "../../../type";
 
 export async function* map<T, K>(
@@ -151,13 +152,13 @@ export async function* skipWhileAsync<T>(
 }
 
 export async function* concat<T>(
-  iterator1: AsyncIterableIterator<T>,
-  iterator2: AsyncIterableIterator<T>
+  s1: Func<AsyncIterableIterator<T>>,
+  s2: Func<AsyncIterableIterator<T>>
 ) {
-  for await (const x of iterator1) {
+  for await (const x of s1()) {
     yield x;
   }
-  for await (const x of iterator2) {
+  for await (const x of s2()) {
     yield x;
   }
 }

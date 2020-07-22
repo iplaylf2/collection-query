@@ -1,4 +1,4 @@
-import { Selector, Predicate } from "../../type";
+import { Selector, Predicate, Func } from "../../type";
 
 export function* map<T, K>(iterator: IterableIterator<T>, f: Selector<T, K>) {
   for (const x of iterator) {
@@ -70,18 +70,24 @@ export function* skipWhile<T>(iterator: IterableIterator<T>, f: Predicate<T>) {
 }
 
 export function* concat<T>(
-  iterator1: IterableIterator<T>,
-  iterator2: IterableIterator<T>
+  s1: Func<IterableIterator<T>>,
+  s2: Func<IterableIterator<T>>
 ) {
-  for (const x of iterator1) {
+  for (const x of s1()) {
     yield x;
   }
-  for (const x of iterator2) {
+  for (const x of s2()) {
     yield x;
   }
 }
 
-export function* zip<T>(ii: IterableIterator<T>[]) {
+export function* zip<T>(ss: Func<IterableIterator<T>>[]) {
+  if (ss.length === 0) {
+    return;
+  }
+
+  const ii = ss.map((s) => s());
+
   while (true) {
     const iiResult = ii.map((i) => i.next());
     const done = iiResult.some(({ done }) => done);

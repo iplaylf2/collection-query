@@ -1,11 +1,12 @@
-import { Action } from "../../../../type";
+import { Func, Action } from "../../../../type";
 import { IterateItem } from "../../type";
 
-export async function* race<T>(ii: AsyncIterableIterator<T>[]) {
-  if (ii.length === 0) {
+export async function* race<T>(ss: Func<AsyncIterableIterator<T>>[]) {
+  if (ss.length === 0) {
     return;
   }
 
+  const ii = ss.map((s) => s());
   const dispatcher = new RaceDispatcher<T>(ii);
 
   while (true) {

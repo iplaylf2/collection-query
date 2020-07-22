@@ -103,15 +103,15 @@ export async function concat<T>(
   s1: Func<AsyncIterableIterator<T>>,
   s2: Func<AsyncIterableIterator<T>>
 ) {
-  return () => core.concat(s1(), s2());
+  return () => core.concat(s1, s2);
 }
 
 export async function zip<T>(ss: Func<AsyncIterableIterator<T>>[]) {
-  return () => core.zip(ss.map((s) => s()));
+  return () => core.zip(ss);
 }
 
 export async function race<T>(ss: Func<AsyncIterableIterator<T>>[]) {
-  return () => core.race(ss.map((s) => s()));
+  return () => core.race(ss);
 }
 
 export async function reduce<T, K>(

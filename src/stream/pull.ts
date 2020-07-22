@@ -53,11 +53,11 @@ export function concat<T>(
   s1: Func<IterableIterator<T>>,
   s2: Func<IterableIterator<T>>
 ) {
-  return () => core.concat(s1(), s2());
+  return () => core.concat(s1, s2);
 }
 
 export function zip<T>(ss: Func<IterableIterator<T>>[]) {
-  return () => core.zip(ss.map((s) => s()));
+  return () => core.zip(ss);
 }
 
 export function reduce<T, K>(
