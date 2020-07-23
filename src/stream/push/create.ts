@@ -12,8 +12,8 @@ export function create<T, Te>(executor: Action<EmitForm<T, Te>>) {
 }
 
 class EmitterHandler<T, Te> {
-  constructor(emit: EmitForm<T, Te>) {
-    this.emit = emit;
+  constructor(receiver: EmitForm<T, Te>) {
+    this.receive = receiver;
     this.open = true;
   }
 
@@ -29,7 +29,7 @@ class EmitterHandler<T, Te> {
   }
 
   cancel() {
-    this.emit = null!;
+    this.receive = null!;
     this.open = false;
   }
 
@@ -51,7 +51,7 @@ class EmitterHandler<T, Te> {
 
   private next(x: T) {
     try {
-      this.emit(EmitType.Next, x);
+      this.receive(EmitType.Next, x);
     } catch (e) {
       this.cancel();
       throw e;
@@ -59,18 +59,18 @@ class EmitterHandler<T, Te> {
   }
 
   private complete() {
-    const emit = this.emit;
+    const receive = this.receive;
     this.cancel();
-    emit(EmitType.Complete);
+    receive(EmitType.Complete);
   }
 
   private error(x: Te) {
-    const emit = this.emit;
+    const receive = this.receive;
     this.cancel();
-    emit(EmitType.Error, x);
+    receive(EmitType.Error, x);
   }
 
-  private emit: EmitForm<T, Te>;
+  private receive: EmitForm<T, Te>;
 
   private open: boolean;
 }
