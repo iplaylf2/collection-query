@@ -5,8 +5,10 @@ import {
   Predicate,
   AsyncPredicate,
   Action,
+  Aggregate,
+  AsyncAggregate,
 } from "../../../type";
-import { EmitType } from "../type";
+import { EmitType, EmitItem } from "../type";
 
 export function map<T, K>(emit: EmitForm<K, never>, f: Selector<T, K>) {
   return async (x: T) => {
@@ -172,3 +174,209 @@ export function concat<T, Te>(
 
 export * from "./core/zip";
 export * from "./core/race";
+
+export function reduce<T, K>(
+  resolve: Action<K>,
+  reject: Action<any>,
+  f: Aggregate<T, K>,
+  v: K
+) {
+  let r = v;
+  return async (...[t, x]: EmitItem<T, any>) => {
+    switch (t) {
+      case EmitType.Next:
+        r = f(r, x);
+        break;
+      case EmitType.Complete:
+        resolve(r);
+        break;
+      case EmitType.Error:
+        reject(x);
+        break;
+    }
+  };
+}
+
+export function reduceAsync<T, K>(
+  resolve: Action<K>,
+  reject: Action<any>,
+  f: AsyncAggregate<T, K>,
+  v: K
+) {
+  let r = v;
+  return async (...[t, x]: EmitItem<T, any>) => {
+    switch (t) {
+      case EmitType.Next:
+        r = await f(r, x);
+        break;
+      case EmitType.Complete:
+        resolve(r);
+        break;
+      case EmitType.Error:
+        reject(x);
+        break;
+    }
+  };
+}
+
+export function count(resolve: Action<number>, reject: Action<any>) {
+  let n = 0;
+  return async (...[t, x]: EmitItem<any, any>) => {
+    switch (t) {
+      case EmitType.Next:
+        n++;
+        break;
+      case EmitType.Complete:
+        resolve(n);
+        break;
+      case EmitType.Error:
+        reject(x);
+        break;
+    }
+  };
+}
+
+export function include<T>(
+  resolve: Action<boolean>,
+  reject: Action<any>,
+  v: T
+) {
+  return async (...[t, x]: EmitItem<T, any>) => {
+    switch (t) {
+      case EmitType.Next:
+        if (x === v) {
+          resolve(true);
+        }
+        break;
+      case EmitType.Complete:
+        resolve(false);
+        break;
+      case EmitType.Error:
+        reject(x);
+        break;
+    }
+  };
+}
+
+export function every<T>(
+  resolve: Action<boolean>,
+  reject: Action<any>,
+  f: Predicate<T>
+) {
+  return async (...[t, x]: EmitItem<T, any>) => {
+    switch (t) {
+      case EmitType.Next:
+        if (!f(x)) {
+          resolve(false);
+        }
+        break;
+      case EmitType.Complete:
+        resolve(true);
+        break;
+      case EmitType.Error:
+        reject(x);
+        break;
+    }
+  };
+}
+
+export function everyAsync<T>(
+  resolve: Action<boolean>,
+  reject: Action<any>,
+  f: AsyncPredicate<T>
+) {
+  return async (...[t, x]: EmitItem<T, any>) => {
+    switch (t) {
+      case EmitType.Next:
+        const p = await f(x);
+        if (!p) {
+          resolve(false);
+        }
+        break;
+      case EmitType.Complete:
+        resolve(true);
+        break;
+      case EmitType.Error:
+        reject(x);
+        break;
+    }
+  };
+}
+
+export function some<T>(
+  resolve: Action<boolean>,
+  reject: Action<any>,
+  f: Predicate<T>
+) {
+  return async (...[t, x]: EmitItem<T, any>) => {
+    switch (t) {
+      case EmitType.Next:
+        if (f(x)) {
+          resolve(true);
+        }
+        break;
+      case EmitType.Complete:
+        resolve(false);
+        break;
+      case EmitType.Error:
+        reject(x);
+        break;
+    }
+  };
+}
+
+export function someAsync<T>(
+  resolve: Action<boolean>,
+  reject: Action<any>,
+  f: AsyncPredicate<T>
+) {
+  return async (...[t, x]: EmitItem<T, any>) => {
+    switch (t) {
+      case EmitType.Next:
+        const p = await f(x);
+        if (p) {
+          resolve(true);
+        }
+        break;
+      case EmitType.Complete:
+        resolve(false);
+        break;
+      case EmitType.Error:
+        reject(x);
+        break;
+    }
+  };
+}
+
+export function first<T>(resolve: Action<T | void>, reject: Action<any>) {
+  return async (...[t, x]: EmitItem<T, any>) => {
+    switch (t) {
+      case EmitType.Next:
+        resolve(x);
+        break;
+      case EmitType.Complete:
+        resolve();
+        break;
+      case EmitType.Error:
+        reject(x);
+        break;
+    }
+  };
+}
+
+export function last<T>(resolve: Action<T | void>, reject: Action<any>) {
+  let last: T | void;
+  return async (...[t, x]: EmitItem<T, any>) => {
+    switch (t) {
+      case EmitType.Next:
+        last = x;
+        break;
+      case EmitType.Complete:
+        resolve(last);
+        break;
+      case EmitType.Error:
+        reject(x);
+        break;
+    }
+  };
+}
