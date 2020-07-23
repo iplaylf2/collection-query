@@ -6,38 +6,31 @@ import { relay } from "./push/relay";
 import { reduce as _reduce } from "./push/reduce";
 
 export function map<T, Te, K>(f: Selector<T, K>) {
-  return (s: Emitter<T, Te>): Emitter<K, Te> =>
-    relayNext(s, (emit) => core.map(emit, f));
+  return relayNext<T, Te, K>((emit) => core.map(emit, f));
 }
 
 export function filter<T, Te>(f: Predicate<T>) {
-  return (s: Emitter<T, Te>): Emitter<T, Te> =>
-    relayNext(s, (emit) => core.filter(emit, f));
+  return relayNext<T, Te>((emit) => core.filter(emit, f));
 }
 
 export function remove<T, Te>(f: Predicate<T>) {
-  return (s: Emitter<T, Te>): Emitter<T, Te> =>
-    relayNext(s, (emit) => core.remove(emit, f));
+  return relayNext<T, Te>((emit) => core.remove(emit, f));
 }
 
 export function take<T, Te>(n: number) {
-  return (s: Emitter<T, Te>): Emitter<T, Te> =>
-    relayNext(s, (emit) => core.take(emit, n));
+  return relayNext<T, Te>((emit) => core.take(emit, n));
 }
 
 export function takeWhile<T, Te>(f: Predicate<T>) {
-  return (s: Emitter<T, Te>): Emitter<T, Te> =>
-    relayNext(s, (emit) => core.takeWhile(emit, f));
+  return relayNext<T, Te>((emit) => core.takeWhile(emit, f));
 }
 
 export function skip<T, Te>(n: number) {
-  return (s: Emitter<T, Te>): Emitter<T, Te> =>
-    relayNext(s, (emit) => core.skip(emit, n));
+  return relayNext<T, Te>((emit) => core.skip(emit, n));
 }
 
 export function skipWhile<T, Te>(f: Predicate<T>) {
-  return (s: Emitter<T, Te>): Emitter<T, Te> =>
-    relayNext(s, (emit) => core.skipWhile(emit, f));
+  return relayNext<T, Te>((emit) => core.skipWhile(emit, f));
 }
 
 export function concat<T, Te>(
@@ -55,34 +48,30 @@ export function race<T, Te>(ss: Emitter<T, Te>[]): Emitter<T, Te> {
   return relay((emit) => core.race(ss, emit));
 }
 
-export function reduce<T, K>(
-  s: Emitter<T>,
-  f: Aggregate<T, K>,
-  v: K
-): Promise<K> {
-  return _reduce(s, (x, j) => core.reduce(x, j, f, v));
+export function reduce<T, K>(s: Emitter<T>, f: Aggregate<T, K>, v: K) {
+  return _reduce<T, K>((x, j) => core.reduce(x, j, f, v))(s);
 }
 
-export function count(s: Emitter<any>): Promise<number> {
-  return _reduce(s, core.count);
+export function count(s: Emitter<any>) {
+  return _reduce<any, number>(core.count)(s);
 }
 
-export function include<T>(s: Emitter<T>, v: T): Promise<boolean> {
-  return _reduce(s, (x, j) => core.include(x, j, v));
+export function include<T>(s: Emitter<T>, v: T) {
+  return _reduce<T, boolean>((x, j) => core.include(x, j, v))(s);
 }
 
-export function every<T>(s: Emitter<T>, f: Predicate<T>): Promise<boolean> {
-  return _reduce(s, (x, j) => core.every(x, j, f));
+export function every<T>(s: Emitter<T>, f: Predicate<T>) {
+  return _reduce<T, boolean>((x, j) => core.every(x, j, f))(s);
 }
 
-export function some<T>(s: Emitter<T>, f: Predicate<T>): Promise<boolean> {
-  return _reduce(s, (x, j) => core.some(x, j, f));
+export function some<T>(s: Emitter<T>, f: Predicate<T>) {
+  return _reduce<T, boolean>((x, j) => core.some(x, j, f))(s);
 }
 
-export function first<T>(s: Emitter<T>): Promise<T | void> {
-  return _reduce(s, core.first);
+export function first<T>(s: Emitter<T>) {
+  return _reduce<T, T | void>(core.first)(s);
 }
 
-export function last<T>(s: Emitter<T>): Promise<T | void> {
-  return _reduce(s, core.last);
+export function last<T>(s: Emitter<T>) {
+  return _reduce<T, T | void>(core.last)(s);
 }
