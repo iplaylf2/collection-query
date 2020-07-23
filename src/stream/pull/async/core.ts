@@ -8,16 +8,7 @@ import {
 
 export async function* map<T, K>(
   iterator: AsyncIterableIterator<T>,
-  f: Selector<T, K>
-) {
-  for await (const x of iterator) {
-    yield f(x);
-  }
-}
-
-export async function* mapAsync<T, K>(
-  iterator: AsyncIterableIterator<T>,
-  f: AsyncSelector<T, K>
+  f: Selector<T, K> | AsyncSelector<T, K>
 ) {
   for await (const x of iterator) {
     yield await f(x);
@@ -26,18 +17,7 @@ export async function* mapAsync<T, K>(
 
 export async function* filter<T>(
   iterator: AsyncIterableIterator<T>,
-  f: Predicate<T>
-) {
-  for await (const x of iterator) {
-    if (f(x)) {
-      yield x;
-    }
-  }
-}
-
-export async function* filterAsync<T>(
-  iterator: AsyncIterableIterator<T>,
-  f: AsyncPredicate<T>
+  f: Predicate<T> | AsyncPredicate<T>
 ) {
   for await (const x of iterator) {
     const p = await f(x);
@@ -49,18 +29,7 @@ export async function* filterAsync<T>(
 
 export async function* remove<T>(
   iterator: AsyncIterableIterator<T>,
-  f: Predicate<T>
-) {
-  for await (const x of iterator) {
-    if (!f(x)) {
-      yield x;
-    }
-  }
-}
-
-export async function* removeAsync<T>(
-  iterator: AsyncIterableIterator<T>,
-  f: AsyncPredicate<T>
+  f: Predicate<T> | AsyncPredicate<T>
 ) {
   for await (const x of iterator) {
     const p = await f(x);
@@ -83,20 +52,7 @@ export async function* take<T>(iterator: AsyncIterableIterator<T>, n: number) {
 
 export async function* takeWhile<T>(
   iterator: AsyncIterableIterator<T>,
-  f: Predicate<T>
-) {
-  for await (const x of iterator) {
-    if (f(x)) {
-      yield x;
-    } else {
-      break;
-    }
-  }
-}
-
-export async function* takeWhileAsync<T>(
-  iterator: AsyncIterableIterator<T>,
-  f: AsyncPredicate<T>
+  f: Predicate<T> | AsyncPredicate<T>
 ) {
   for await (const x of iterator) {
     const p = await f(x);
@@ -126,20 +82,7 @@ export async function* skip<T>(iterator: AsyncIterableIterator<T>, n: number) {
 
 export async function* skipWhile<T>(
   iterator: AsyncIterableIterator<T>,
-  f: Predicate<T>
-) {
-  while (true) {
-    const { value, done } = await iterator.next();
-    if (done || !f(value)) {
-      break;
-    }
-  }
-  yield* iterator;
-}
-
-export async function* skipWhileAsync<T>(
-  iterator: AsyncIterableIterator<T>,
-  f: AsyncPredicate<T>
+  f: Predicate<T> | AsyncPredicate<T>
 ) {
   while (true) {
     const { value, done } = await iterator.next();
