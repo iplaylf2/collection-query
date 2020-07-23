@@ -12,52 +12,32 @@ import * as core from "./push/async/core";
 import { relay } from "./push/async/relay";
 import { reduce as _reduce } from "./push/async/reduce";
 
-export function map<T, Te, K>(f: Selector<T, K>) {
+export function map<T, Te, K>(f: Selector<T, K> | AsyncSelector<T, K>) {
   return relayNext<T, Te, K>((emit) => core.map(emit, f));
 }
 
-export function mapAsync<T, Te, K>(f: AsyncSelector<T, K>) {
-  return relayNext<T, Te, K>((emit) => core.mapAsync(emit, f));
-}
-
-export function filter<T, Te>(f: Predicate<T>) {
+export function filter<T, Te>(f: Predicate<T> | AsyncPredicate<T>) {
   return relayNext<T, Te>((emit) => core.filter(emit, f));
 }
 
-export function filterAsync<T, Te>(f: AsyncPredicate<T>) {
-  return relayNext<T, Te>((emit) => core.filterAsync(emit, f));
-}
-
-export function remove<T, Te>(f: Predicate<T>) {
+export function remove<T, Te>(f: Predicate<T> | AsyncPredicate<T>) {
   return relayNext<T, Te>((emit) => core.remove(emit, f));
-}
-
-export function removeAsync<T, Te>(f: AsyncPredicate<T>) {
-  return relayNext<T, Te>((emit) => core.removeAsync(emit, f));
 }
 
 export function take<T, Te>(n: number) {
   return relayNext<T, Te>((emit) => core.take(emit, n));
 }
 
-export function takeWhile<T, Te>(f: Predicate<T>) {
+export function takeWhile<T, Te>(f: Predicate<T> | AsyncPredicate<T>) {
   return relayNext<T, Te>((emit) => core.takeWhile(emit, f));
-}
-
-export function takeWhileAsync<T, Te>(f: AsyncPredicate<T>) {
-  return relayNext<T, Te>((emit) => core.takeWhileAsync(emit, f));
 }
 
 export function skip<T, Te>(n: number) {
   return relayNext<T, Te>((emit) => core.skip(emit, n));
 }
 
-export function skipWhile<T, Te>(f: Predicate<T>) {
+export function skipWhile<T, Te>(f: Predicate<T> | AsyncPredicate<T>) {
   return relayNext<T, Te>((emit) => core.skipWhile(emit, f));
-}
-
-export function skipWhileAsync<T, Te>(f: AsyncPredicate<T>) {
-  return relayNext<T, Te>((emit) => core.skipWhileAsync(emit, f));
 }
 
 export function concat<T, Te>(
@@ -75,16 +55,12 @@ export function race<T, Te>(ss: Emitter<T, Te>[]): Emitter<T, Te> {
   return relay((emit) => core.race(ss, emit));
 }
 
-export function reduce<T, K>(s: Emitter<T>, f: Aggregate<T, K>, v: K) {
-  return _reduce<T, K>((x, j) => core.reduce(x, j, f, v))(s);
-}
-
-export function reduceAsync<T, K>(
+export function reduce<T, K>(
   s: Emitter<T>,
-  f: AsyncAggregate<T, K>,
+  f: Aggregate<T, K> | AsyncAggregate<T, K>,
   v: K
 ) {
-  return _reduce<T, K>((x, j) => core.reduceAsync(x, j, f, v))(s);
+  return _reduce<T, K>((x, j) => core.reduce(x, j, f, v))(s);
 }
 
 export function count(s: Emitter<any>) {
@@ -95,20 +71,12 @@ export function include<T>(s: Emitter<T>, v: T) {
   return _reduce<T, boolean>((x, j) => core.include(x, j, v))(s);
 }
 
-export function every<T>(s: Emitter<T>, f: Predicate<T>) {
+export function every<T>(s: Emitter<T>, f: Predicate<T> | AsyncPredicate<T>) {
   return _reduce<T, boolean>((x, j) => core.every(x, j, f))(s);
 }
 
-export function everyAsync<T>(s: Emitter<T>, f: AsyncPredicate<T>) {
-  return _reduce<T, boolean>((x, j) => core.everyAsync(x, j, f))(s);
-}
-
-export function some<T>(s: Emitter<T>, f: Predicate<T>) {
+export function some<T>(s: Emitter<T>, f: Predicate<T> | AsyncPredicate<T>) {
   return _reduce<T, boolean>((x, j) => core.some(x, j, f))(s);
-}
-
-export function someAsync<T>(s: Emitter<T>, f: AsyncPredicate<T>) {
-  return _reduce<T, boolean>((x, j) => core.someAsync(x, j, f))(s);
 }
 
 export function first<T>(s: Emitter<T>) {

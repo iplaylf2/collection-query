@@ -10,15 +10,9 @@ import {
 } from "../../../type";
 import { EmitType, EmitItem } from "../type";
 
-export function map<T, K>(emit: EmitForm<K, never>, f: Selector<T, K>) {
-  return async (x: T) => {
-    await emit(EmitType.Next, f(x));
-  };
-}
-
-export function mapAsync<T, K>(
+export function map<T, K>(
   emit: EmitForm<K, never>,
-  f: AsyncSelector<T, K>
+  f: Selector<T, K> | AsyncSelector<T, K>
 ) {
   return async (x: T) => {
     const r = await f(x);
@@ -26,15 +20,10 @@ export function mapAsync<T, K>(
   };
 }
 
-export function filter<T>(emit: EmitForm<T, never>, f: Predicate<T>) {
-  return async (x: T) => {
-    if (f(x)) {
-      await emit(EmitType.Next, x);
-    }
-  };
-}
-
-export function filterAsync<T>(emit: EmitForm<T, never>, f: AsyncPredicate<T>) {
+export function filter<T>(
+  emit: EmitForm<T, never>,
+  f: Predicate<T> | AsyncPredicate<T>
+) {
   return async (x: T) => {
     const p = await f(x);
     if (p) {
@@ -43,15 +32,10 @@ export function filterAsync<T>(emit: EmitForm<T, never>, f: AsyncPredicate<T>) {
   };
 }
 
-export function remove<T>(emit: EmitForm<T, never>, f: Predicate<T>) {
-  return async (x: T) => {
-    if (!f(x)) {
-      await emit(EmitType.Next, x);
-    }
-  };
-}
-
-export function removeAsync<T>(emit: EmitForm<T, never>, f: AsyncPredicate<T>) {
+export function remove<T>(
+  emit: EmitForm<T, never>,
+  f: Predicate<T> | AsyncPredicate<T>
+) {
   return async (x: T) => {
     const p = await f(x);
     if (!p) {
@@ -71,19 +55,9 @@ export function take<T>(emit: EmitForm<T, never>, n: number) {
   };
 }
 
-export function takeWhile<T>(emit: EmitForm<T, never>, f: Predicate<T>) {
-  return async (x: T) => {
-    if (f(x)) {
-      await emit(EmitType.Next, x);
-    } else {
-      await emit(EmitType.Complete);
-    }
-  };
-}
-
-export function takeWhileAsync<T>(
+export function takeWhile<T>(
   emit: EmitForm<T, never>,
-  f: AsyncPredicate<T>
+  f: Predicate<T> | AsyncPredicate<T>
 ) {
   return async (x: T) => {
     const p = await f(x);
@@ -111,23 +85,9 @@ export function skip<T>(emit: EmitForm<T, never>, n: number) {
   };
 }
 
-export function skipWhile<T>(emit: EmitForm<T, never>, f: Predicate<T>) {
-  let skip = true;
-  return async (x: T) => {
-    if (skip) {
-      if (!f(x)) {
-        skip = false;
-        await emit(EmitType.Next, x);
-      }
-    } else {
-      await emit(EmitType.Next, x);
-    }
-  };
-}
-
-export function skipWhileAsync<T>(
+export function skipWhile<T>(
   emit: EmitForm<T, never>,
-  f: AsyncPredicate<T>
+  f: Predicate<T> | AsyncPredicate<T>
 ) {
   let skip = true;
   return async (x: T) => {
@@ -178,29 +138,7 @@ export * from "./core/race";
 export function reduce<T, K>(
   resolve: Action<K>,
   reject: Action<any>,
-  f: Aggregate<T, K>,
-  v: K
-) {
-  let r = v;
-  return async (...[t, x]: EmitItem<T, any>) => {
-    switch (t) {
-      case EmitType.Next:
-        r = f(r, x);
-        break;
-      case EmitType.Complete:
-        resolve(r);
-        break;
-      case EmitType.Error:
-        reject(x);
-        break;
-    }
-  };
-}
-
-export function reduceAsync<T, K>(
-  resolve: Action<K>,
-  reject: Action<any>,
-  f: AsyncAggregate<T, K>,
+  f: Aggregate<T, K> | AsyncAggregate<T, K>,
   v: K
 ) {
   let r = v;
@@ -261,29 +199,7 @@ export function include<T>(
 export function every<T>(
   resolve: Action<boolean>,
   reject: Action<any>,
-  f: Predicate<T>
-) {
-  return async (...[t, x]: EmitItem<T, any>) => {
-    switch (t) {
-      case EmitType.Next:
-        if (!f(x)) {
-          resolve(false);
-        }
-        break;
-      case EmitType.Complete:
-        resolve(true);
-        break;
-      case EmitType.Error:
-        reject(x);
-        break;
-    }
-  };
-}
-
-export function everyAsync<T>(
-  resolve: Action<boolean>,
-  reject: Action<any>,
-  f: AsyncPredicate<T>
+  f: Predicate<T> | AsyncPredicate<T>
 ) {
   return async (...[t, x]: EmitItem<T, any>) => {
     switch (t) {
@@ -306,29 +222,7 @@ export function everyAsync<T>(
 export function some<T>(
   resolve: Action<boolean>,
   reject: Action<any>,
-  f: Predicate<T>
-) {
-  return async (...[t, x]: EmitItem<T, any>) => {
-    switch (t) {
-      case EmitType.Next:
-        if (f(x)) {
-          resolve(true);
-        }
-        break;
-      case EmitType.Complete:
-        resolve(false);
-        break;
-      case EmitType.Error:
-        reject(x);
-        break;
-    }
-  };
-}
-
-export function someAsync<T>(
-  resolve: Action<boolean>,
-  reject: Action<any>,
-  f: AsyncPredicate<T>
+  f: Predicate<T> | AsyncPredicate<T>
 ) {
   return async (...[t, x]: EmitItem<T, any>) => {
     switch (t) {
