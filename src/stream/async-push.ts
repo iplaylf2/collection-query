@@ -47,6 +47,10 @@ export function concat<T, Te>(
   return relay((emit) => core.concat(s1, s2, emit));
 }
 
+export function concatAll<T, Te>([s, ...ss]: Emitter<T, Te>[]) {
+  return ss.reduce((r, s) => concat(r, s), s);
+}
+
 export function zip<T, Te>(ss: Emitter<T, Te>[]): Emitter<T[], Te> {
   return relay((emit) => core.zip(ss, emit));
 }
