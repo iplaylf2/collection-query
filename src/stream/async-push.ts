@@ -11,6 +11,7 @@ import { relayNext } from "./push/async/relay-next";
 import * as core from "./push/async/core";
 import { relay } from "./push/async/relay";
 import { reduce as _reduce } from "./push/async/reduce";
+import { relay as relaySync } from "./push/relay";
 
 export function map<T, Te, K>(f: Selector<T, K> | AsyncSelector<T, K>) {
   return relayNext<T, Te, K>((emit) => core.map(emit, f));
@@ -89,4 +90,8 @@ export function first<T>(s: Emitter<T>) {
 
 export function last<T>(s: Emitter<T>) {
   return _reduce<T, T | void>(core.last)(s);
+}
+
+export function sync<T, Te>(s: Emitter<T, Te>) {
+  return relaySync<T, Te>(s as any);
 }
