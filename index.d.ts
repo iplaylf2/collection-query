@@ -1,1 +1,1 @@
-export * from "./type/init";
+export * from "./type/collection-query";
