@@ -1,3 +1,5 @@
-export { Emitter as PushStream } from "./stream/push/type";
-export { create } from "./stream/push/create";
+import { PushStream } from "./stream/type";
+import { Action } from "./type";
+import { EmitForm } from "./stream/push/type";
+export declare const create: <T, Te = never>(executor: Action<EmitForm<T, Te>>) => PushStream<T, Te>;
 export * from "./stream/push";

@@ -10,6 +10,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !exports.hasOwnProperty(p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var create_1 = require("./stream/push/async/create");
-Object.defineProperty(exports, "create", { enumerable: true, get: function () { return create_1.create; } });
+exports.create = void 0;
+const create_1 = require("./stream/push/async/create");
+exports.create = create_1.create;
 __exportStar(require("./stream/async-push"), exports);

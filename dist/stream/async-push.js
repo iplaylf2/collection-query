@@ -6,32 +6,33 @@ const core = require("./push/async/core");
 const relay_1 = require("./push/async/relay");
 const reduce_1 = require("./push/async/reduce");
 const relay_2 = require("./push/relay");
+const relayNext = relay_next_1.relayNext;
 function map(f) {
-    return relay_next_1.relayNext((emit) => core.map(emit, f));
+    return relayNext((emit) => core.map(emit, f));
 }
 exports.map = map;
 function filter(f) {
-    return relay_next_1.relayNext((emit) => core.filter(emit, f));
+    return relayNext((emit) => core.filter(emit, f));
 }
 exports.filter = filter;
 function remove(f) {
-    return relay_next_1.relayNext((emit) => core.remove(emit, f));
+    return relayNext((emit) => core.remove(emit, f));
 }
 exports.remove = remove;
 function take(n) {
-    return relay_next_1.relayNext((emit) => core.take(emit, n));
+    return relayNext((emit) => core.take(emit, n));
 }
 exports.take = take;
 function takeWhile(f) {
-    return relay_next_1.relayNext((emit) => core.takeWhile(emit, f));
+    return relayNext((emit) => core.takeWhile(emit, f));
 }
 exports.takeWhile = takeWhile;
 function skip(n) {
-    return relay_next_1.relayNext((emit) => core.skip(emit, n));
+    return relayNext((emit) => core.skip(emit, n));
 }
 exports.skip = skip;
 function skipWhile(f) {
-    return relay_next_1.relayNext((emit) => core.skipWhile(emit, f));
+    return relayNext((emit) => core.skipWhile(emit, f));
 }
 exports.skipWhile = skipWhile;
 function concat(s1, s2) {
@@ -78,7 +79,4 @@ function last(s) {
     return reduce_1.reduce(core.last)(s);
 }
 exports.last = last;
-function sync(s) {
-    return relay_2.relay(s);
-}
-exports.sync = sync;
+exports.sync = relay_2.relay;
