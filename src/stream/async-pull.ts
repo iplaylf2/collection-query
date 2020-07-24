@@ -13,16 +13,7 @@ import * as core from "./pull/async/core";
 
 export async function forEach<T>(
   s: Func<AsyncIterableIterator<T>>,
-  f: Action<T>
-) {
-  for await (const x of s()) {
-    f(x);
-  }
-}
-
-export async function forEachAsync<T>(
-  s: Func<AsyncIterableIterator<T>>,
-  f: AsyncAction<T>
+  f: Action<T> | AsyncAction<T>
 ) {
   for await (const x of s()) {
     await f(x);
