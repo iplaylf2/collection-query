@@ -1,7 +1,7 @@
 import { Action } from "../../../type";
 import { EmitForm, Emitter } from "./type";
 
-interface ReduceHandler<T, K> {
+export interface ReduceHandler<T, K> {
   (resolve: Action<K>, reject: Action<any>): EmitForm<T, any>;
 }
 

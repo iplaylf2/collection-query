@@ -1,10 +1,14 @@
+import { PushStream, AsyncPushStream } from "./type";
+import { relayNext as _relayNext, RelayNextHandler } from "./push/relay-next";
 import { Selector, Predicate, Aggregate } from "../type";
-import { Emitter } from "./push/type";
-import { relayNext } from "./push/relay-next";
 import * as core from "./push/core";
 import { relay } from "./push/relay";
 import { reduce as _reduce } from "./push/reduce";
 import { relay as relayAsync } from "./push/async/relay";
+
+const relayNext: <T, Te, K = T>(
+  handler: RelayNextHandler<T, Te, K>
+) => (s: PushStream<T, Te>) => PushStream<K, Te> = _relayNext;
 
 export function map<T, Te, K>(f: Selector<T, K>) {
   return relayNext<T, Te, K>((emit) => core.map(emit, f));
@@ -35,52 +39,52 @@ export function skipWhile<T, Te>(f: Predicate<T>) {
 }
 
 export function concat<T, Te>(
-  s1: Emitter<T, Te>,
-  s2: Emitter<T, Te>
-): Emitter<T, Te> {
+  s1: PushStream<T, Te>,
+  s2: PushStream<T, Te>
+): PushStream<T, Te> {
   return relay((emit) => core.concat(s1, s2, emit));
 }
 
-export function concatAll<T, Te>([s, ...ss]: Emitter<T, Te>[]) {
+export function concatAll<T, Te>([s, ...ss]: PushStream<T, Te>[]) {
   return ss.reduce((r, s) => concat(r, s), s);
 }
 
-export function zip<T, Te>(ss: Emitter<T, Te>[]): Emitter<T[], Te> {
+export function zip<T, Te>(ss: PushStream<T, Te>[]): PushStream<T[], Te> {
   return relay((emit) => core.zip(ss, emit));
 }
 
-export function race<T, Te>(ss: Emitter<T, Te>[]): Emitter<T, Te> {
+export function race<T, Te>(ss: PushStream<T, Te>[]): PushStream<T, Te> {
   return relay((emit) => core.race(ss, emit));
 }
 
-export function reduce<T, K>(s: Emitter<T>, f: Aggregate<T, K>, v: K) {
+export function reduce<T, K>(s: PushStream<T>, f: Aggregate<T, K>, v: K) {
   return _reduce<T, K>((x, j) => core.reduce(x, j, f, v))(s);
 }
 
-export function count(s: Emitter<any>) {
+export function count(s: PushStream<any>) {
   return _reduce<any, number>(core.count)(s);
 }
 
-export function include<T>(s: Emitter<T>, v: T) {
+export function include<T>(s: PushStream<T>, v: T) {
   return _reduce<T, boolean>((x, j) => core.include(x, j, v))(s);
 }
 
-export function every<T>(s: Emitter<T>, f: Predicate<T>) {
+export function every<T>(s: PushStream<T>, f: Predicate<T>) {
   return _reduce<T, boolean>((x, j) => core.every(x, j, f))(s);
 }
 
-export function some<T>(s: Emitter<T>, f: Predicate<T>) {
+export function some<T>(s: PushStream<T>, f: Predicate<T>) {
   return _reduce<T, boolean>((x, j) => core.some(x, j, f))(s);
 }
 
-export function first<T>(s: Emitter<T>) {
+export function first<T>(s: PushStream<T>) {
   return _reduce<T, T | void>(core.first)(s);
 }
 
-export function last<T>(s: Emitter<T>) {
+export function last<T>(s: PushStream<T>) {
   return _reduce<T, T | void>(core.last)(s);
 }
 
-export function async<T, Te>(s: Emitter<T, Te>) {
-  return relayAsync(s);
-}
+export const async: <T, Te>(
+  s: PushStream<T, Te>
+) => AsyncPushStream<T, Te> = relayAsync;

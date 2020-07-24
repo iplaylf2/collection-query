@@ -2,7 +2,7 @@ import { Emitter, EmitForm } from "./type";
 import { relay } from "./relay";
 import { EmitType } from "../type";
 
-interface RelayNextHandler<T, Te, K> {
+export interface RelayNextHandler<T, Te, K> {
   (emit: EmitForm<K, Te>): (x: T) => Promise<void>;
 }
 

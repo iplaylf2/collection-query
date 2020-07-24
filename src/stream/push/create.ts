@@ -1,7 +1,7 @@
 import { Action } from "../../type";
 import { EmitForm, EmitItem, EmitType } from "./type";
 
-export function create<T, Te>(executor: Action<EmitForm<T, Te>>) {
+export function create<T, Te = never>(executor: Action<EmitForm<T, Te>>) {
   return (receiver: EmitForm<T, Te>) => {
     const handler = new EmitterHandler(receiver);
     handler.start(executor);
