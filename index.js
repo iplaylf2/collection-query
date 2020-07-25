@@ -1,2 +1,2 @@
 "use strict";
-module.exports = require("./dist/init.js");
+module.exports = require("./dist/collection-query.js");
