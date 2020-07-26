@@ -26,6 +26,7 @@ class ZipCollector {
             const receiver = this.collect(index, linkedZip);
             const cancel = emitter(receiver);
             this.cancelList.push(cancel);
+            index++;
         }
     }
     cancel() {

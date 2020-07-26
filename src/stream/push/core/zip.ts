@@ -32,6 +32,7 @@ class ZipCollector<T, Te> {
       const cancel = emitter(receiver);
 
       this.cancelList.push(cancel);
+      index++;
     }
   }
 
