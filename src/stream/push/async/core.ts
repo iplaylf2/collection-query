@@ -9,7 +9,7 @@ import {
   AsyncAggregate,
 } from "../../../type";
 import { EmitType, EmitItem } from "../type";
-import { getPartitionCollector } from "../../common/get-partition-collector";
+import { PartitionCollector } from "../../common/partition-collector";
 
 export function map<T, K>(
   emit: EmitForm<K, never>,
@@ -115,7 +115,7 @@ export function partition<T, Te>(
     return () => {};
   }
 
-  const collector = getPartitionCollector<T>(n, step);
+  const collector = new PartitionCollector<T>(n, step);
   return emitter(async (t, x?) => {
     switch (t) {
       case EmitType.Next:

@@ -1,6 +1,6 @@
 import { EmitForm, EmitType, Emitter, EmitItem } from "./type";
 import { Selector, Predicate, Action, Aggregate } from "../../type";
-import { getPartitionCollector } from "../common/get-partition-collector";
+import { PartitionCollector } from "../common/partition-collector";
 
 export function map<T, K>(emit: EmitForm<K, never>, f: Selector<T, K>) {
   return (x: T) => {
@@ -86,7 +86,7 @@ export function partition<T, Te>(
     return () => {};
   }
 
-  const collector = getPartitionCollector<T>(n, step);
+  const collector = new PartitionCollector<T>(n, step);
   return emitter((t, x?) => {
     switch (t) {
       case EmitType.Next:
