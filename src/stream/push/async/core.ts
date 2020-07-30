@@ -10,6 +10,7 @@ import {
 } from "../../../type";
 import { EmitType, EmitItem } from "../type";
 import { PartitionCollector } from "../../common/partition-collector";
+import { PartitionByCollector } from "../../common/partition-by-collector";
 
 export function map<T, K>(
   emit: EmitForm<K, never>,
@@ -107,15 +108,14 @@ export function skipWhile<T>(
 export function partition<T, Te>(
   emitter: Emitter<T, Te>,
   emit: EmitForm<T[], Te>,
-  n: number,
-  step: number
+  n: number
 ) {
-  if (n <= 0 || step <= 0) {
+  if (!(n > 0)) {
     emit(EmitType.Complete);
     return () => {};
   }
 
-  const collector = new PartitionCollector<T>(n, step);
+  const collector = new PartitionCollector<T>(n);
   return emitter(async (t, x?) => {
     switch (t) {
       case EmitType.Next:
@@ -128,9 +128,9 @@ export function partition<T, Te>(
         break;
       case EmitType.Complete:
         {
-          const partition = collector.getRest();
-          if (partition.length > 0) {
-            await emit(EmitType.Next, partition);
+          const [rest, partition] = collector.getRest();
+          if (rest) {
+            await emit(EmitType.Next, partition!);
           }
 
           emit(EmitType.Complete);
@@ -147,38 +147,27 @@ export function partitionBy<T, Te>(
   emit: EmitForm<T[], Te>,
   f: Selector<T, any> | AsyncSelector<T, any>
 ) {
-  let active = false;
-
-  let partition: T[] = [];
-  let key: any;
+  const collector = new PartitionByCollector<T>(f);
 
   return emitter(async (t, x?) => {
     switch (t) {
       case EmitType.Next:
-        x = x as T;
-
-        const k = await f(x);
-
-        if (!active) {
-          active = true;
-          key = k;
-        }
-
-        if (k === key) {
-          partition.push(x);
-        } else {
-          await emit(EmitType.Next, partition);
-
-          partition = [x];
-          key = k;
+        {
+          const [full, partition] = collector.collect(x as T);
+          if (full) {
+            await emit(EmitType.Next, partition!);
+          }
         }
         break;
       case EmitType.Complete:
-        if (active) {
-          await emit(EmitType.Next, partition);
-        }
+        {
+          const [rest, partition] = collector.getRest();
+          if (rest) {
+            await emit(EmitType.Next, partition!);
+          }
 
-        emit(EmitType.Complete);
+          emit(EmitType.Complete);
+        }
         break;
       case EmitType.Error:
         emit(EmitType.Error, x as Te);
