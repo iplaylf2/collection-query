@@ -89,12 +89,12 @@ export function* zip<T>(ss: Func<IterableIterator<T>>[]) {
   const ii = ss.map((s) => s());
 
   while (true) {
-    const iiResult = ii.map((i) => i.next());
-    const done = iiResult.some(({ done }) => done);
+    const ii_result = ii.map((i) => i.next());
+    const done = ii_result.some(({ done }) => done);
     if (done) {
       break;
     } else {
-      const result: T[] = iiResult.map(({ value }) => value);
+      const result: T[] = ii_result.map(({ value }) => value);
       yield result;
     }
   }

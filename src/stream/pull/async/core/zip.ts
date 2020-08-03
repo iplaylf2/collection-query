@@ -7,10 +7,10 @@ export async function* zip<T>(ss: Func<AsyncIterableIterator<T>>[]) {
   }
 
   const ii = ss.map((s) => s());
-  const zipCollector = new ZipCollector(ii);
+  const zip_collector = new ZipCollector(ii);
 
   while (true) {
-    const [done, x] = await zipCollector.startRound();
+    const [done, x] = await zip_collector.startRound();
     if (done) {
       return;
     }
@@ -27,13 +27,13 @@ class ZipCollector<T> {
   }
 
   startRound() {
-    let handleResult!: Action<IterateItem<T[]>>, handleError!: Action<any>;
-    const roundResult = new Promise<IterateItem<T[]>>(
-      (resolve, reject) => ((handleResult = resolve), (handleError = reject))
+    let handle_result!: Action<IterateItem<T[]>>, handle_error!: Action<any>;
+    const round_result = new Promise<IterateItem<T[]>>(
+      (resolve, reject) => ((handle_result = resolve), (handle_error = reject))
     );
 
-    this.setRoundResult = handleResult;
-    this.setRoundError = handleError;
+    this.setRoundResult = handle_result;
+    this.setRoundError = handle_error;
     this.count = 0;
 
     let index = 0;
@@ -42,7 +42,7 @@ class ZipCollector<T> {
       index++;
     }
 
-    return roundResult;
+    return round_result;
   }
 
   private async collect(index: number) {

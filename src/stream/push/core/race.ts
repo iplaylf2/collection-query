@@ -7,11 +7,11 @@ export function race<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T, Te>) {
     return () => {};
   }
 
-  const raceDispatch = new RaceDispatch(ee, emit);
+  const race_dispatch = new RaceDispatch(ee, emit);
 
-  raceDispatch.start();
+  race_dispatch.start();
 
-  return raceDispatch.cancel.bind(raceDispatch);
+  return race_dispatch.cancel.bind(race_dispatch);
 }
 
 class RaceDispatch<T, Te> {

@@ -1,41 +1,41 @@
 import { PushStream, AsyncPushStream } from "./type";
-import { relayNext as _relayNext, RelayNextHandler } from "./push/relay-next";
+import { relayNext as _relay_next, RelayNextHandler } from "./push/relay-next";
 import { Selector, Predicate, Aggregate } from "../type";
 import * as core from "./push/core";
 import { relay } from "./push/relay";
 import { reduce as _reduce } from "./push/reduce";
-import { relay as relayAsync } from "./push/async/relay";
+import { relay as relay_async } from "./push/async/relay";
 
-const relayNext: <T, Te, K = T>(
+const relay_next: <T, Te, K = T>(
   handler: RelayNextHandler<T, Te, K>
-) => (s: PushStream<T, Te>) => PushStream<K, Te> = _relayNext;
+) => (s: PushStream<T, Te>) => PushStream<K, Te> = _relay_next;
 
 export function map<T, Te, K>(f: Selector<T, K>) {
-  return relayNext<T, Te, K>((emit) => core.map(emit, f));
+  return relay_next<T, Te, K>((emit) => core.map(emit, f));
 }
 
 export function filter<T, Te>(f: Predicate<T>) {
-  return relayNext<T, Te>((emit) => core.filter(emit, f));
+  return relay_next<T, Te>((emit) => core.filter(emit, f));
 }
 
 export function remove<T, Te>(f: Predicate<T>) {
-  return relayNext<T, Te>((emit) => core.remove(emit, f));
+  return relay_next<T, Te>((emit) => core.remove(emit, f));
 }
 
 export function take<T, Te>(n: number) {
-  return relayNext<T, Te>((emit) => core.take(emit, n));
+  return relay_next<T, Te>((emit) => core.take(emit, n));
 }
 
 export function takeWhile<T, Te>(f: Predicate<T>) {
-  return relayNext<T, Te>((emit) => core.takeWhile(emit, f));
+  return relay_next<T, Te>((emit) => core.takeWhile(emit, f));
 }
 
 export function skip<T, Te>(n: number) {
-  return relayNext<T, Te>((emit) => core.skip(emit, n));
+  return relay_next<T, Te>((emit) => core.skip(emit, n));
 }
 
 export function skipWhile<T, Te>(f: Predicate<T>) {
-  return relayNext<T, Te>((emit) => core.skipWhile(emit, f));
+  return relay_next<T, Te>((emit) => core.skipWhile(emit, f));
 }
 
 export function concat<T, Te>(
@@ -87,4 +87,4 @@ export function last<T>(s: PushStream<T>) {
 
 export const async: <T, Te>(
   s: PushStream<T, Te>
-) => AsyncPushStream<T, Te> = relayAsync;
+) => AsyncPushStream<T, Te> = relay_async;

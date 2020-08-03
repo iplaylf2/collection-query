@@ -8,18 +8,18 @@ export function race<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T, Te>) {
     return () => {};
   }
 
-  const raceDispatch = new RaceDispatch(ee, emit);
+  const race_dispatch = new RaceDispatch(ee, emit);
 
-  raceDispatch.start();
+  race_dispatch.start();
 
-  return raceDispatch.cancel.bind(raceDispatch);
+  return race_dispatch.cancel.bind(race_dispatch);
 }
 
 class RaceDispatch<T, Te> {
   constructor(ee: Emitter<T, Te>[], emit: EmitForm<T, Te>) {
     this.ee = ee;
     this.emit = emit;
-    this.cancelList = [];
+    this.cancel_list = [];
     this.count = this.ee.length;
   }
 
@@ -28,12 +28,12 @@ class RaceDispatch<T, Te> {
       const receiver = this.join.bind(this);
       const cancel = emitter(receiver);
 
-      this.cancelList.push(cancel);
+      this.cancel_list.push(cancel);
     }
   }
 
   cancel() {
-    for (const cancel of this.cancelList) {
+    for (const cancel of this.cancel_list) {
       cancel();
     }
   }
@@ -71,6 +71,6 @@ class RaceDispatch<T, Te> {
   private emit: EmitForm<T, Te>;
 
   private readonly ee: Emitter<T, Te>[];
-  private readonly cancelList: Action<void>[];
+  private readonly cancel_list: Action<void>[];
   private count: number;
 }

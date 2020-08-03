@@ -8,11 +8,11 @@ export function zip<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T[], Te>) {
     return () => {};
   }
 
-  const zipCollector = new ZipCollector(ee, emit);
+  const zip_collector = new ZipCollector(ee, emit);
 
-  zipCollector.start();
+  zip_collector.start();
 
-  return zipCollector.cancel.bind(zipCollector);
+  return zip_collector.cancel.bind(zip_collector);
 }
 
 class ZipCollector<T, Te> {
@@ -23,13 +23,13 @@ class ZipCollector<T, Te> {
   }
 
   start() {
-    const linkedZip = new LinkedZip<T>(this.ee.length);
+    const linked_zip = new LinkedZip<T>(this.ee.length);
 
     let index = 0;
     for (const emitter of this.ee) {
-      linkedZip.checkIn(index);
+      linked_zip.checkIn(index);
 
-      const receiver = this.collect(index, linkedZip);
+      const receiver = this.collect(index, linked_zip);
       const cancel = emitter(receiver);
 
       this.cancelList.push(cancel);
@@ -43,14 +43,14 @@ class ZipCollector<T, Te> {
     }
   }
 
-  private collect(index: number, linkedZip: LinkedZip<T>): EmitForm<T, Te> {
+  private collect(index: number, linked_zip: LinkedZip<T>): EmitForm<T, Te> {
     return async (t, x?) => {
       switch (t) {
         case EmitType.Next:
-          linkedZip = await this.handleNext(index, linkedZip, x as T);
+          linked_zip = await this.handleNext(index, linked_zip, x as T);
           break;
         case EmitType.Complete:
-          this.handleComplete(linkedZip);
+          this.handleComplete(linked_zip);
           break;
         case EmitType.Error:
           this.handleError(x as Te);
@@ -59,29 +59,29 @@ class ZipCollector<T, Te> {
     };
   }
 
-  private async handleNext(index: number, linkedZip: LinkedZip<T>, x: T) {
-    const [full, content] = linkedZip.zip(index, x);
+  private async handleNext(index: number, linked_zip: LinkedZip<T>, x: T) {
+    const [full, content] = linked_zip.zip(index, x);
     if (full) {
       await this.emit(EmitType.Next, content);
     }
 
-    linkedZip = linkedZip.getNext();
-    linkedZip.checkIn(index);
+    linked_zip = linked_zip.getNext();
+    linked_zip.checkIn(index);
 
-    if (linkedZip.broken) {
+    if (linked_zip.broken) {
       this.cancelList[index]();
 
-      if (linkedZip.isAllCheckIn()) {
+      if (linked_zip.isAllCheckIn()) {
         this.emit(EmitType.Complete);
       }
     }
 
-    return linkedZip;
+    return linked_zip;
   }
 
-  private handleComplete(linkedZip: LinkedZip<T>) {
-    const [full, checkInList] = linkedZip.break();
-    for (const index of checkInList) {
+  private handleComplete(linked_zip: LinkedZip<T>) {
+    const [full, check_in_list] = linked_zip.break();
+    for (const index of check_in_list) {
       this.cancelList[index]();
     }
 

@@ -8,24 +8,24 @@ export interface RelayHandler<T, Te> {
 
 export function relay<T, Te>(handler: RelayHandler<T, Te>): Emitter<T, Te> {
   return (receiver: EmitForm<T, Te>) => {
-    let cancelEarly = false;
-    let sourceCancel: Action<void> = function () {
-      cancelEarly = true;
+    let cancel_early = false;
+    let source_cancel: Action<void> = function () {
+      cancel_early = true;
     };
 
-    const relayEmitter = create<T, Te>((emit) => {
-      if (cancelEarly) {
+    const relay_emitter = create<T, Te>((emit) => {
+      if (cancel_early) {
         return;
       }
 
-      sourceCancel = handler(emit);
+      source_cancel = handler(emit);
     });
 
-    const relayCancel = relayEmitter(receiver);
+    const relay_cancel = relay_emitter(receiver);
 
     const cancel = function () {
-      relayCancel();
-      sourceCancel();
+      relay_cancel();
+      source_cancel();
     };
 
     return cancel;

@@ -21,17 +21,17 @@ export async function* race<T>(ss: Func<AsyncIterableIterator<T>>[]) {
 
 class RaceDispatcher<T> {
   static startRound<T>(dispatcher: RaceDispatcher<T>, start: Action<void>) {
-    let handleResult!: Action<IterateItem<T>>, handleError!: Action<any>;
-    const roundResult = new Promise<IterateItem<T>>(
-      (resolve, reject) => ((handleResult = resolve), (handleError = reject))
+    let handle_result!: Action<IterateItem<T>>, handle_error!: Action<any>;
+    const round_result = new Promise<IterateItem<T>>(
+      (resolve, reject) => ((handle_result = resolve), (handle_error = reject))
     );
 
-    dispatcher.setRoundResult = handleResult;
-    dispatcher.setRoundError = handleError;
+    dispatcher.setRoundResult = handle_result;
+    dispatcher.setRoundError = handle_error;
     dispatcher.idle = true;
     start();
 
-    return roundResult;
+    return round_result;
   }
 
   constructor(ii: AsyncIterableIterator<T>[]) {
