@@ -22,7 +22,7 @@ export class PartitionByCollector<T> {
     } else {
       this.key = key;
 
-      const result = this.partition.slice();
+      const result = this.partition;
       this.partition = [x];
 
       return [true, result];
