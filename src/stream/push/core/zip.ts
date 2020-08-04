@@ -2,102 +2,74 @@ import { Emitter, EmitForm, EmitType } from "../type";
 import { Action } from "../../../type";
 
 export function zip<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T[], Te>) {
-  if (ee.length === 0) {
+  const total = ee.length;
+  if (!(total > 0)) {
     emit(EmitType.Complete);
     return () => {};
   }
 
-  const zip_collector = new ZipCollector(ee, emit);
+  const cancel_list = new Array<Action<void>>(total);
 
-  zip_collector.start();
+  const linked_zip_start = new LinkedZip<T>(total);
 
-  return zip_collector.cancel.bind(zip_collector);
-}
+  let index = 0;
+  for (const emitter of ee) {
+    let linked_zip = linked_zip_start;
 
-class ZipCollector<T, Te> {
-  constructor(ee: Emitter<T, Te>[], emit: EmitForm<T[], Te>) {
-    this.ee = ee;
-    this.emit = emit;
-    this.cancelList = [];
-  }
-
-  start() {
-    const linked_zip = new LinkedZip<T>(this.ee.length);
-
-    let index = 0;
-    for (const emitter of this.ee) {
-      linked_zip.checkIn(index);
-
-      const receiver = this.collect(index, linked_zip);
-      const cancel = emitter(receiver);
-
-      this.cancelList.push(cancel);
-      index++;
-    }
-  }
-
-  cancel() {
-    for (const cancel of this.cancelList) {
-      cancel();
-    }
-  }
-
-  private collect(index: number, linked_zip: LinkedZip<T>): EmitForm<T, Te> {
-    return (t, x?) => {
-      switch (t) {
-        case EmitType.Next:
-          linked_zip = this.handleNext(index, linked_zip, x as T);
-          break;
-        case EmitType.Complete:
-          this.handleComplete(linked_zip);
-          break;
-        case EmitType.Error:
-          this.handleError(x as Te);
-          break;
-      }
-    };
-  }
-
-  private handleNext(index: number, linked_zip: LinkedZip<T>, x: T) {
-    const [full, content] = linked_zip.zip(index, x);
-    if (full) {
-      this.emit(EmitType.Next, content);
-    }
-
-    linked_zip = linked_zip.getNext();
     linked_zip.checkIn(index);
 
-    if (linked_zip.broken) {
-      this.cancelList[index]();
+    const i = index;
+    const cancel = emitter((t, x?) => {
+      switch (t) {
+        case EmitType.Next:
+          {
+            const [full, result] = linked_zip.zip(i, x as T);
+            if (full) {
+              emit(EmitType.Next, result!);
+            }
 
-      if (linked_zip.isAllCheckIn()) {
-        this.emit(EmitType.Complete);
+            linked_zip = linked_zip.getNext(index);
+
+            if (linked_zip.broken) {
+              cancel_list[i]();
+
+              if (linked_zip.isAllCheckIn()) {
+                emit(EmitType.Complete);
+              }
+            }
+          }
+          break;
+        case EmitType.Complete:
+          {
+            const [full, check_in_list] = linked_zip.break();
+            for (const i of check_in_list!) {
+              cancel_list[i]();
+            }
+
+            if (full) {
+              emit(EmitType.Complete);
+            }
+          }
+          break;
+        case EmitType.Error:
+          cancel();
+          emit(EmitType.Error, x as Te);
+          break;
       }
-    }
+    });
 
-    return linked_zip;
+    cancel_list[index] = cancel;
+
+    index++;
   }
 
-  private handleComplete(linked_zip: LinkedZip<T>) {
-    const [full, check_in_list] = linked_zip.break();
-    for (const index of check_in_list) {
-      this.cancelList[index]();
+  const cancel = function () {
+    for (const c of cancel_list) {
+      c();
     }
+  };
 
-    if (full) {
-      this.emit(EmitType.Complete);
-    }
-  }
-
-  private handleError(x: Te) {
-    this.cancel();
-    this.emit(EmitType.Error, x);
-  }
-
-  private emit: EmitForm<T[], Te>;
-
-  private readonly ee: Emitter<T, Te>[];
-  private readonly cancelList: Action<void>[];
+  return cancel;
 }
 
 class LinkedZip<T> {
@@ -113,16 +85,18 @@ class LinkedZip<T> {
     this.checkInList.push(index);
   }
 
-  zip(index: number, x: T): [boolean, T[]] {
+  zip(index: number, x: T): [true, T[]] | [false] {
     this.zipContent[index] = x;
     this.zipCount++;
-    return [this.zipCount === this.total, this.zipContent];
+    return [(this.zipCount === this.total) as true, this.zipContent];
   }
 
-  getNext() {
+  getNext(index: number) {
     if (!this.next) {
       this.next = new LinkedZip(this.total);
     }
+
+    this.next.checkIn(index);
 
     return this.next;
   }
