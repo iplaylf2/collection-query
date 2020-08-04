@@ -176,7 +176,41 @@ export function concat<T, Te>(
 }
 
 export * from "./core/zip";
-export * from "./core/race";
+
+export function race<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T, Te>) {
+  let count = ee.length;
+  if (!(count > 0)) {
+    emit(EmitType.Complete);
+    return () => {};
+  }
+
+  const cancel_list = ee.map((emitter) =>
+    emitter((t, x?) => {
+      switch (t) {
+        case EmitType.Next:
+          emit(EmitType.Next, x as T);
+          break;
+        case EmitType.Complete:
+          count--;
+          if (!(count > 0)) {
+            emit(EmitType.Complete);
+          }
+          break;
+        case EmitType.Error:
+          cancel();
+          emit(EmitType.Error, x as Te);
+      }
+    })
+  );
+
+  const cancel = function () {
+    for (const c of cancel_list) {
+      c();
+    }
+  };
+
+  return cancel;
+}
 
 export function reduce<T, K>(
   resolve: Action<K>,
