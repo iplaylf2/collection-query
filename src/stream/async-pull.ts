@@ -78,7 +78,7 @@ export async function reduce<T, K>(
   f: Aggregate<T, K> | AsyncAggregate<T, K>,
   v: K
 ) {
-  var r = v;
+  let r = v;
   for await (const x of s()) {
     r = await f(r, x);
   }
@@ -86,7 +86,7 @@ export async function reduce<T, K>(
 }
 
 export async function count(s: AsyncPullStream<any>) {
-  var n = 0;
+  let n = 0;
   for await (const _x of s()) {
     n++;
   }
@@ -134,7 +134,7 @@ export async function first<T>(s: AsyncPullStream<T>) {
 }
 
 export async function last<T>(s: AsyncPullStream<T>) {
-  var last;
+  let last;
   for await (const x of s()) {
     last = x;
   }
