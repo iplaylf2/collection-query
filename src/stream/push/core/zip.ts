@@ -28,14 +28,19 @@ export function zip<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T[], Te>) {
               emit(EmitType.Next, result!);
             }
 
-            linked_zip = linked_zip.getNext(i);
+            const [status, next_linked] = linked_zip.getNext(i);
 
-            if (linked_zip.broken) {
-              cancel_list[i]();
-
-              if (linked_zip.isAllCheckIn()) {
+            switch (status) {
+              case LinkedZipStatus.Active:
+                linked_zip = next_linked;
+                break;
+              case LinkedZipStatus.Broken:
+                cancel_list[i]();
+                break;
+              case LinkedZipStatus.Inactive:
+                cancel_list[i]();
                 emit(EmitType.Complete);
-              }
+                break;
             }
           }
           break;
@@ -91,32 +96,49 @@ class LinkedZip<T> {
     return [(this.zipCount === this.total) as true, this.zipContent];
   }
 
-  getNext(index: number) {
+  getNext(index: number): [LinkedZipStatus, LinkedZip<T>] {
     if (!this.next) {
       this.next = new LinkedZip(this.total);
     }
 
     this.next.checkIn(index);
 
-    return this.next;
-  }
+    let status: LinkedZipStatus;
+    if (this.broken) {
+      if (this.isAllCheckIn()) {
+        status = LinkedZipStatus.Inactive;
+      } else {
+        status = LinkedZipStatus.Broken;
+      }
+    } else {
+      status = LinkedZipStatus.Active;
+    }
 
-  isAllCheckIn() {
-    return this.checkInList.length === this.total;
+    return [status, this.next];
   }
 
   break(): [boolean, number[]] {
     this.broken = true;
+    this.zipContent = null!;
     this.next = null!;
 
     return [this.isAllCheckIn(), this.checkInList];
   }
 
-  broken: boolean;
+  private isAllCheckIn() {
+    return this.checkInList.length === this.total;
+  }
 
   private readonly total: number;
   private readonly checkInList: number[];
-  private readonly zipContent: T[];
+  private broken: boolean;
+  private zipContent: T[];
   private zipCount!: number;
   private next!: LinkedZip<T>;
+}
+
+enum LinkedZipStatus {
+  Active,
+  Broken,
+  Inactive,
 }
