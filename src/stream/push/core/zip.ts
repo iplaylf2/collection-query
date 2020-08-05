@@ -28,7 +28,7 @@ export function zip<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T[], Te>) {
               emit(EmitType.Next, result!);
             }
 
-            linked_zip = linked_zip.getNext(index);
+            linked_zip = linked_zip.getNext(i);
 
             if (linked_zip.broken) {
               cancel_list[i]();
