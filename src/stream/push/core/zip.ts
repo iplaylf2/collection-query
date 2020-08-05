@@ -18,27 +18,27 @@ export function zip<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T[], Te>) {
 
     linked_zip.checkIn(index);
 
-    const i = index;
+    const _index = index;
     const cancel = emitter((t, x?) => {
       switch (t) {
         case EmitType.Next:
           {
-            const [full, result] = linked_zip.zip(i, x as T);
+            const [full, result] = linked_zip.zip(_index, x as T);
             if (full) {
               emit(EmitType.Next, result!);
             }
 
-            const [status, next_linked] = linked_zip.getNext(i);
+            const [status, next_linked] = linked_zip.getNext(_index);
 
             switch (status) {
               case LinkedZipStatus.Active:
                 linked_zip = next_linked;
                 break;
               case LinkedZipStatus.Broken:
-                cancel_list[i]();
+                cancel_list[_index]();
                 break;
               case LinkedZipStatus.Inactive:
-                cancel_list[i]();
+                cancel_list[_index]();
                 emit(EmitType.Complete);
                 break;
             }
