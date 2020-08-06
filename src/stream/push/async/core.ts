@@ -252,7 +252,7 @@ export function race<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T, Te>) {
         break;
       }
 
-      emit(EmitType.Next, x!);
+      await emit(EmitType.Next, x!);
     }
 
     emit(EmitType.Complete);
