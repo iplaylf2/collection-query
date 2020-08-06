@@ -11,6 +11,7 @@ import {
 import { EmitType, EmitItem } from "../type";
 import { PartitionCollector } from "../../common/partition-collector";
 import { PartitionByCollector } from "../../common/partition-by-collector";
+import { RaceDispatcher } from "../../common/async/race-dispatcher";
 
 export function map<T, K>(
   emit: EmitForm<K, never>,
@@ -205,7 +206,60 @@ export function concat<T, Te>(
 }
 
 export * from "./core/zip";
-export * from "./core/race";
+
+export function race<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T, Te>) {
+  const total = ee.length;
+  if (!(total > 0)) {
+    emit(EmitType.Complete);
+    return () => {};
+  }
+
+  const dispatcher = new RaceDispatcher<T>(total);
+
+  const cancel_list = ee.map((emitter) =>
+    emitter(async (t, x?) => {
+      switch (t) {
+        case EmitType.Next:
+          await dispatcher.race(x as T);
+          break;
+        case EmitType.Complete:
+          dispatcher.leave();
+          break;
+        case EmitType.Error:
+          cancel();
+          dispatcher.crash(x as Te);
+          break;
+      }
+    })
+  );
+
+  const cancel = function () {
+    for (const c of cancel_list) {
+      c();
+    }
+  };
+
+  (async function () {
+    while (true) {
+      try {
+        var [done, x] = await dispatcher.next();
+      } catch (e) {
+        emit(EmitType.Error, e);
+        return;
+      }
+
+      if (done) {
+        break;
+      }
+
+      emit(EmitType.Next, x!);
+    }
+
+    emit(EmitType.Complete);
+  })();
+
+  return cancel;
+}
 
 export function reduce<T, K>(
   resolve: Action<K>,
