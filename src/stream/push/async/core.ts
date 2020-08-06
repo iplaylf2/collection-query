@@ -53,7 +53,7 @@ export function take<T>(emit: EmitForm<T, never>, n: number) {
       n--;
       await emit(EmitType.Next, x);
     } else {
-      await emit(EmitType.Complete);
+      emit(EmitType.Complete);
     }
   };
 }
@@ -67,7 +67,7 @@ export function takeWhile<T>(
     if (p) {
       await emit(EmitType.Next, x);
     } else {
-      await emit(EmitType.Complete);
+      emit(EmitType.Complete);
     }
   };
 }
