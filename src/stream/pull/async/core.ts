@@ -5,6 +5,7 @@ import {
   AsyncPredicate,
   Func,
 } from "../../../type";
+import { RaceDispatcher } from "../../common/async/race-dispatcher";
 
 export async function* map<T, K>(
   iterator: AsyncIterableIterator<T>,
@@ -107,4 +108,40 @@ export async function* concat<T>(
 }
 
 export * from "./core/zip";
-export * from "./core/race";
+
+export async function* race<T>(ss: Func<AsyncIterableIterator<T>>[]) {
+  const total = ss.length;
+  if (!(total > 0)) {
+    return;
+  }
+
+  const dispatcher = new RaceDispatcher<T>(total);
+
+  ss.map((s) => s()).forEach(async (i) => {
+    while (true) {
+      try {
+        var { done, value } = await i.next();
+      } catch (e) {
+        dispatcher.crash(e);
+        return;
+      }
+
+      if (done) {
+        break;
+      }
+
+      await dispatcher.race(value);
+    }
+
+    dispatcher.leave();
+  });
+
+  while (true) {
+    const [done, x] = await dispatcher.next();
+    if (done) {
+      break;
+    }
+
+    yield x!;
+  }
+}
