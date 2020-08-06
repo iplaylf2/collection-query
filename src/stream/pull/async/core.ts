@@ -116,13 +116,19 @@ export async function* race<T>(ss: Func<AsyncIterableIterator<T>>[]) {
   }
 
   const dispatcher = new RaceDispatcher<T>(total);
+  let crash = false;
 
   ss.map((s) => s()).forEach(async (i) => {
     while (true) {
       try {
         var { done, value } = await i.next();
       } catch (e) {
+        crash = true;
         dispatcher.crash(e);
+        return;
+      }
+
+      if (crash) {
         return;
       }
 
