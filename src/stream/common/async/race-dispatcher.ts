@@ -58,7 +58,7 @@ export class RaceDispatcher<T> {
     }
   }
 
-  async next() {
+  async next(): Promise<IterateItem<T>> {
     switch (this.status) {
       case RaceDispatcherStatus.Active:
         throw "never";
@@ -87,7 +87,7 @@ export class RaceDispatcher<T> {
     this.blockPromise = new Promise((resolve) => (this.unblock = resolve));
   }
 
-  private alreadyCrash() {
+  private alreadyCrash(): never {
     throw "race dispatcher crash";
   }
 
@@ -96,8 +96,8 @@ export class RaceDispatcher<T> {
   private setNextError!: Action<any>;
 
   private count: number;
-  private status!: RaceDispatcherStatus;
   private error: any;
+  private status!: RaceDispatcherStatus;
   private blockPromise!: Promise<void>;
   private nextPromise!: Promise<IterateItem<T>>;
 }
