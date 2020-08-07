@@ -5,7 +5,10 @@ import {
   AsyncPredicate,
   Func,
 } from "../../../type";
-import { ZipCollector } from "../../common/async/zip-collector";
+import {
+  ZipCollector,
+  ZipCollectorStatus,
+} from "../../common/async/zip-collector";
 import {
   RaceDispatcher,
   RaceDispatcherStatus,
@@ -118,24 +121,23 @@ export async function* zip<T>(ss: Func<AsyncIterableIterator<T>>[]) {
   }
 
   const collector = new ZipCollector<T>(total);
-  let crash = false;
 
   let index = 0;
   ss.map((s) => [s(), index++] as [AsyncIterableIterator<T>, number]).forEach(
     async ([i, index]) => {
-      await collector.prepare();
-
       while (true) {
         try {
           var { done, value } = await i.next();
         } catch (e) {
-          crash = true;
           collector.crash(e);
           return;
         }
 
-        if (crash) {
-          return;
+        switch (collector.getStatus()) {
+          case ZipCollectorStatus.Active:
+            break;
+          default:
+            return;
         }
 
         if (done) {
