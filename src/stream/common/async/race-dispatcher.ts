@@ -8,20 +8,17 @@ export class RaceDispatcher<T> {
   }
 
   async race(x: T) {
-    while (true) {
-      await this.blockPromise;
-      
-      switch (this.status) {
-        case RaceDispatcherStatus.Active:
-          this.pending();
-          this.setNextResult([false, x]);
+    begin: switch (this.status) {
+      case RaceDispatcherStatus.Active:
+        this.pending();
+        this.setNextResult([false, x]);
 
-          return this.blockPromise;
-        case RaceDispatcherStatus.Pending:
-          break;
-        case RaceDispatcherStatus.Crash:
-          throw "race dispatcher crash";
-      }
+        return this.blockPromise;
+      case RaceDispatcherStatus.Pending:
+        await this.blockPromise;
+        break begin;
+      case RaceDispatcherStatus.Crash:
+        throw "race dispatcher crash";
     }
   }
 
@@ -33,8 +30,17 @@ export class RaceDispatcher<T> {
   }
 
   crash(e: any) {
-    this.status = RaceDispatcherStatus.Crash;
-    this.error = e;
+    switch (this.status) {
+      case RaceDispatcherStatus.Active:
+        this.setNextError(e);
+        break;
+      case RaceDispatcherStatus.Pending:
+        this.status = RaceDispatcherStatus.Crash;
+        this.error = e;
+        break;
+      case RaceDispatcherStatus.Crash:
+        throw e;
+    }
   }
 
   async next() {
@@ -45,7 +51,9 @@ export class RaceDispatcher<T> {
         this.status = RaceDispatcherStatus.Active;
 
         this.nextPromise = new Promise(
-          (resolve) => (this.setNextResult = resolve)
+          (resolve, reject) => (
+            (this.setNextResult = resolve), (this.setNextError = reject)
+          )
         );
         this.unblock();
 
@@ -62,6 +70,7 @@ export class RaceDispatcher<T> {
 
   private unblock!: Action<void>;
   private setNextResult!: Action<IterateItem<T>>;
+  private setNextError!: Action<any>;
 
   private count: number;
   private status!: RaceDispatcherStatus;
