@@ -5,6 +5,7 @@ import {
   AsyncPredicate,
   Func,
 } from "../../../type";
+import { ZipCollector } from "../../common/async/zip-collector";
 import { RaceDispatcher } from "../../common/async/race-dispatcher";
 
 export async function* map<T, K>(
@@ -107,7 +108,53 @@ export async function* concat<T>(
   }
 }
 
-export * from "./core/zip";
+export async function* zip<T>(ss: Func<AsyncIterableIterator<T>>[]) {
+  const total = ss.length;
+  if (!(total > 0)) {
+    return;
+  }
+
+  const collector = new ZipCollector<T>(total);
+  let crash = false;
+
+  let index = 0;
+  ss.map((s) => [s(), index++] as [AsyncIterableIterator<T>, number]).forEach(
+    async ([i, index]) => {
+      await collector.prepare();
+
+      while (true) {
+        try {
+          var { done, value } = await i.next();
+        } catch (e) {
+          crash = true;
+          collector.crash(e);
+          return;
+        }
+
+        if (crash) {
+          return;
+        }
+
+        if (done) {
+          break;
+        }
+
+        await collector.zip(index, value);
+      }
+
+      collector.leave();
+    }
+  );
+
+  while (true) {
+    const [done, x] = await collector.next();
+    if (done) {
+      break;
+    }
+
+    yield x!;
+  }
+}
 
 export async function* race<T>(ss: Func<AsyncIterableIterator<T>>[]) {
   const total = ss.length;

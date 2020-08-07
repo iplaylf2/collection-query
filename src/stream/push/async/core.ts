@@ -12,6 +12,7 @@ import { EmitType, EmitItem } from "../type";
 import { PartitionCollector } from "../../common/partition-collector";
 import { PartitionByCollector } from "../../common/partition-by-collector";
 import { RaceDispatcher } from "../../common/async/race-dispatcher";
+import { ZipCollector } from "../../common/async/zip-collector";
 
 export function map<T, K>(
   emit: EmitForm<K, never>,
@@ -205,7 +206,64 @@ export function concat<T, Te>(
   return cancel;
 }
 
-export * from "./core/zip";
+export function zip<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T[], Te>) {
+  const total = ee.length;
+  if (!(total > 0)) {
+    emit(EmitType.Complete);
+    return () => {};
+  }
+
+  const collector = new ZipCollector<T>(total);
+
+  let index = 0;
+  const cancel_list = ee.map((emitter) => {
+    const _index = index;
+    index++;
+
+    return emitter(async (t, x?) => {
+      switch (t) {
+        case EmitType.Next:
+          await collector.zip(_index, x as T);
+          break;
+        case EmitType.Complete:
+          cancel();
+          collector.leave();
+          break;
+        case EmitType.Error:
+          cancel();
+          collector.crash(x as Te);
+          break;
+      }
+    });
+  });
+
+  const cancel = function () {
+    for (const c of cancel_list) {
+      c();
+    }
+  };
+
+  (async function () {
+    while (true) {
+      try {
+        var [done, x] = await collector.next();
+      } catch (e) {
+        emit(EmitType.Error, e);
+        return;
+      }
+
+      if (done) {
+        break;
+      }
+
+      await emit(EmitType.Next, x!);
+    }
+
+    emit(EmitType.Complete);
+  })();
+
+  return cancel;
+}
 
 export function race<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T, Te>) {
   const total = ee.length;
