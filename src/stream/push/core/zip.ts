@@ -86,22 +86,22 @@ class LinkedZip<T> {
     this.zipCount = 0;
   }
 
-  checkIn(index: number) {
-    this.checkInList.push(index);
+  checkIn(i: number) {
+    this.checkInList.push(i);
   }
 
-  zip(index: number, x: T): [true, T[]] | [false] {
-    this.zipContent[index] = x;
+  zip(i: number, x: T): [true, T[]] | [false] {
+    this.zipContent[i] = x;
     this.zipCount++;
     return [(this.zipCount === this.total) as true, this.zipContent];
   }
 
-  getNext(index: number): [LinkedZipStatus, LinkedZip<T>] {
+  getNext(i: number): [LinkedZipStatus, LinkedZip<T>] {
     if (!this.next) {
       this.next = new LinkedZip(this.total);
     }
 
-    this.next.checkIn(index);
+    this.next.checkIn(i);
 
     let status: LinkedZipStatus;
     if (this.broken) {
