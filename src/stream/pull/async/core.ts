@@ -6,7 +6,10 @@ import {
   Func,
 } from "../../../type";
 import { ZipCollector } from "../../common/async/zip-collector";
-import { RaceDispatcher } from "../../common/async/race-dispatcher";
+import {
+  RaceDispatcher,
+  RaceDispatcherStatus,
+} from "../../common/async/race-dispatcher";
 
 export async function* map<T, K>(
   iterator: AsyncIterableIterator<T>,
@@ -163,19 +166,17 @@ export async function* race<T>(ss: Func<AsyncIterableIterator<T>>[]) {
   }
 
   const dispatcher = new RaceDispatcher<T>(total);
-  let crash = false;
 
   ss.map((s) => s()).forEach(async (i) => {
     while (true) {
       try {
         var { done, value } = await i.next();
       } catch (e) {
-        crash = true;
         dispatcher.crash(e);
         return;
       }
 
-      if (crash) {
+      if (dispatcher.getStatus() === RaceDispatcherStatus.Crash) {
         return;
       }
 

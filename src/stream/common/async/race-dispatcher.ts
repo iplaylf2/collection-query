@@ -1,6 +1,12 @@
 import { IterateItem } from "../../pull/type";
 import { Action } from "../../../type";
 
+export enum RaceDispatcherStatus {
+  Active,
+  Pending,
+  Crash,
+}
+
 export class RaceDispatcher<T> {
   constructor(total: number) {
     this.count = total;
@@ -72,6 +78,10 @@ export class RaceDispatcher<T> {
     }
   }
 
+  getStatus() {
+    return this.status;
+  }
+
   private pending() {
     this.status = RaceDispatcherStatus.Pending;
     this.blockPromise = new Promise((resolve) => (this.unblock = resolve));
@@ -90,10 +100,4 @@ export class RaceDispatcher<T> {
   private error: any;
   private blockPromise!: Promise<void>;
   private nextPromise!: Promise<IterateItem<T>>;
-}
-
-enum RaceDispatcherStatus {
-  Active,
-  Pending,
-  Crash,
 }
