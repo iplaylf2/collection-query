@@ -32,6 +32,7 @@ export class RaceDispatcher<T> {
   crash(e: any) {
     switch (this.status) {
       case RaceDispatcherStatus.Active:
+        this.status = RaceDispatcherStatus.Crash;
         this.setNextError(e);
         break;
       case RaceDispatcherStatus.Pending:
