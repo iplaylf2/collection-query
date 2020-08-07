@@ -18,14 +18,22 @@ export class RaceDispatcher<T> {
         await this.blockPromise;
         break begin;
       case RaceDispatcherStatus.Crash:
-        throw "race dispatcher crash";
+        this.alreadyCrash();
     }
   }
 
   leave() {
-    this.count--;
-    if (!(this.count > 0)) {
-      this.setNextResult([true]);
+    switch (this.status) {
+      case RaceDispatcherStatus.Active:
+        this.count--;
+        if (!(this.count > 0)) {
+          this.setNextResult([true]);
+        }
+        break;
+      case RaceDispatcherStatus.Pending:
+        throw "never";
+      case RaceDispatcherStatus.Crash:
+        this.alreadyCrash();
     }
   }
 
@@ -40,7 +48,7 @@ export class RaceDispatcher<T> {
         this.error = e;
         break;
       case RaceDispatcherStatus.Crash:
-        throw e;
+        this.alreadyCrash();
     }
   }
 
@@ -67,6 +75,10 @@ export class RaceDispatcher<T> {
   private pending() {
     this.status = RaceDispatcherStatus.Pending;
     this.blockPromise = new Promise((resolve) => (this.unblock = resolve));
+  }
+
+  private alreadyCrash() {
+    throw "race dispatcher crash";
   }
 
   private unblock!: Action<void>;
