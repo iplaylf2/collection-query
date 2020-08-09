@@ -1,7 +1,7 @@
 import { EmitForm, EmitType, Emitter, EmitItem } from "./type";
 import { Selector, Predicate, Action, Aggregate } from "../../type";
 import { PartitionCollector } from "../common/partition-collector";
-import { PartitionByCollector } from "../common/partition-by-collector";
+import { PartitionByCollector } from "../common/partition-by-collector/partition-by-collector";
 
 export function map<T, K>(emit: EmitForm<K, never>, f: Selector<T, K>) {
   return (x: T) => {

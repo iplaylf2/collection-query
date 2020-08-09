@@ -1,4 +1,6 @@
 import { Selector, Predicate, Func } from "../../type";
+import { PartitionCollector } from "../common/partition-collector";
+import { PartitionByCollector } from "../common/partition-by-collector/partition-by-collector";
 
 export function* map<T, K>(iterator: IterableIterator<T>, f: Selector<T, K>) {
   for (const x of iterator) {
@@ -67,6 +69,41 @@ export function* skipWhile<T>(iterator: IterableIterator<T>, f: Predicate<T>) {
     }
   }
   yield* iterator;
+}
+
+export function* partition<T>(iterator: IterableIterator<T>, n: number) {
+  const collector = new PartitionCollector<T>(n);
+
+  for (const x of iterator) {
+    const [full, partition] = collector.collect(x);
+    if (full) {
+      yield partition!;
+    }
+  }
+
+  const [rest, partition] = collector.getRest();
+  if (rest) {
+    yield partition!;
+  }
+}
+
+export function* partitionBy<T>(
+  iterator: IterableIterator<T>,
+  f: Predicate<T>
+) {
+  const collector = new PartitionByCollector<T>(f);
+
+  for (const x of iterator) {
+    const [full, partition] = collector.collect(x);
+    if (full) {
+      yield partition!;
+    }
+  }
+
+  const [rest, partition] = collector.getRest();
+  if (rest) {
+    yield partition!;
+  }
 }
 
 export function* concat<T>(

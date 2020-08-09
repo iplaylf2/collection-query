@@ -10,9 +10,10 @@ import {
 } from "../../../type";
 import { EmitType, EmitItem } from "../type";
 import { PartitionCollector } from "../../common/partition-collector";
-import { PartitionByCollector } from "../../common/partition-by-collector";
+import { AsyncPartitionByCollector } from "../../common/partition-by-collector/async-partition-by-collector";
 import { RaceDispatcher } from "../../common/async/race-dispatcher";
 import { ZipCollector } from "../../common/async/zip-collector";
+
 
 export function map<T, K>(
   emit: EmitForm<K, never>,
@@ -149,13 +150,13 @@ export function partitionBy<T, Te>(
   emit: EmitForm<T[], Te>,
   f: Selector<T, any> | AsyncSelector<T, any>
 ) {
-  const collector = new PartitionByCollector<T>(f);
+  const collector = new AsyncPartitionByCollector<T>(f);
 
   return emitter(async (t, x?) => {
     switch (t) {
       case EmitType.Next:
         {
-          const [full, partition] = collector.collect(x as T);
+          const [full, partition] = await collector.collect(x as T);
           if (full) {
             await emit(EmitType.Next, partition!);
           }

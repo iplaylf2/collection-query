@@ -5,6 +5,8 @@ import {
   AsyncPredicate,
   Func,
 } from "../../../type";
+import { PartitionCollector } from "../../common/partition-collector";
+import { AsyncPartitionByCollector } from "../../common/partition-by-collector/async-partition-by-collector";
 import {
   ZipCollector,
   ZipCollectorStatus,
@@ -100,6 +102,44 @@ export async function* skipWhile<T>(
     }
   }
   yield* iterator;
+}
+
+export async function* partition<T>(
+  iterator: AsyncIterableIterator<T>,
+  n: number
+) {
+  const collector = new PartitionCollector<T>(n);
+
+  for await (const x of iterator) {
+    const [full, partition] = collector.collect(x);
+    if (full) {
+      yield partition!;
+    }
+  }
+
+  const [rest, partition] = collector.getRest();
+  if (rest) {
+    yield partition!;
+  }
+}
+
+export async function* partitionBy<T>(
+  iterator: AsyncIterableIterator<T>,
+  f: Predicate<T>
+) {
+  const collector = new AsyncPartitionByCollector<T>(f);
+
+  for await (const x of iterator) {
+    const [full, partition] = await collector.collect(x);
+    if (full) {
+      yield partition!;
+    }
+  }
+
+  const [rest, partition] = collector.getRest();
+  if (rest) {
+    yield partition!;
+  }
 }
 
 export async function* concat<T>(

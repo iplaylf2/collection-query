@@ -1,15 +1,14 @@
-import { Selector } from "../../type";
-
-export class PartitionByCollector<T> {
-  constructor(f: Selector<T, any>) {
-    this.f = f;
+export abstract class PartitionByCollectorBase<T> {
+  constructor() {
     this.partition = [];
     this.start = false;
   }
 
-  collect(x: T): [true, T[]] | [false] {
-    const key = this.f(x);
+  getRest(): [true, T[]] | [false] {
+    return [(this.partition.length > 0) as true, this.partition];
+  }
 
+  protected dispatch(key: any, x: T): [true, T[]] | [false] {
     if (!this.start) {
       this.start = true;
 
@@ -29,11 +28,6 @@ export class PartitionByCollector<T> {
     }
   }
 
-  getRest(): [true, T[]] | [false] {
-    return [(this.partition.length > 0) as true, this.partition];
-  }
-
-  private readonly f: Selector<T, any>;
   private partition: T[];
   private start: boolean;
   private key: any;
