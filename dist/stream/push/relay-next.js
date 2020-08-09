@@ -5,11 +5,11 @@ const type_1 = require("./type");
 const relay_1 = require("./relay");
 function relayNext(handler) {
     return (emitter) => relay_1.relay((emit) => {
-        const handleNext = handler(emit);
+        const handle_next = handler(emit);
         return emitter((t, x) => {
             switch (t) {
                 case type_1.EmitType.Next:
-                    handleNext(x);
+                    handle_next(x);
                     break;
                 case type_1.EmitType.Complete:
                     emit(t);

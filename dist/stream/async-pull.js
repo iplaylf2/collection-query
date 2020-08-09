@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.last = exports.first = exports.some = exports.every = exports.include = exports.count = exports.reduce = exports.race = exports.zip = exports.concatAll = exports.concat = exports.skipWhile = exports.skip = exports.takeWhile = exports.take = exports.remove = exports.filter = exports.map = exports.forEach = void 0;
+exports.last = exports.first = exports.some = exports.every = exports.include = exports.count = exports.reduce = exports.race = exports.zip = exports.concatAll = exports.concat = exports.partitionBy = exports.partition = exports.skipWhile = exports.skip = exports.takeWhile = exports.take = exports.remove = exports.filter = exports.map = exports.forEach = void 0;
 const core = require("./pull/async/core");
 async function forEach(s, f) {
     for await (const x of s()) {
@@ -36,6 +36,14 @@ function skipWhile(f) {
     return (s) => () => core.skipWhile(s(), f);
 }
 exports.skipWhile = skipWhile;
+function partition(n) {
+    return (s) => () => core.partition(s(), n);
+}
+exports.partition = partition;
+function partitionBy(f) {
+    return (s) => () => core.partitionBy(s(), f);
+}
+exports.partitionBy = partitionBy;
 function concat(s1, s2) {
     return () => core.concat(s1, s2);
 }
@@ -53,7 +61,7 @@ function race(ss) {
 }
 exports.race = race;
 async function reduce(s, f, v) {
-    var r = v;
+    let r = v;
     for await (const x of s()) {
         r = await f(r, x);
     }
@@ -61,7 +69,7 @@ async function reduce(s, f, v) {
 }
 exports.reduce = reduce;
 async function count(s) {
-    var n = 0;
+    let n = 0;
     for await (const _x of s()) {
         n++;
     }
@@ -103,7 +111,7 @@ async function first(s) {
 }
 exports.first = first;
 async function last(s) {
-    var last;
+    let last;
     for await (const x of s()) {
         last = x;
     }

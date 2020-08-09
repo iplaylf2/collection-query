@@ -1,17 +1,11 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __exportStar = (this && this.__exportStar) || function(m, exports) {
-    for (var p in m) if (p !== "default" && !exports.hasOwnProperty(p)) __createBinding(exports, m, p);
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.last = exports.first = exports.some = exports.every = exports.include = exports.count = exports.reduce = exports.concat = exports.skipWhile = exports.skip = exports.takeWhile = exports.take = exports.remove = exports.filter = exports.map = void 0;
+exports.last = exports.first = exports.some = exports.every = exports.include = exports.count = exports.reduce = exports.race = exports.zip = exports.concat = exports.partitionBy = exports.partition = exports.skipWhile = exports.skip = exports.takeWhile = exports.take = exports.remove = exports.filter = exports.map = void 0;
 const type_1 = require("../type");
+const partition_collector_1 = require("../../common/partition-collector");
+const async_partition_by_collector_1 = require("../../common/partition-by-collector/async-partition-by-collector");
+const race_dispatcher_1 = require("../../common/async/race-dispatcher");
+const zip_collector_1 = require("../../common/async/zip-collector");
 function map(emit, f) {
     return async (x) => {
         const r = await f(x);
@@ -44,7 +38,7 @@ function take(emit, n) {
             await emit(type_1.EmitType.Next, x);
         }
         else {
-            await emit(type_1.EmitType.Complete);
+            emit(type_1.EmitType.Complete);
         }
     };
 }
@@ -56,7 +50,7 @@ function takeWhile(emit, f) {
             await emit(type_1.EmitType.Next, x);
         }
         else {
-            await emit(type_1.EmitType.Complete);
+            emit(type_1.EmitType.Complete);
         }
     };
 }
@@ -95,6 +89,64 @@ function skipWhile(emit, f) {
     };
 }
 exports.skipWhile = skipWhile;
+function partition(emitter, emit, n) {
+    if (!(n > 0)) {
+        emit(type_1.EmitType.Complete);
+        return () => { };
+    }
+    const collector = new partition_collector_1.PartitionCollector(n);
+    return emitter(async (t, x) => {
+        switch (t) {
+            case type_1.EmitType.Next:
+                {
+                    const [full, partition] = collector.collect(x);
+                    if (full) {
+                        await emit(type_1.EmitType.Next, partition);
+                    }
+                }
+                break;
+            case type_1.EmitType.Complete:
+                {
+                    const [rest, partition] = collector.getRest();
+                    if (rest) {
+                        await emit(type_1.EmitType.Next, partition);
+                    }
+                    emit(type_1.EmitType.Complete);
+                }
+                break;
+            case type_1.EmitType.Error:
+                emit(type_1.EmitType.Error, x);
+        }
+    });
+}
+exports.partition = partition;
+function partitionBy(emitter, emit, f) {
+    const collector = new async_partition_by_collector_1.AsyncPartitionByCollector(f);
+    return emitter(async (t, x) => {
+        switch (t) {
+            case type_1.EmitType.Next:
+                {
+                    const [full, partition] = await collector.collect(x);
+                    if (full) {
+                        await emit(type_1.EmitType.Next, partition);
+                    }
+                }
+                break;
+            case type_1.EmitType.Complete:
+                {
+                    const [rest, partition] = collector.getRest();
+                    if (rest) {
+                        await emit(type_1.EmitType.Next, partition);
+                    }
+                    emit(type_1.EmitType.Complete);
+                }
+                break;
+            case type_1.EmitType.Error:
+                emit(type_1.EmitType.Error, x);
+        }
+    });
+}
+exports.partitionBy = partitionBy;
 function concat(emitter1, emitter2, emit) {
     let cancel2 = function () { };
     const cancel1 = emitter1(async (t, x) => {
@@ -117,8 +169,102 @@ function concat(emitter1, emitter2, emit) {
     return cancel;
 }
 exports.concat = concat;
-__exportStar(require("./core/zip"), exports);
-__exportStar(require("./core/race"), exports);
+function zip(ee, emit) {
+    const total = ee.length;
+    if (!(total > 0)) {
+        emit(type_1.EmitType.Complete);
+        return () => { };
+    }
+    const collector = new zip_collector_1.ZipCollector(total);
+    let index = 0;
+    const cancel_list = ee.map((emitter) => {
+        const _index = index;
+        index++;
+        return emitter(async (t, x) => {
+            switch (t) {
+                case type_1.EmitType.Next:
+                    await collector.zip(_index, x);
+                    break;
+                case type_1.EmitType.Complete:
+                    cancel();
+                    collector.leave();
+                    break;
+                case type_1.EmitType.Error:
+                    cancel();
+                    collector.crash(x);
+                    break;
+            }
+        });
+    });
+    const cancel = function () {
+        for (const c of cancel_list) {
+            c();
+        }
+    };
+    (async function () {
+        while (true) {
+            try {
+                var [done, x] = await collector.next();
+            }
+            catch (e) {
+                emit(type_1.EmitType.Error, e);
+                return;
+            }
+            if (done) {
+                break;
+            }
+            await emit(type_1.EmitType.Next, x);
+        }
+        emit(type_1.EmitType.Complete);
+    })();
+    return cancel;
+}
+exports.zip = zip;
+function race(ee, emit) {
+    const total = ee.length;
+    if (!(total > 0)) {
+        emit(type_1.EmitType.Complete);
+        return () => { };
+    }
+    const dispatcher = new race_dispatcher_1.RaceDispatcher(total);
+    const cancel_list = ee.map((emitter) => emitter(async (t, x) => {
+        switch (t) {
+            case type_1.EmitType.Next:
+                await dispatcher.race(x);
+                break;
+            case type_1.EmitType.Complete:
+                dispatcher.leave();
+                break;
+            case type_1.EmitType.Error:
+                cancel();
+                dispatcher.crash(x);
+                break;
+        }
+    }));
+    const cancel = function () {
+        for (const c of cancel_list) {
+            c();
+        }
+    };
+    (async function () {
+        while (true) {
+            try {
+                var [done, x] = await dispatcher.next();
+            }
+            catch (e) {
+                emit(type_1.EmitType.Error, e);
+                return;
+            }
+            if (done) {
+                break;
+            }
+            await emit(type_1.EmitType.Next, x);
+        }
+        emit(type_1.EmitType.Complete);
+    })();
+    return cancel;
+}
+exports.race = race;
 function reduce(resolve, reject, f, v) {
     let r = v;
     return async (...[t, x]) => {
