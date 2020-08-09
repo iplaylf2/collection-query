@@ -52,6 +52,16 @@ export function skipWhile<T>(f: Predicate<T> | AsyncPredicate<T>) {
     core.skipWhile(s(), f);
 }
 
+export function partition<T>(n: number) {
+  return (s: AsyncPullStream<T>): AsyncPullStream<T[]> => () =>
+    core.partition(s(), n);
+}
+
+export function partitionBy<T>(f: Selector<T, any>) {
+  return (s: AsyncPullStream<T>): AsyncPullStream<T[]> => () =>
+    core.partitionBy(s(), f);
+}
+
 export function concat<T>(
   s1: AsyncPullStream<T>,
   s2: AsyncPullStream<T>
