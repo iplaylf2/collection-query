@@ -1,5 +1,7 @@
 import { EmitForm, EmitType, Emitter, EmitItem } from "./type";
 import { Selector, Predicate, Action, Aggregate } from "../../type";
+import { PartitionCollector } from "../common/partition-collector";
+import { PartitionByCollector } from "../common/partition-by-collector/partition-by-collector";
 
 export function map<T, K>(emit: EmitForm<K, never>, f: Selector<T, K>) {
   return (x: T) => {
@@ -74,6 +76,76 @@ export function skipWhile<T>(emit: EmitForm<T, never>, f: Predicate<T>) {
   };
 }
 
+export function partition<T, Te>(
+  emitter: Emitter<T, Te>,
+  emit: EmitForm<T[], Te>,
+  n: number
+) {
+  if (!(n > 0)) {
+    emit(EmitType.Complete);
+    return () => {};
+  }
+
+  const collector = new PartitionCollector<T>(n);
+  return emitter((t, x?) => {
+    switch (t) {
+      case EmitType.Next:
+        {
+          const [full, partition] = collector.collect(x as T);
+          if (full) {
+            emit(EmitType.Next, partition!);
+          }
+        }
+        break;
+      case EmitType.Complete:
+        {
+          const [rest, partition] = collector.getRest();
+          if (rest) {
+            emit(EmitType.Next, partition!);
+          }
+
+          emit(EmitType.Complete);
+        }
+        break;
+      case EmitType.Error:
+        emit(EmitType.Error, x as Te);
+    }
+  });
+}
+
+export function partitionBy<T, Te>(
+  emitter: Emitter<T, Te>,
+  emit: EmitForm<T[], Te>,
+  f: Selector<T, any>
+) {
+  const collector = new PartitionByCollector<T>(f);
+
+  return emitter((t, x?) => {
+    switch (t) {
+      case EmitType.Next:
+        {
+          const [full, partition] = collector.collect(x as T);
+          if (full) {
+            emit(EmitType.Next, partition!);
+          }
+        }
+        break;
+      case EmitType.Complete:
+        {
+          const [rest, partition] = collector.getRest();
+          if (rest) {
+            emit(EmitType.Next, partition!);
+          }
+
+          emit(EmitType.Complete);
+        }
+        break;
+      case EmitType.Error:
+        emit(EmitType.Error, x as Te);
+    }
+  });
+}
+
 export function concat<T, Te>(
   emitter1: Emitter<T, Te>,
   emitter2: Emitter<T, Te>,
@@ -104,7 +176,42 @@ export function concat<T, Te>(
 }
 
 export * from "./core/zip";
-export * from "./core/race";
+
+export function race<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T, Te>) {
+  let count = ee.length;
+  if (!(count > 0)) {
+    emit(EmitType.Complete);
+    return () => {};
+  }
+
+  const cancel_list = ee.map((emitter) =>
+    emitter((t, x?) => {
+      switch (t) {
+        case EmitType.Next:
+          emit(EmitType.Next, x as T);
+          break;
+        case EmitType.Complete:
+          count--;
+          if (!(count > 0)) {
+            emit(EmitType.Complete);
+          }
+          break;
+        case EmitType.Error:
+          cancel();
+          emit(EmitType.Error, x as Te);
+          break;
+      }
+    })
+  );
+
+  const cancel = function () {
+    for (const c of cancel_list) {
+      c();
+    }
+  };
+
+  return cancel;
+}
 
 export function reduce<T, K>(
   resolve: Action<K>,

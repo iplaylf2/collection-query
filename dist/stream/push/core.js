@@ -10,8 +10,10 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !exports.hasOwnProperty(p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.last = exports.first = exports.some = exports.every = exports.include = exports.count = exports.reduce = exports.concat = exports.skipWhile = exports.skip = exports.takeWhile = exports.take = exports.remove = exports.filter = exports.map = void 0;
+exports.last = exports.first = exports.some = exports.every = exports.include = exports.count = exports.reduce = exports.race = exports.concat = exports.partitionBy = exports.partition = exports.skipWhile = exports.skip = exports.takeWhile = exports.take = exports.remove = exports.filter = exports.map = void 0;
 const type_1 = require("./type");
+const partition_collector_1 = require("../common/partition-collector");
+const partition_by_collector_1 = require("../common/partition-by-collector/partition-by-collector");
 function map(emit, f) {
     return (x) => {
         emit(type_1.EmitType.Next, f(x));
@@ -90,6 +92,64 @@ function skipWhile(emit, f) {
     };
 }
 exports.skipWhile = skipWhile;
+function partition(emitter, emit, n) {
+    if (!(n > 0)) {
+        emit(type_1.EmitType.Complete);
+        return () => { };
+    }
+    const collector = new partition_collector_1.PartitionCollector(n);
+    return emitter((t, x) => {
+        switch (t) {
+            case type_1.EmitType.Next:
+                {
+                    const [full, partition] = collector.collect(x);
+                    if (full) {
+                        emit(type_1.EmitType.Next, partition);
+                    }
+                }
+                break;
+            case type_1.EmitType.Complete:
+                {
+                    const [rest, partition] = collector.getRest();
+                    if (rest) {
+                        emit(type_1.EmitType.Next, partition);
+                    }
+                    emit(type_1.EmitType.Complete);
+                }
+                break;
+            case type_1.EmitType.Error:
+                emit(type_1.EmitType.Error, x);
+        }
+    });
+}
+exports.partition = partition;
+function partitionBy(emitter, emit, f) {
+    const collector = new partition_by_collector_1.PartitionByCollector(f);
+    return emitter((t, x) => {
+        switch (t) {
+            case type_1.EmitType.Next:
+                {
+                    const [full, partition] = collector.collect(x);
+                    if (full) {
+                        emit(type_1.EmitType.Next, partition);
+                    }
+                }
+                break;
+            case type_1.EmitType.Complete:
+                {
+                    const [rest, partition] = collector.getRest();
+                    if (rest) {
+                        emit(type_1.EmitType.Next, partition);
+                    }
+                    emit(type_1.EmitType.Complete);
+                }
+                break;
+            case type_1.EmitType.Error:
+                emit(type_1.EmitType.Error, x);
+        }
+    });
+}
+exports.partitionBy = partitionBy;
 function concat(emitter1, emitter2, emit) {
     let cancel2 = function () { };
     const cancel1 = emitter1((t, x) => {
@@ -113,7 +173,37 @@ function concat(emitter1, emitter2, emit) {
 }
 exports.concat = concat;
 __exportStar(require("./core/zip"), exports);
-__exportStar(require("./core/race"), exports);
+function race(ee, emit) {
+    let count = ee.length;
+    if (!(count > 0)) {
+        emit(type_1.EmitType.Complete);
+        return () => { };
+    }
+    const cancel_list = ee.map((emitter) => emitter((t, x) => {
+        switch (t) {
+            case type_1.EmitType.Next:
+                emit(type_1.EmitType.Next, x);
+                break;
+            case type_1.EmitType.Complete:
+                count--;
+                if (!(count > 0)) {
+                    emit(type_1.EmitType.Complete);
+                }
+                break;
+            case type_1.EmitType.Error:
+                cancel();
+                emit(type_1.EmitType.Error, x);
+                break;
+        }
+    }));
+    const cancel = function () {
+        for (const c of cancel_list) {
+            c();
+        }
+    };
+    return cancel;
+}
+exports.race = race;
 function reduce(resolve, reject, f, v) {
     let r = v;
     return (...[t, x]) => {

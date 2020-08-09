@@ -8,17 +8,17 @@ export interface ReduceHandler<T, K> {
 export function reduce<T, K = T>(handler: ReduceHandler<T, K>) {
   return (emitter: Emitter<T>): Promise<K> =>
     new Promise((resolve, reject) => {
-      const resolveHandle = function (x: K) {
+      const resolve_handle = function (x: K) {
         cancel();
         resolve(x);
       };
 
-      const rejectHandle = function (x: any) {
+      const reject_handle = function (x: any) {
         cancel();
         reject(x);
       };
 
-      const receiver = handler(resolveHandle, rejectHandle);
+      const receiver = handler(resolve_handle, reject_handle);
 
       const cancel = emitter(receiver);
     });

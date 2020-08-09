@@ -8,6 +8,8 @@ export declare function take<T>(n: number): (s: PullStream<T>) => PullStream<T>;
 export declare function takeWhile<T>(f: Predicate<T>): (s: PullStream<T>) => PullStream<T>;
 export declare function skip<T>(n: number): Generator<never, (s: PullStream<T>) => PullStream<T>, unknown>;
 export declare function skipWhile<T>(f: Predicate<T>): (s: PullStream<T>) => PullStream<T>;
+export declare function partition<T>(n: number): (s: PullStream<T>) => PullStream<T[]>;
+export declare function partitionBy<T>(f: Selector<T, any>): (s: PullStream<T>) => PullStream<T[]>;
 export declare function concat<T>(s1: PullStream<T>, s2: PullStream<T>): PullStream<T>;
 export declare function concatAll<T>([s, ...ss]: PullStream<T>[]): PullStream<T>;
 export declare function zip<T>(ss: PullStream<T>[]): PullStream<T[]>;

@@ -9,11 +9,11 @@ export interface RelayNextHandler<T, Te, K> {
 export function relayNext<T, Te, K = T>(handler: RelayNextHandler<T, Te, K>) {
   return (emitter: Emitter<T, Te>): Emitter<K, Te> =>
     relay((emit) => {
-      const handleNext = handler(emit);
+      const handle_next = handler(emit);
       return emitter(async (t, x?) => {
         switch (t) {
           case EmitType.Next:
-            await handleNext(x as T);
+            await handle_next(x as T);
             break;
           case EmitType.Complete:
             emit(t);

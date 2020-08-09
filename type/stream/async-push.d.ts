@@ -7,6 +7,8 @@ export declare function take<T, Te>(n: number): (s: AsyncPushStream<T, Te>) => A
 export declare function takeWhile<T, Te>(f: Predicate<T> | AsyncPredicate<T>): (s: AsyncPushStream<T, Te>) => AsyncPushStream<T, Te>;
 export declare function skip<T, Te>(n: number): (s: AsyncPushStream<T, Te>) => AsyncPushStream<T, Te>;
 export declare function skipWhile<T, Te>(f: Predicate<T> | AsyncPredicate<T>): (s: AsyncPushStream<T, Te>) => AsyncPushStream<T, Te>;
+export declare function partition<T, Te>(n: number): (s: AsyncPushStream<T, Te>) => AsyncPushStream<T[], Te>;
+export declare function partitionBy<T, Te>(f: Selector<T, any>): (s: AsyncPushStream<T, Te>) => AsyncPushStream<T[], Te>;
 export declare function concat<T, Te>(s1: AsyncPushStream<T, Te>, s2: AsyncPushStream<T, Te>): AsyncPushStream<T, Te>;
 export declare function concatAll<T, Te>([s, ...ss]: AsyncPushStream<T, Te>[]): AsyncPushStream<T, Te>;
 export declare function zip<T, Te>(ss: AsyncPushStream<T, Te>[]): AsyncPushStream<T[], Te>;

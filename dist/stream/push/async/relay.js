@@ -4,20 +4,20 @@ exports.relay = void 0;
 const create_1 = require("./create");
 function relay(handler) {
     return (receiver) => {
-        let cancelEarly = false;
-        let sourceCancel = function () {
-            cancelEarly = true;
+        let cancel_early = false;
+        let source_cancel = function () {
+            cancel_early = true;
         };
-        const relayEmitter = create_1.create((emit) => {
-            if (cancelEarly) {
+        const relay_emitter = create_1.create((emit) => {
+            if (cancel_early) {
                 return;
             }
-            sourceCancel = handler(emit);
+            source_cancel = handler(emit);
         });
-        const relayCancel = relayEmitter(receiver);
+        const relay_cancel = relay_emitter(receiver);
         const cancel = function () {
-            relayCancel();
-            sourceCancel();
+            relay_cancel();
+            source_cancel();
         };
         return cancel;
     };

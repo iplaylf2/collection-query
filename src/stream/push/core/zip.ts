@@ -2,102 +2,79 @@ import { Emitter, EmitForm, EmitType } from "../type";
 import { Action } from "../../../type";
 
 export function zip<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T[], Te>) {
-  if (ee.length === 0) {
+  const total = ee.length;
+  if (!(total > 0)) {
     emit(EmitType.Complete);
     return () => {};
   }
 
-  const zipCollector = new ZipCollector(ee, emit);
+  const cancel_list = new Array<Action<void>>(total);
 
-  zipCollector.start();
+  const linked_zip_start = new LinkedZip<T>(total);
 
-  return zipCollector.cancel.bind(zipCollector);
-}
+  let index = 0;
+  for (const emitter of ee) {
+    let linked_zip = linked_zip_start;
 
-class ZipCollector<T, Te> {
-  constructor(ee: Emitter<T, Te>[], emit: EmitForm<T[], Te>) {
-    this.ee = ee;
-    this.emit = emit;
-    this.cancelList = [];
-  }
+    linked_zip.checkIn(index);
 
-  start() {
-    const linkedZip = new LinkedZip<T>(this.ee.length);
-
-    let index = 0;
-    for (const emitter of this.ee) {
-      linkedZip.checkIn(index);
-
-      const receiver = this.collect(index, linkedZip);
-      const cancel = emitter(receiver);
-
-      this.cancelList.push(cancel);
-      index++;
-    }
-  }
-
-  cancel() {
-    for (const cancel of this.cancelList) {
-      cancel();
-    }
-  }
-
-  private collect(index: number, linkedZip: LinkedZip<T>): EmitForm<T, Te> {
-    return (t, x?) => {
+    const _index = index;
+    const cancel = emitter((t, x?) => {
       switch (t) {
         case EmitType.Next:
-          linkedZip = this.handleNext(index, linkedZip, x as T);
+          {
+            const [full, result] = linked_zip.zip(_index, x as T);
+            if (full) {
+              emit(EmitType.Next, result!);
+            }
+
+            const [status, next_linked] = linked_zip.getNext(_index);
+
+            switch (status) {
+              case LinkedZipStatus.Active:
+                linked_zip = next_linked;
+                break;
+              case LinkedZipStatus.Broken:
+                cancel_list[_index]();
+                break;
+              case LinkedZipStatus.Inactive:
+                cancel_list[_index]();
+                emit(EmitType.Complete);
+                break;
+            }
+          }
           break;
         case EmitType.Complete:
-          this.handleComplete(linkedZip);
+          {
+            const [full, check_in_list] = linked_zip.break();
+            for (const i of check_in_list!) {
+              cancel_list[i]();
+            }
+
+            if (full) {
+              emit(EmitType.Complete);
+            }
+          }
           break;
         case EmitType.Error:
-          this.handleError(x as Te);
+          cancel();
+          emit(EmitType.Error, x as Te);
           break;
       }
-    };
+    });
+
+    cancel_list[index] = cancel;
+
+    index++;
   }
 
-  private handleNext(index: number, linkedZip: LinkedZip<T>, x: T) {
-    const [full, content] = linkedZip.zip(index, x);
-    if (full) {
-      this.emit(EmitType.Next, content);
+  const cancel = function () {
+    for (const c of cancel_list) {
+      c();
     }
+  };
 
-    linkedZip = linkedZip.getNext();
-    linkedZip.checkIn(index);
-
-    if (linkedZip.broken) {
-      this.cancelList[index]();
-
-      if (linkedZip.isAllCheckIn()) {
-        this.emit(EmitType.Complete);
-      }
-    }
-
-    return linkedZip;
-  }
-
-  private handleComplete(linkedZip: LinkedZip<T>) {
-    const [full, checkInList] = linkedZip.break();
-    for (const index of checkInList) {
-      this.cancelList[index]();
-    }
-
-    if (full) {
-      this.emit(EmitType.Complete);
-    }
-  }
-
-  private handleError(x: Te) {
-    this.cancel();
-    this.emit(EmitType.Error, x);
-  }
-
-  private emit: EmitForm<T[], Te>;
-
-  private readonly ee: Emitter<T, Te>[];
-  private readonly cancelList: Action<void>[];
+  return cancel;
 }
 
 class LinkedZip<T> {
@@ -109,40 +86,59 @@ class LinkedZip<T> {
     this.zipCount = 0;
   }
 
-  checkIn(index: number) {
-    this.checkInList.push(index);
+  checkIn(i: number) {
+    this.checkInList.push(i);
   }
 
-  zip(index: number, x: T): [boolean, T[]] {
-    this.zipContent[index] = x;
+  zip(i: number, x: T): [true, T[]] | [false] {
+    this.zipContent[i] = x;
     this.zipCount++;
-    return [this.zipCount === this.total, this.zipContent];
+    return [(this.zipCount === this.total) as true, this.zipContent];
   }
 
-  getNext() {
+  getNext(i: number): [LinkedZipStatus, LinkedZip<T>] {
     if (!this.next) {
       this.next = new LinkedZip(this.total);
     }
 
-    return this.next;
-  }
+    this.next.checkIn(i);
 
-  isAllCheckIn() {
-    return this.checkInList.length === this.total;
+    let status: LinkedZipStatus;
+    if (this.broken) {
+      if (this.isAllCheckIn()) {
+        status = LinkedZipStatus.Inactive;
+      } else {
+        status = LinkedZipStatus.Broken;
+      }
+    } else {
+      status = LinkedZipStatus.Active;
+    }
+
+    return [status, this.next];
   }
 
   break(): [boolean, number[]] {
     this.broken = true;
+    this.zipContent = null!;
     this.next = null!;
 
     return [this.isAllCheckIn(), this.checkInList];
   }
 
-  broken: boolean;
+  private isAllCheckIn() {
+    return this.checkInList.length === this.total;
+  }
 
   private readonly total: number;
   private readonly checkInList: number[];
-  private readonly zipContent: T[];
+  private broken: boolean;
+  private zipContent: T[];
   private zipCount!: number;
   private next!: LinkedZip<T>;
+}
+
+enum LinkedZipStatus {
+  Active,
+  Broken,
+  Inactive,
 }

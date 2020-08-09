@@ -1,0 +1,32 @@
+{
+  //File Inclusion
+  "include": ["test"],
+  //Compiler Options
+  "compilerOptions": {
+    //Project Options
+    //"declaration": true,
+    "lib": ["ESNext", "DOM"],
+    "module": "CommonJS",
+    "outDir": "test.out",
+    "target": "ESNext",
+    "sourceMap": true,
+    //Strict Checks
+    "alwaysStrict": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "strict": true,
+    "strictBindCallApply": true,
+    "strictFunctionTypes": true,
+    "strictNullChecks": true,
+    "strictPropertyInitialization": true,
+    //Module Resolution
+    "allowSyntheticDefaultImports": true,
+    //Linter Checks
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+    //Advanced
+    //"declarationDir":"type"
+  }
+}

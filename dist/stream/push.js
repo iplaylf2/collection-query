@@ -1,40 +1,48 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.async = exports.last = exports.first = exports.some = exports.every = exports.include = exports.count = exports.reduce = exports.race = exports.zip = exports.concatAll = exports.concat = exports.skipWhile = exports.skip = exports.takeWhile = exports.take = exports.remove = exports.filter = exports.map = void 0;
+exports.async = exports.last = exports.first = exports.some = exports.every = exports.include = exports.count = exports.reduce = exports.race = exports.zip = exports.concatAll = exports.concat = exports.partitionBy = exports.partition = exports.skipWhile = exports.skip = exports.takeWhile = exports.take = exports.remove = exports.filter = exports.map = void 0;
 const relay_next_1 = require("./push/relay-next");
 const core = require("./push/core");
 const relay_1 = require("./push/relay");
 const reduce_1 = require("./push/reduce");
 const relay_2 = require("./push/async/relay");
-const relayNext = relay_next_1.relayNext;
+const relay_next = relay_next_1.relayNext;
 function map(f) {
-    return relayNext((emit) => core.map(emit, f));
+    return relay_next((emit) => core.map(emit, f));
 }
 exports.map = map;
 function filter(f) {
-    return relayNext((emit) => core.filter(emit, f));
+    return relay_next((emit) => core.filter(emit, f));
 }
 exports.filter = filter;
 function remove(f) {
-    return relayNext((emit) => core.remove(emit, f));
+    return relay_next((emit) => core.remove(emit, f));
 }
 exports.remove = remove;
 function take(n) {
-    return relayNext((emit) => core.take(emit, n));
+    return relay_next((emit) => core.take(emit, n));
 }
 exports.take = take;
 function takeWhile(f) {
-    return relayNext((emit) => core.takeWhile(emit, f));
+    return relay_next((emit) => core.takeWhile(emit, f));
 }
 exports.takeWhile = takeWhile;
 function skip(n) {
-    return relayNext((emit) => core.skip(emit, n));
+    return relay_next((emit) => core.skip(emit, n));
 }
 exports.skip = skip;
 function skipWhile(f) {
-    return relayNext((emit) => core.skipWhile(emit, f));
+    return relay_next((emit) => core.skipWhile(emit, f));
 }
 exports.skipWhile = skipWhile;
+function partition(n) {
+    return (s) => relay_1.relay((emit) => core.partition(s, emit, n));
+}
+exports.partition = partition;
+function partitionBy(f) {
+    return (s) => relay_1.relay((emit) => core.partitionBy(s, emit, f));
+}
+exports.partitionBy = partitionBy;
 function concat(s1, s2) {
     return relay_1.relay((emit) => core.concat(s1, s2, emit));
 }

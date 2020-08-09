@@ -52,6 +52,16 @@ export function skipWhile<T>(f: Predicate<T> | AsyncPredicate<T>) {
     core.skipWhile(s(), f);
 }
 
+export function partition<T>(n: number) {
+  return (s: AsyncPullStream<T>): AsyncPullStream<T[]> => () =>
+    core.partition(s(), n);
+}
+
+export function partitionBy<T>(f: Selector<T, any>) {
+  return (s: AsyncPullStream<T>): AsyncPullStream<T[]> => () =>
+    core.partitionBy(s(), f);
+}
+
 export function concat<T>(
   s1: AsyncPullStream<T>,
   s2: AsyncPullStream<T>
@@ -78,7 +88,7 @@ export async function reduce<T, K>(
   f: Aggregate<T, K> | AsyncAggregate<T, K>,
   v: K
 ) {
-  var r = v;
+  let r = v;
   for await (const x of s()) {
     r = await f(r, x);
   }
@@ -86,7 +96,7 @@ export async function reduce<T, K>(
 }
 
 export async function count(s: AsyncPullStream<any>) {
-  var n = 0;
+  let n = 0;
   for await (const _x of s()) {
     n++;
   }
@@ -134,7 +144,7 @@ export async function first<T>(s: AsyncPullStream<T>) {
 }
 
 export async function last<T>(s: AsyncPullStream<T>) {
-  var last;
+  let last;
   for await (const x of s()) {
     last = x;
   }

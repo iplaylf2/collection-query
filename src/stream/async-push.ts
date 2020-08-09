@@ -1,6 +1,6 @@
 import { AsyncPushStream, PushStream } from "./type";
 import {
-  relayNext as _relayNext,
+  relayNext as _relay_next,
   RelayNextHandler,
 } from "./push/async/relay-next";
 import {
@@ -14,38 +14,48 @@ import {
 import * as core from "./push/async/core";
 import { relay } from "./push/async/relay";
 import { reduce as _reduce } from "./push/async/reduce";
-import { relay as relaySync } from "./push/relay";
+import { relay as relay_sync } from "./push/relay";
 
-const relayNext: <T, Te, K = T>(
+const relay_next: <T, Te, K = T>(
   handler: RelayNextHandler<T, Te, K>
-) => (s: AsyncPushStream<T, Te>) => AsyncPushStream<K, Te> = _relayNext;
+) => (s: AsyncPushStream<T, Te>) => AsyncPushStream<K, Te> = _relay_next;
 
 export function map<T, Te, K>(f: Selector<T, K> | AsyncSelector<T, K>) {
-  return relayNext<T, Te, K>((emit) => core.map(emit, f));
+  return relay_next<T, Te, K>((emit) => core.map(emit, f));
 }
 
 export function filter<T, Te>(f: Predicate<T> | AsyncPredicate<T>) {
-  return relayNext<T, Te>((emit) => core.filter(emit, f));
+  return relay_next<T, Te>((emit) => core.filter(emit, f));
 }
 
 export function remove<T, Te>(f: Predicate<T> | AsyncPredicate<T>) {
-  return relayNext<T, Te>((emit) => core.remove(emit, f));
+  return relay_next<T, Te>((emit) => core.remove(emit, f));
 }
 
 export function take<T, Te>(n: number) {
-  return relayNext<T, Te>((emit) => core.take(emit, n));
+  return relay_next<T, Te>((emit) => core.take(emit, n));
 }
 
 export function takeWhile<T, Te>(f: Predicate<T> | AsyncPredicate<T>) {
-  return relayNext<T, Te>((emit) => core.takeWhile(emit, f));
+  return relay_next<T, Te>((emit) => core.takeWhile(emit, f));
 }
 
 export function skip<T, Te>(n: number) {
-  return relayNext<T, Te>((emit) => core.skip(emit, n));
+  return relay_next<T, Te>((emit) => core.skip(emit, n));
 }
 
 export function skipWhile<T, Te>(f: Predicate<T> | AsyncPredicate<T>) {
-  return relayNext<T, Te>((emit) => core.skipWhile(emit, f));
+  return relay_next<T, Te>((emit) => core.skipWhile(emit, f));
+}
+
+export function partition<T, Te>(n: number) {
+  return (s: AsyncPushStream<T, Te>): AsyncPushStream<T[], Te> =>
+    relay((emit) => core.partition(s, emit, n));
+}
+
+export function partitionBy<T, Te>(f: Selector<T, any>) {
+  return (s: AsyncPushStream<T, Te>): AsyncPushStream<T[], Te> =>
+    relay((emit) => core.partitionBy(s, emit, f));
 }
 
 export function concat<T, Te>(
@@ -111,4 +121,4 @@ export function last<T>(s: AsyncPushStream<T>) {
 
 export const sync: <T, Te>(
   s: AsyncPushStream<T, Te>
-) => PushStream<T, Te> = relaySync as any;
+) => PushStream<T, Te> = relay_sync as any;
