@@ -16,6 +16,7 @@ class EmitterHandler<T, Te> {
   constructor(receiver: EmitForm<T, Te>) {
     this.receive = receiver;
     this.open = true;
+    this.unblock = () => {};
     this.queueBlock = Promise.resolve();
   }
 
@@ -33,6 +34,7 @@ class EmitterHandler<T, Te> {
   cancel() {
     this.receive = null!;
     this.open = false;
+    this.unblock();
   }
 
   private async handle(...item: EmitItem<T, Te>) {
@@ -40,6 +42,7 @@ class EmitterHandler<T, Te> {
 
     let unblock!: Action<void>;
     this.queueBlock = new Promise((resolve) => (unblock = resolve));
+    this.unblock = unblock;
 
     await block;
 
@@ -86,6 +89,7 @@ class EmitterHandler<T, Te> {
   }
 
   private receive: EmitForm<T, Te>;
+  private unblock: Action<void>;
 
   private open: boolean;
   private queueBlock: Promise<void>;
