@@ -1,4 +1,4 @@
-import { AsyncPushStream, PushStream } from "./type";
+import { AsyncPushStream } from "./type";
 import {
   relayNext as _relay_next,
   RelayNextHandler,
@@ -14,7 +14,6 @@ import {
 import * as core from "./push/async/core";
 import { relay } from "./push/async/relay";
 import { reduce as _reduce } from "./push/async/reduce";
-import { relay as relay_sync } from "./push/relay";
 
 const relay_next: <T, Te, K = T>(
   handler: RelayNextHandler<T, Te, K>
@@ -118,7 +117,3 @@ export function first<T>(s: AsyncPushStream<T>) {
 export function last<T>(s: AsyncPushStream<T>) {
   return _reduce<T, T | void>(core.last)(s);
 }
-
-export const sync: <T, Te>(
-  s: AsyncPushStream<T, Te>
-) => PushStream<T, Te> = relay_sync as any;

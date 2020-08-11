@@ -10,3 +10,4 @@ export const create: <T, Te = never>(
 ) => AsyncPushStream<T, Te> = _create;
 
 export * from "./stream/async-push";
+export * from "./stream/convert/async-push-to-sync-push";
