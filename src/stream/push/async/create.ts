@@ -1,7 +1,6 @@
 import { Action } from "../../../type";
 import { EmitForm } from "./type";
 import { EmitItem, EmitType } from "../type";
-import { Channel } from "../../../channel";
 
 export function create<T, Te = never>(executor: Action<EmitForm<T, Te>>) {
   return (receiver: EmitForm<T, Te>) => {
@@ -17,26 +16,14 @@ class EmitterHandler<T, Te> {
   constructor(receiver: EmitForm<T, Te>) {
     this.receive = receiver;
     this.open = true;
-    this.channel = new Channel();
+    this.unblock = () => {};
+    this.queueBlock = Promise.resolve();
   }
 
   async start(executor: Action<EmitForm<T, Te>>) {
     await Promise.resolve();
 
-    const receiver: EmitForm<T, Te> = (t, x?) =>
-      this.channel.put([t, x] as any);
-
-    (async () => {
-      while (true) {
-        const [done, x] = await this.channel.take();
-        if (done) {
-          break;
-        }
-
-        await this.handle(...x!);
-      }
-    })();
-
+    const receiver = this.handle.bind(this);
     try {
       executor(receiver);
     } catch {
@@ -47,10 +34,24 @@ class EmitterHandler<T, Te> {
   cancel() {
     this.receive = null!;
     this.open = false;
-    this.channel.close();
+    this.unblock();
   }
 
-  private async handle(...[t, x]: EmitItem<T, Te>) {
+  private async handle(...item: EmitItem<T, Te>) {
+    const block = this.queueBlock;
+
+    let unblock!: Action<void>;
+    this.queueBlock = new Promise((resolve) => (unblock = resolve));
+    this.unblock = unblock;
+
+    await block;
+
+    await this.handleReceive(...item);
+
+    unblock();
+  }
+
+  private async handleReceive(...[t, x]: EmitItem<T, Te>) {
     if (this.open) {
       switch (t) {
         case EmitType.Next:
@@ -88,7 +89,8 @@ class EmitterHandler<T, Te> {
   }
 
   private receive: EmitForm<T, Te>;
+  private unblock: Action<void>;
 
   private open: boolean;
-  private channel: Channel<EmitItem<T, Te>>;
+  private queueBlock: Promise<void>;
 }
