@@ -1,83 +1,80 @@
 import { Action } from "./type";
 
-export enum ChannelStatus {
-  Unloaded,
-  Loaded,
-  Closed,
-  Clean,
-}
-
 export class Channel<T> {
-  constructor() {
+  constructor(limit = Infinity) {
+    this.limit = limit > 0 ? limit : 1;
+    this.isClose = false;
+    this.buffer = new Buffer();
+
     this.blockTake();
-    this.status = ChannelStatus.Unloaded;
   }
 
   async put(x: T) {
-    begin: switch (this.status) {
-      case ChannelStatus.Unloaded:
-        this.content = x;
-        this.unblockTake();
-        this.blockPut();
+    begin: {
+      await this.putBlock;
 
-        this.status = ChannelStatus.Loaded;
-        break;
-      case ChannelStatus.Loaded:
-        await this.putBlock;
+      if (this.isClose) {
+        return;
+      }
+
+      if (this.buffer.length < this.limit) {
+        this.buffer.put(x);
+
+        if (this.buffer.length === this.limit) {
+          this.blockPut();
+        }
+        if (1 === this.buffer.length) {
+          this.unblockTake();
+        }
+
+        return;
+      } else {
         break begin;
-      case ChannelStatus.Closed:
-      case ChannelStatus.Clean:
-        break;
+      }
     }
   }
 
   async take(): Promise<[true] | [false, T]> {
-    begin: switch (this.status) {
-      case ChannelStatus.Unloaded:
-        await this.takeBlock;
-        break begin;
-      case ChannelStatus.Loaded: {
-        const x = this.content;
-        this.content = null!;
-        this.unblockPut();
-        this.blockTake();
+    begin: {
+      await this.takeBlock;
 
-        this.status = ChannelStatus.Unloaded;
-
-        return [false, x];
-      }
-      case ChannelStatus.Closed: {
-        const x = this.content;
-        this.content = null!;
-
-        this.status = ChannelStatus.Clean;
-
-        return [false, x];
-      }
-      case ChannelStatus.Clean:
+      if (this.isClose) {
         return [true];
+      }
+
+      if (0 < this.buffer.length) {
+        const x = this.buffer.take();
+
+        if (this.buffer.length === 0) {
+          this.blockTake();
+        }
+        if (this.buffer.length === this.limit - 1) {
+          this.unblockPut();
+        }
+
+        return [false, x];
+      } else {
+        break begin;
+      }
     }
     throw "never";
   }
 
   close() {
-    switch (this.status) {
-      case ChannelStatus.Unloaded:
-        this.unblockTake();
-        this.status = ChannelStatus.Clean;
-        break;
-      case ChannelStatus.Loaded:
-        this.unblockPut();
-        this.status = ChannelStatus.Closed;
-        break;
-      case ChannelStatus.Closed:
-      case ChannelStatus.Clean:
-        break;
+    if (!this.close) {
+      this.isClose = true;
+      this.buffer.clear();
+      this.unblockPut();
+      this.unblockTake();
     }
   }
 
-  getStatus() {
-    return this.status;
+  getLimit() {
+    return this.limit;
+  }
+
+  getLength() {
+    return this.buffer.length;
   }
 
   private blockPut() {
@@ -91,8 +88,56 @@ export class Channel<T> {
   private unblockPut!: Action<void>;
   private unblockTake!: Action<void>;
 
-  private status: ChannelStatus;
-  private content!: T;
+  private limit: number;
+  private isClose: boolean;
+  private buffer: Buffer<T>;
   private putBlock!: Promise<void>;
   private takeBlock!: Promise<void>;
+}
+
+class Buffer<T> {
+  constructor() {
+    this.length = 0;
+  }
+
+  put(x: T) {
+    const node = { x };
+    if (this.tail === undefined) {
+      this.head = node;
+      this.tail = node;
+    } else {
+      this.tail.next = node;
+      this.tail = node;
+    }
+    this.length++;
+  }
+
+  take(): T {
+    if (this.head === undefined) {
+      throw "empty";
+    } else {
+      const result = this.head.x;
+      this.head = this.head.next;
+      this.length--;
+      if (this.length === 0) {
+        this.tail = undefined;
+      }
+
+      return result;
+    }
+  }
+
+  clear() {
+    this.head = undefined;
+    this.tail = undefined;
+  }
+
+  length: number;
+  private head?: LinkedList<T>;
+  private tail?: LinkedList<T>;
+}
+
+interface LinkedList<T> {
+  x: T;
+  next?: LinkedList<T>;
 }
