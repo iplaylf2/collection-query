@@ -1,15 +1,14 @@
 import { Channel } from "../../../channel";
 import { Action } from "../../../type";
 
-enum RaceHandlerStatus {
+export enum RaceHandlerStatus {
   Running,
   End,
   Crash,
 }
 
-class RaceHandler<T> implements AsyncIterableIterator<T> {
-  constructor(total: number) {
-    this.count = total;
+export class RaceHandler<T> implements AsyncIterableIterator<T> {
+  constructor() {
     this.channel = new Channel();
 
     this.status = RaceHandlerStatus.Running;
@@ -42,26 +41,7 @@ class RaceHandler<T> implements AsyncIterableIterator<T> {
     return { done: true, value: undefined };
   }
 
-  async race(x: T) {
-    if (this.status === RaceHandlerStatus.Running) {
-      this.channel.put(x);
-      do {
-        await this.raceBlock;
-      } while (this.channel.getLength() > 0);
-    }
-  }
-
-  leave() {
-    if (this.count !== 0) {
-      this.count--;
-      if (this.count === 0) {
-        this.end();
-      }
-    }
-  }
-
   end() {
-    this.count === 0;
     this.channel.close();
     this.unblockRace();
     this.status = RaceHandlerStatus.End;
@@ -70,10 +50,28 @@ class RaceHandler<T> implements AsyncIterableIterator<T> {
   crash(error: any) {
     if (this.status === RaceHandlerStatus.Running) {
       this.error = error;
-      this.count === 0;
       this.channel.close();
       this.unblockRace();
       this.status = RaceHandlerStatus.Crash;
+    }
+  }
+
+  getStatus() {
+    return this.status;
+  }
+
+  async race(x: T) {
+    if (this.status === RaceHandlerStatus.Running) {
+      this.channel.put(x);
+      while (true) {
+        await this.raceBlock;
+
+        if (this.channel.getLength() === 0) {
+          return;
+        }
+
+        this.blockRace();
+      }
     }
   }
 
@@ -85,7 +83,6 @@ class RaceHandler<T> implements AsyncIterableIterator<T> {
 
   private status: RaceHandlerStatus;
   private error: any;
-  private count: number;
   private channel: Channel<T>;
   private raceBlock!: Promise<void>;
 }
