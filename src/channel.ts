@@ -3,7 +3,7 @@ import { Action } from "./type";
 export class Channel<T> {
   constructor(limit = Infinity) {
     this.limit = limit > 0 ? limit : 1;
-    this.isClose = false;
+    this._isClose = false;
     this.buffer = new Buffer();
 
     this.blockTake();
@@ -13,7 +13,7 @@ export class Channel<T> {
     begin: {
       await this.putBlock;
 
-      if (this.isClose) {
+      if (this._isClose) {
         return;
       }
 
@@ -38,7 +38,7 @@ export class Channel<T> {
     begin: {
       await this.takeBlock;
 
-      if (this.isClose) {
+      if (this._isClose) {
         return [true];
       }
 
@@ -62,11 +62,15 @@ export class Channel<T> {
 
   close() {
     if (!this.close) {
-      this.isClose = true;
+      this._isClose = true;
       this.buffer.clear();
       this.unblockPut();
       this.unblockTake();
     }
+  }
+
+  isClose() {
+    return this._isClose;
   }
 
   getLimit() {
@@ -89,7 +93,7 @@ export class Channel<T> {
   private unblockTake!: Action<void>;
 
   private limit: number;
-  private isClose: boolean;
+  private _isClose: boolean;
   private buffer: Buffer<T>;
   private putBlock!: Promise<void>;
   private takeBlock!: Promise<void>;
