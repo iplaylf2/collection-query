@@ -8,12 +8,6 @@ export class Channel<T> {
 
     this.putBlock = new AsyncBlock();
     this.takeBlock = new AsyncBlock();
-
-    this.onFullBlock = new AsyncBlock();
-    this.onLoadBlock = new AsyncBlock();
-    this.onEmptyBlock = new AsyncBlock();
-    this.onUnloadBlock = new AsyncBlock();
-    this.onCloseBlock = new AsyncBlock();
   }
 
   async put(x: T) {
@@ -29,11 +23,9 @@ export class Channel<T> {
 
         if (this.buffer.length === this._limit) {
           this.putBlock.block();
-          this.onFullBlock.unblock();
         }
         if (1 === this.buffer.length) {
           this.takeBlock.unblock();
-          this.onLoadBlock.unblock();
         }
 
         return;
@@ -56,11 +48,9 @@ export class Channel<T> {
 
         if (this.buffer.length === 0) {
           this.takeBlock.block();
-          this.onEmptyBlock.unblock();
         }
         if (this.buffer.length === this._limit - 1) {
           this.putBlock.unblock();
-          this.onUnloadBlock.unblock();
         }
 
         return [false, x];
@@ -77,7 +67,6 @@ export class Channel<T> {
       this.buffer.clear();
       this.putBlock.unblock();
       this.takeBlock.unblock();
-      this.onCloseBlock.unblock();
     }
   }
 
@@ -93,56 +82,11 @@ export class Channel<T> {
     return this.buffer.length;
   }
 
-  get onFull() {
-    if (!this.onFullBlock.isBlock) {
-      this.onFullBlock.block();
-    }
-
-    return this.onFullBlock.wait;
-  }
-
-  get onLoad() {
-    if (!this.onLoadBlock.isBlock) {
-      this.onLoadBlock.block();
-    }
-
-    return this.onLoadBlock.wait;
-  }
-
-  get onEmpty() {
-    if (!this.onEmptyBlock.isBlock) {
-      this.onEmptyBlock.block();
-    }
-
-    return this.onEmptyBlock.wait;
-  }
-
-  get onUnload() {
-    if (!this.onUnloadBlock.isBlock) {
-      this.onUnloadBlock.block();
-    }
-
-    return this.onUnloadBlock.wait;
-  }
-
-  get onClose() {
-    if (!this.onCloseBlock.isBlock) {
-      this.onCloseBlock.block();
-    }
-
-    return this.onCloseBlock.wait;
-  }
-
   private _limit: number;
   private _isClose: boolean;
   private buffer: Buffer<T>;
   private putBlock: AsyncBlock;
   private takeBlock: AsyncBlock;
-  private onFullBlock: AsyncBlock;
-  private onLoadBlock: AsyncBlock;
-  private onEmptyBlock: AsyncBlock;
-  private onUnloadBlock: AsyncBlock;
-  private onCloseBlock: AsyncBlock;
 }
 
 class Buffer<T> {
