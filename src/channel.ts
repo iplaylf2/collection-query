@@ -1,4 +1,4 @@
-import { Action } from "./type";
+import { AsyncBlock } from "./async-block";
 
 export class Channel<T> {
   constructor(limit = Infinity) {
@@ -6,12 +6,13 @@ export class Channel<T> {
     this._isClose = false;
     this.buffer = new Buffer();
 
-    this.blockTake();
+    this.putBlock = new AsyncBlock();
+    this.takeBlock = new AsyncBlock();
   }
 
   async put(x: T) {
     begin: {
-      await this.putBlock;
+      await this.putBlock.wait;
 
       if (this._isClose) {
         return;
@@ -21,10 +22,10 @@ export class Channel<T> {
         this.buffer.put(x);
 
         if (this.buffer.length === this.limit) {
-          this.blockPut();
+          this.putBlock.block();
         }
         if (1 === this.buffer.length) {
-          this.unblockTake();
+          this.takeBlock.unblock();
         }
 
         return;
@@ -36,7 +37,7 @@ export class Channel<T> {
 
   async take(): Promise<[true] | [false, T]> {
     begin: {
-      await this.takeBlock;
+      await this.takeBlock.wait;
 
       if (this._isClose) {
         return [true];
@@ -46,10 +47,10 @@ export class Channel<T> {
         const x = this.buffer.take();
 
         if (this.buffer.length === 0) {
-          this.blockTake();
+          this.takeBlock.block();
         }
         if (this.buffer.length === this.limit - 1) {
-          this.unblockPut();
+          this.putBlock.unblock();
         }
 
         return [false, x];
@@ -64,8 +65,8 @@ export class Channel<T> {
     if (!this.close) {
       this._isClose = true;
       this.buffer.clear();
-      this.unblockPut();
-      this.unblockTake();
+      this.putBlock.unblock();
+      this.takeBlock.unblock();
     }
   }
 
@@ -81,22 +82,11 @@ export class Channel<T> {
     return this.buffer.length;
   }
 
-  private blockPut() {
-    this.putBlock = new Promise((r) => (this.unblockPut = r));
-  }
-
-  private blockTake() {
-    this.takeBlock = new Promise((r) => (this.unblockTake = r));
-  }
-
-  private unblockPut!: Action<void>;
-  private unblockTake!: Action<void>;
-
   private limit: number;
   private _isClose: boolean;
   private buffer: Buffer<T>;
-  private putBlock!: Promise<void>;
-  private takeBlock!: Promise<void>;
+  private putBlock: AsyncBlock;
+  private takeBlock: AsyncBlock;
 }
 
 class Buffer<T> {
