@@ -19,7 +19,7 @@ export class RaceHandler<T> implements AsyncIterableIterator<T> {
   }
 
   async next(): Promise<IteratorResult<T, any>> {
-    if (this.channel.getLength() === 0) {
+    if (this.channel.length === 0) {
       this.raceBlock.unblock();
     }
 
@@ -63,13 +63,13 @@ export class RaceHandler<T> implements AsyncIterableIterator<T> {
   async race(x: T) {
     if (this.status === RaceHandlerStatus.Running) {
       await this.channel.put(x);
-      if (this.channel.getLength() === 1) {
+      if (this.channel.length === 1) {
         this.raceBlock.block();
       }
 
       do {
         await this.raceBlock.wait;
-      } while (this.channel.getLength() > 0);
+      } while (this.channel.length > 0);
     }
   }
 
