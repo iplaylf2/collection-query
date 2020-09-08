@@ -84,9 +84,9 @@ export class Channel<T> {
 
   private _limit: number;
   private _isClose: boolean;
-  private buffer: Buffer<T>;
-  private putBlock: AsyncBlock;
-  private takeBlock: AsyncBlock;
+  private readonly buffer: Buffer<T>;
+  private readonly putBlock: AsyncBlock;
+  private readonly takeBlock: AsyncBlock;
 }
 
 class Buffer<T> {

@@ -86,5 +86,5 @@ class EmitterHandler<T, Te> {
   private receive: EmitForm<T, Te>;
 
   private open: boolean;
-  private channel: Channel<void>;
+  private readonly channel: Channel<void>;
 }
