@@ -2,12 +2,18 @@ import { AsyncBlock } from "./async-block";
 
 export class Channel<T> {
   constructor(limit = Infinity) {
-    this.limit = limit > 0 ? limit : 1;
+    this._limit = limit > 0 ? limit : 1;
     this._isClose = false;
     this.buffer = new Buffer();
 
     this.putBlock = new AsyncBlock();
     this.takeBlock = new AsyncBlock();
+
+    this.onFullBlock = new AsyncBlock();
+    this.onLoadBlock = new AsyncBlock();
+    this.onEmptyBlock = new AsyncBlock();
+    this.onUnloadBlock = new AsyncBlock();
+    this.onCloseBlock = new AsyncBlock();
   }
 
   async put(x: T) {
@@ -18,14 +24,16 @@ export class Channel<T> {
         return;
       }
 
-      if (this.buffer.length < this.limit) {
+      if (this.buffer.length < this._limit) {
         this.buffer.put(x);
 
-        if (this.buffer.length === this.limit) {
+        if (this.buffer.length === this._limit) {
           this.putBlock.block();
+          this.onFullBlock.unblock();
         }
         if (1 === this.buffer.length) {
           this.takeBlock.unblock();
+          this.onLoadBlock.unblock();
         }
 
         return;
@@ -48,9 +56,11 @@ export class Channel<T> {
 
         if (this.buffer.length === 0) {
           this.takeBlock.block();
+          this.onEmptyBlock.unblock();
         }
-        if (this.buffer.length === this.limit - 1) {
+        if (this.buffer.length === this._limit - 1) {
           this.putBlock.unblock();
+          this.onUnloadBlock.unblock();
         }
 
         return [false, x];
@@ -67,31 +77,77 @@ export class Channel<T> {
       this.buffer.clear();
       this.putBlock.unblock();
       this.takeBlock.unblock();
+      this.onCloseBlock.unblock();
     }
   }
 
-  isClose() {
+  get isClose() {
     return this._isClose;
   }
 
-  getLimit() {
-    return this.limit;
+  get limit() {
+    return this._limit;
   }
 
-  getLength() {
+  get length() {
     return this.buffer.length;
   }
 
-  private limit: number;
+  get onFull() {
+    if (!this.onFullBlock.isBlock) {
+      this.onFullBlock.block();
+    }
+
+    return this.onFullBlock.wait;
+  }
+
+  get onLoad() {
+    if (!this.onLoadBlock.isBlock) {
+      this.onLoadBlock.block();
+    }
+
+    return this.onLoadBlock.wait;
+  }
+
+  get onEmpty() {
+    if (!this.onEmptyBlock.isBlock) {
+      this.onEmptyBlock.block();
+    }
+
+    return this.onEmptyBlock.wait;
+  }
+
+  get onUnload() {
+    if (!this.onUnloadBlock.isBlock) {
+      this.onUnloadBlock.block();
+    }
+
+    return this.onUnloadBlock.wait;
+  }
+
+  get onClose() {
+    if (!this.onCloseBlock.isBlock) {
+      this.onCloseBlock.block();
+    }
+
+    return this.onCloseBlock.wait;
+  }
+
+  private _limit: number;
   private _isClose: boolean;
   private buffer: Buffer<T>;
   private putBlock: AsyncBlock;
   private takeBlock: AsyncBlock;
+  private onFullBlock: AsyncBlock;
+  private onLoadBlock: AsyncBlock;
+  private onEmptyBlock: AsyncBlock;
+  private onUnloadBlock: AsyncBlock;
+  private onCloseBlock: AsyncBlock;
 }
 
 class Buffer<T> {
   constructor() {
-    this.length = 0;
+    this._length = 0;
   }
 
   put(x: T) {
@@ -103,7 +159,7 @@ class Buffer<T> {
       this.tail.next = node;
       this.tail = node;
     }
-    this.length++;
+    this._length++;
   }
 
   take(): T {
@@ -112,8 +168,8 @@ class Buffer<T> {
     } else {
       const result = this.head.x;
       this.head = this.head.next;
-      this.length--;
-      if (this.length === 0) {
+      this._length--;
+      if (this._length === 0) {
         this.tail = undefined;
       }
 
@@ -126,7 +182,11 @@ class Buffer<T> {
     this.tail = undefined;
   }
 
-  length: number;
+  get length() {
+    return this._length;
+  }
+
+  private _length: number;
   private head?: LinkedList<T>;
   private tail?: LinkedList<T>;
 }
