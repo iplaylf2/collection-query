@@ -67,13 +67,9 @@ export class RaceHandler<T> implements AsyncIterableIterator<T> {
         this.raceBlock.block();
       }
 
-      while (true) {
+      do {
         await this.raceBlock.wait;
-
-        if (this.channel.getLength() === 0) {
-          return;
-        }
-      }
+      } while (this.channel.getLength() > 0);
     }
   }
 
