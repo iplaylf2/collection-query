@@ -1,5 +1,5 @@
 import { Channel } from "../../../channel";
-import { Action } from "../../../type";
+import { AsyncBlock } from "../../../async-block";
 
 export enum RaceHandlerStatus {
   Running,
@@ -10,7 +10,7 @@ export enum RaceHandlerStatus {
 export class RaceHandler<T> implements AsyncIterableIterator<T> {
   constructor() {
     this.channel = new Channel();
-
+    this.raceBlock = new AsyncBlock();
     this.status = RaceHandlerStatus.Running;
   }
 
@@ -19,14 +19,14 @@ export class RaceHandler<T> implements AsyncIterableIterator<T> {
   }
 
   async next(): Promise<IteratorResult<T, any>> {
+    if (this.channel.getLength() === 0) {
+      this.raceBlock.unblock();
+    }
+
     const [, x] = await this.channel.take();
 
     switch (this.status) {
       case RaceHandlerStatus.Running:
-        if (this.channel.getLength() === 0) {
-          this.unblockRace();
-        }
-
         return { done: false, value: x! };
       case RaceHandlerStatus.End:
         return { done: true, value: undefined };
@@ -43,7 +43,7 @@ export class RaceHandler<T> implements AsyncIterableIterator<T> {
 
   end() {
     this.channel.close();
-    this.unblockRace();
+    this.raceBlock.unblock();
     this.status = RaceHandlerStatus.End;
   }
 
@@ -51,7 +51,7 @@ export class RaceHandler<T> implements AsyncIterableIterator<T> {
     if (this.status === RaceHandlerStatus.Running) {
       this.error = error;
       this.channel.close();
-      this.unblockRace();
+      this.raceBlock.unblock();
       this.status = RaceHandlerStatus.Crash;
     }
   }
@@ -62,27 +62,23 @@ export class RaceHandler<T> implements AsyncIterableIterator<T> {
 
   async race(x: T) {
     if (this.status === RaceHandlerStatus.Running) {
-      this.channel.put(x);
+      await this.channel.put(x);
+      if (this.channel.getLength() === 1) {
+        this.raceBlock.block();
+      }
+
       while (true) {
-        await this.raceBlock;
+        await this.raceBlock.wait;
 
         if (this.channel.getLength() === 0) {
           return;
         }
-
-        this.blockRace();
       }
     }
   }
 
-  private blockRace() {
-    this.raceBlock = new Promise((r) => (this.unblockRace = r));
-  }
-
-  private unblockRace!: Action<void>;
-
   private status: RaceHandlerStatus;
   private error: any;
   private channel: Channel<T>;
-  private raceBlock!: Promise<void>;
+  private raceBlock: AsyncBlock;
 }
