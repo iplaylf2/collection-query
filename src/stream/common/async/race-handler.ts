@@ -1,67 +1,17 @@
-import { Channel } from "../../../channel";
+import {
+  ControlledIterableIterator,
+  IteratorStatus,
+} from "./controlled-iterable-iterator";
 import { AsyncBlock } from "../../../async-block";
 
-export enum RaceHandlerStatus {
-  Running,
-  End,
-  Crash,
-}
-
-export class RaceHandler<T> implements AsyncIterableIterator<T> {
+export class RaceHandler<T> extends ControlledIterableIterator<T> {
   constructor() {
-    this.channel = new Channel();
+    super();
     this.raceBlock = new AsyncBlock();
-    this.status = RaceHandlerStatus.Running;
-  }
-
-  [Symbol.asyncIterator](): AsyncIterableIterator<T> {
-    return this;
-  }
-
-  async next(): Promise<IteratorResult<T, any>> {
-    if (this.channel.length === 0) {
-      this.raceBlock.unblock();
-    }
-
-    const [, x] = await this.channel.take();
-
-    switch (this.status) {
-      case RaceHandlerStatus.Running:
-        return { done: false, value: x! };
-      case RaceHandlerStatus.End:
-        return { done: true, value: undefined };
-      case RaceHandlerStatus.Crash:
-        this.status = RaceHandlerStatus.End;
-        throw this.error;
-    }
-  }
-
-  async return(): Promise<IteratorResult<T, any>> {
-    this.end();
-    return { done: true, value: undefined };
-  }
-
-  end() {
-    this.channel.close();
-    this.raceBlock.unblock();
-    this.status = RaceHandlerStatus.End;
-  }
-
-  crash(error: any) {
-    if (this.status === RaceHandlerStatus.Running) {
-      this.error = error;
-      this.channel.close();
-      this.raceBlock.unblock();
-      this.status = RaceHandlerStatus.Crash;
-    }
-  }
-
-  getStatus() {
-    return this.status;
   }
 
   async race(x: T) {
-    if (this.status === RaceHandlerStatus.Running) {
+    if (this.status === IteratorStatus.Running) {
       await this.channel.put(x);
       if (this.channel.length === 1) {
         this.raceBlock.block();
@@ -73,8 +23,15 @@ export class RaceHandler<T> implements AsyncIterableIterator<T> {
     }
   }
 
-  private status: RaceHandlerStatus;
-  private error: any;
-  private channel: Channel<T>;
-  private raceBlock: AsyncBlock;
+  protected beforeNext() {
+    if (this.channel.length === 0) {
+      this.raceBlock.unblock();
+    }
+  }
+
+  protected onDispose(): void {
+    this.raceBlock.unblock();
+  }
+
+  private readonly raceBlock: AsyncBlock;
 }
