@@ -2,8 +2,9 @@ import { ControlledIterator, IteratorStatus } from "./controlled-iterator";
 import { AsyncBlock } from "../../../async-block";
 
 export class RaceHandler<T> extends ControlledIterator<T> {
-  constructor() {
+  constructor(total: number) {
     super();
+    this.count = total;
     this.raceBlock = new AsyncBlock();
   }
 
@@ -24,6 +25,15 @@ export class RaceHandler<T> extends ControlledIterator<T> {
     }
   }
 
+  leave() {
+    if (this.status === IteratorStatus.Running) {
+      this.count--;
+      if (!(this.count > 0)) {
+        this.end();
+      }
+    }
+  }
+
   protected beforeNext() {
     if (this.channel.length === 0) {
       this.raceBlock.unblock();
@@ -34,5 +44,6 @@ export class RaceHandler<T> extends ControlledIterator<T> {
     this.raceBlock.unblock();
   }
 
+  private count: number;
   private readonly raceBlock: AsyncBlock;
 }
