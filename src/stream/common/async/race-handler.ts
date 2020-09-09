@@ -1,7 +1,4 @@
-import {
-  ControlledIterator,
-  IteratorStatus,
-} from "./controlled-iterator";
+import { ControlledIterator, IteratorStatus } from "./controlled-iterator";
 import { AsyncBlock } from "../../../async-block";
 
 export class RaceHandler<T> extends ControlledIterator<T> {
@@ -20,6 +17,10 @@ export class RaceHandler<T> extends ControlledIterator<T> {
       do {
         await this.raceBlock.wait;
       } while (this.channel.length > 0);
+
+      return this.status === IteratorStatus.Running;
+    } else {
+      return false;
     }
   }
 
