@@ -6,7 +6,7 @@ export enum IteratorStatus {
   Crash,
 }
 
-export abstract class ControlledIterableIterator<T>
+export abstract class ControlledIterator<T>
   implements AsyncIterableIterator<T> {
   constructor() {
     this.channel = new Channel();

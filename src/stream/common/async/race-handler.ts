@@ -1,10 +1,10 @@
 import {
-  ControlledIterableIterator,
+  ControlledIterator,
   IteratorStatus,
-} from "./controlled-iterable-iterator";
+} from "./controlled-iterator";
 import { AsyncBlock } from "../../../async-block";
 
-export class RaceHandler<T> extends ControlledIterableIterator<T> {
+export class RaceHandler<T> extends ControlledIterator<T> {
   constructor() {
     super();
     this.raceBlock = new AsyncBlock();
