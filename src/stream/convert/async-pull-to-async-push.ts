@@ -1,24 +1,36 @@
 import { AsyncPullStream, AsyncPushStream } from "../type";
-import { create } from "../push/async/create";
-import { EmitType } from "../push/type";
+import { relay } from "../push/async/relay";
+import { EmitType, EmitItem } from "../push/type";
+import { Channel } from "../../channel";
 
 export function push<T>(s: AsyncPullStream<T>): AsyncPushStream<T, any> {
-  return create(async (emit) => {
-    const i = s();
-    while (true) {
+  return relay((emit) => {
+    const channel = new Channel<EmitItem<T, any>>();
+
+    (async () => {
       try {
-        var { done, value } = await i.next();
+        for await (const x of s()) {
+          await channel.put([EmitType.Next, x]);
+        }
+        channel.put([EmitType.Complete]);
       } catch (e) {
-        emit(EmitType.Error, e);
+        channel.put([EmitType.Error, e]);
       }
 
-      if (done) {
-        break;
+      channel.close();
+    })();
+
+    (async () => {
+      while (true) {
+        const [done, x] = await channel.take();
+        if (done) {
+          break;
+        }
+
+        emit(...x!);
       }
+    })();
 
-      await emit(EmitType.Next, value);
-    }
-
-    emit(EmitType.Complete);
+    return channel.close.bind(channel);
   });
 }
