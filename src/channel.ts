@@ -10,12 +10,12 @@ export class Channel<T> {
     this.takeBlock = new AsyncBlock();
   }
 
-  async put(x: T) {
+  async put(x: T): Promise<boolean> {
     begin: {
       await this.putBlock.wait;
 
       if (this._isClose) {
-        return;
+        return false;
       }
 
       if (this.buffer.length < this._limit) {
@@ -28,11 +28,12 @@ export class Channel<T> {
           this.takeBlock.unblock();
         }
 
-        return;
+        return true;
       } else {
         break begin;
       }
     }
+    throw "never";
   }
 
   async take(): Promise<[true] | [false, T]> {
