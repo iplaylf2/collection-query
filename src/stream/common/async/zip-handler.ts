@@ -1,5 +1,6 @@
 import { ControlledIterator, IteratorStatus } from "./controlled-iterator";
 import { AsyncBlock } from "../../../async-block";
+import { Channel } from "../../../channel";
 
 export class ZipHandler<T> extends ControlledIterator<T[]> {
   constructor(total: number) {
@@ -7,6 +8,7 @@ export class ZipHandler<T> extends ControlledIterator<T[]> {
     this.total = total;
     this.count = 0;
     this.content = new Array(total);
+    this.channel = new Channel();
     this.zipBlock = new AsyncBlock();
   }
 
@@ -33,10 +35,13 @@ export class ZipHandler<T> extends ControlledIterator<T[]> {
     }
   }
 
-  protected beforeNext() {
+  protected async getNext(): Promise<T[]> {
     if (this.count === 0) {
       this.zipBlock.unblock();
     }
+
+    const [, x] = await this.channel.take();
+    return x!;
   }
 
   protected onDispose(): void {
@@ -46,5 +51,6 @@ export class ZipHandler<T> extends ControlledIterator<T[]> {
   private readonly total: number;
   private count: number;
   private content: T[];
+  private readonly channel: Channel<T[]>;
   private readonly zipBlock: AsyncBlock;
 }

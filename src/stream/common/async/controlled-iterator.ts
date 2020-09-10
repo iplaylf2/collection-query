@@ -1,5 +1,3 @@
-import { Channel } from "../../../channel";
-
 export enum IteratorStatus {
   Running,
   End,
@@ -9,7 +7,6 @@ export enum IteratorStatus {
 export abstract class ControlledIterator<T>
   implements AsyncIterableIterator<T> {
   constructor() {
-    this.channel = new Channel();
     this._status = IteratorStatus.Running;
   }
 
@@ -18,13 +15,11 @@ export abstract class ControlledIterator<T>
   }
 
   async next(): Promise<IteratorResult<T, any>> {
-    this.beforeNext();
-
-    const [, x] = await this.channel.take();
+    const x = await this.getNext();
 
     switch (this._status) {
       case IteratorStatus.Running:
-        return { done: false, value: x! };
+        return { done: false, value: x };
       case IteratorStatus.End:
         return { done: true, value: undefined };
       case IteratorStatus.Crash:
@@ -40,14 +35,14 @@ export abstract class ControlledIterator<T>
 
   end() {
     if (this._status === IteratorStatus.Running) {
-      this.dispose();
+      this.onDispose();
       this._status = IteratorStatus.End;
     }
   }
 
   crash(error: any) {
     if (this._status === IteratorStatus.Running) {
-      this.dispose();
+      this.onDispose();
       this.error = error;
       this._status = IteratorStatus.Crash;
     }
@@ -57,16 +52,10 @@ export abstract class ControlledIterator<T>
     return this._status;
   }
 
-  protected abstract beforeNext(): void;
+  protected abstract getNext(): Promise<T>;
   protected abstract onDispose(): void;
 
-  protected readonly channel: Channel<T>;
   protected error: any;
-
-  private dispose() {
-    this.channel.close();
-    this.onDispose();
-  }
 
   private _status: IteratorStatus;
 }
