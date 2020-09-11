@@ -97,13 +97,19 @@ class QueueBlock {
 
     let dequeue!: Action<void>;
     this.lastBlock = new Promise((r) => {
+      const node = { value: r };
+
       dequeue = () => {
-        const current = this.linkDequeueHead.next!;
-        this.linkDequeueHead.next = current.next;
-        r();
+        const current = this.linkDequeueHead.next;
+        if (current === node) {
+          this.linkDequeueHead.next = current.next;
+          if (this.linkDequeueTail === node) {
+            this.linkDequeueTail = this.linkDequeueHead;
+          }
+          r();
+        }
       };
 
-      const node = { value: r };
       this.linkDequeueTail.next = node;
       this.linkDequeueTail = node;
     });
