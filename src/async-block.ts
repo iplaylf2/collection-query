@@ -1,9 +1,8 @@
 import { Action } from "./type";
 
-export class AsyncBlock {
+export class AsyncBlock<T = void> {
   constructor() {
     this._isBlock = false;
-    this.resolveBlock = () => {};
   }
 
   block() {
@@ -15,9 +14,11 @@ export class AsyncBlock {
     this._isBlock = true;
   }
 
-  unblock() {
-    this._isBlock = false;
-    this.resolveBlock();
+  unblock(x: T) {
+    if (this._isBlock) {
+      this._isBlock = false;
+      this.resolveBlock(x);
+    }
   }
 
   get isBlock() {
@@ -28,8 +29,8 @@ export class AsyncBlock {
     return this.blockPromise;
   }
 
-  private resolveBlock!: Action<void>;
+  private resolveBlock!: Action<T>;
 
   private _isBlock: boolean;
-  private blockPromise!: Promise<void>;
+  private blockPromise!: Promise<T>;
 }
