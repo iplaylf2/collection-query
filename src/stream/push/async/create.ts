@@ -1,7 +1,6 @@
 import { Action } from "../../../type";
 import { EmitForm } from "./type";
 import { EmitItem, EmitType } from "../type";
-import { Channel } from "../../../channel";
 
 export function create<T, Te = never>(executor: Action<EmitForm<T, Te>>) {
   return (receiver: EmitForm<T, Te>) => {
@@ -16,9 +15,8 @@ export function create<T, Te = never>(executor: Action<EmitForm<T, Te>>) {
 class EmitterHandler<T, Te> {
   constructor(receiver: EmitForm<T, Te>) {
     this.receive = receiver;
+    this.queueBlock = new QueueBlock();
     this.open = true;
-    this.channel = new Channel();
-    this.channel.put();
   }
 
   async start(executor: Action<EmitForm<T, Te>>) {
@@ -35,15 +33,15 @@ class EmitterHandler<T, Te> {
   cancel() {
     this.receive = null!;
     this.open = false;
-    this.channel.close();
+    this.queueBlock.dequeueAll();
   }
 
   private async handle(...item: EmitItem<T, Te>) {
-    await this.channel.take();
+    const dequeue = await this.queueBlock.enqueue();
 
     await this.handleReceive(...item);
 
-    await this.channel.put();
+    dequeue();
   }
 
   private async handleReceive(...[t, x]: EmitItem<T, Te>) {
@@ -84,7 +82,52 @@ class EmitterHandler<T, Te> {
   }
 
   private receive: EmitForm<T, Te>;
-
+  private queueBlock: QueueBlock;
   private open: boolean;
-  private readonly channel: Channel<void>;
+}
+
+class QueueBlock {
+  constructor() {
+    this.linkDequeueHead = {} as any;
+    this.linkDequeueTail = this.linkDequeueHead;
+  }
+
+  async enqueue(): Promise<Action<void>> {
+    const last_block = this.lastBlock;
+
+    let dequeue!: Action<void>;
+    this.lastBlock = new Promise((r) => {
+      dequeue = () => {
+        const current = this.linkDequeueHead.next!;
+        this.linkDequeueHead.next = current.next;
+        r();
+      };
+
+      const node = { value: r };
+      this.linkDequeueTail.next = node;
+      this.linkDequeueTail = node;
+    });
+
+    await last_block;
+
+    return dequeue;
+  }
+
+  dequeueAll() {
+    let current = this.linkDequeueHead.next;
+    while (current) {
+      current.value();
+      current = current.next;
+    }
+    this.linkDequeueTail = this.linkDequeueHead;
+  }
+
+  private lastBlock!: Promise<void>;
+  private linkDequeueHead: LinkNode<Action<void>>;
+  private linkDequeueTail: LinkNode<Action<void>>;
+}
+
+interface LinkNode<T> {
+  value: T;
+  next?: LinkNode<T>;
 }
