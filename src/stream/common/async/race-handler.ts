@@ -1,6 +1,6 @@
 import { ControlledIterator, IteratorStatus } from "./controlled-iterator";
-import { AsyncBlock } from "../../../async-block";
-import { Channel } from "../../../channel";
+import { AsyncBlock } from "../../../async-tool/async-block";
+import { Channel } from "../../../async-tool/channel";
 
 export class RaceHandler<T> extends ControlledIterator<T> {
   constructor(total: number) {

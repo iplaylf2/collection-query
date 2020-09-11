@@ -1,4 +1,4 @@
-import { Action } from "./type";
+import { Action } from "../type";
 
 export class AsyncBlock<T = void> {
   constructor() {

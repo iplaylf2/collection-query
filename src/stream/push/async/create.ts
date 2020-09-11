@@ -1,7 +1,7 @@
 import { Action } from "../../../type";
 import { EmitForm } from "./type";
 import { EmitItem, EmitType } from "../type";
-import { QueueBlock } from "../../../queue-block";
+import { QueueBlock } from "../../../async-tool/queue-block";
 
 export function create<T, Te = never>(executor: Action<EmitForm<T, Te>>) {
   return (receiver: EmitForm<T, Te>) => {

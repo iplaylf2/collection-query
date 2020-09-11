@@ -1,7 +1,7 @@
 import { AsyncPullStream, AsyncPushStream } from "../type";
 import { relay } from "../push/async/relay";
 import { EmitType, EmitItem } from "../push/type";
-import { Channel } from "../../channel";
+import { Channel } from "../../async-tool/channel";
 
 export function push<T>(s: AsyncPullStream<T>): AsyncPushStream<T, any> {
   return relay((emit) => {
