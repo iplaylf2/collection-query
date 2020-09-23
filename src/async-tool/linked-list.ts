@@ -29,7 +29,7 @@ export class LinkedList<T> {
     return this._length;
   }
 
-  private head: LinkNode<T>;
+  private readonly head: LinkNode<T>;
   private tail: LinkNode<T>;
   private _length: number;
 }

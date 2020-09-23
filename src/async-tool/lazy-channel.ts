@@ -64,8 +64,8 @@ export class LazyChannel<T> {
     }
   }
 
-  private buffer: LinkedList<T>;
-  private putBlock: AsyncBlock;
-  private takeBlock: AsyncBlock;
+  private readonly buffer: LinkedList<T>;
+  private readonly putBlock: AsyncBlock;
+  private readonly takeBlock: AsyncBlock;
   private _isClose: boolean;
 }
