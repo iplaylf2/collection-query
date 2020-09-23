@@ -10,6 +10,10 @@ export class LazyChannel<T> {
   }
 
   async put(x: T): Promise<boolean> {
+    if(this._isClose){
+      return false;
+    }
+
     this.buffer.put(x);
 
     if (!this.putBlock.isBlock) {
