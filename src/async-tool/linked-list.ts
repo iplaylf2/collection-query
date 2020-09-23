@@ -15,7 +15,7 @@ export class LinkedList<T> {
   }
 
   take(): T {
-    if (this._length > 0) {
+    if (0 < this._length) {
       const current = this.head.next!;
       const x = current.value;
       this.head.next = current.next;

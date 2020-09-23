@@ -10,7 +10,7 @@ export class LazyChannel<T> {
   }
 
   async put(x: T): Promise<boolean> {
-    if(this._isClose){
+    if (this._isClose) {
       return false;
     }
 
@@ -24,7 +24,7 @@ export class LazyChannel<T> {
     begin: {
       await this.putBlock.wait;
 
-      if (this.buffer.length > 0) {
+      if (0 < this.buffer.length) {
         if (!this._isClose) {
           break begin;
         }
@@ -39,7 +39,7 @@ export class LazyChannel<T> {
     begin: {
       await this.takeBlock.wait;
 
-      if (this.buffer.length > 0) {
+      if (0 < this.buffer.length) {
         const result = this.buffer.take();
 
         return [false, result];
