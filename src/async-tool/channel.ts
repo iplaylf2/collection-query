@@ -45,22 +45,26 @@ export class Channel<T> {
       await this.takeBlock.wait;
 
       if (this._isClose) {
-        return [true];
-      }
-
-      if (0 < this.buffer.length) {
-        const x = this.buffer.take();
-
-        if (0 === this.buffer.length) {
-          this.takeBlock.block();
+        if (0 < this.buffer.length) {
+          return [false, this.buffer.take()];
+        } else {
+          return [true];
         }
-        if (this.buffer.length === this._limit - 1) {
-          this.putBlock.unblock();
-        }
-
-        return [false, x];
       } else {
-        break begin;
+        if (0 < this.buffer.length) {
+          const x = this.buffer.take();
+
+          if (0 === this.buffer.length) {
+            this.takeBlock.block();
+          }
+          if (this.buffer.length === this._limit - 1) {
+            this.putBlock.unblock();
+          }
+
+          return [false, x];
+        } else {
+          break begin;
+        }
       }
     }
     throw "never";
