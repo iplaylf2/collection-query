@@ -19,15 +19,14 @@ export class LazyChannel<T> {
     if (!this.putBlock.isBlock) {
       this.putBlock.block();
     }
+
     this.takeBlock.unblock();
 
     begin: {
       await this.putBlock.wait;
 
-      if (0 < this.buffer.length) {
-        if (!this._isClose) {
-          break begin;
-        }
+      if (!this._isClose && 0 < this.buffer.length) {
+        break begin;
       }
 
       return this._isClose;
@@ -41,20 +40,17 @@ export class LazyChannel<T> {
 
       if (0 < this.buffer.length) {
         const result = this.buffer.take();
-
         return [false, result];
+      } else if (this._isClose) {
+        return [true];
       } else {
-        if (this._isClose) {
-          return [true];
-        } else {
-          if (!this.takeBlock.isBlock) {
-            this.takeBlock.block();
-          }
-
-          this.putBlock.unblock();
-
-          break begin;
+        if (!this.takeBlock.isBlock) {
+          this.takeBlock.block();
         }
+
+        this.putBlock.unblock();
+
+        break begin;
       }
     }
     throw "never";
