@@ -1,13 +1,17 @@
 import { AsyncBlock } from "./async-block";
+import { LinkedList } from "./linked-list";
 
 export class Channel<T> {
   constructor(limit = Infinity) {
-    this._limit = limit > 0 ? limit : 1;
-    this._isClose = false;
-    this.buffer = new Buffer();
+    this._limit = 0 < limit ? limit : 1;
 
+    this.buffer = new LinkedList();
     this.putBlock = new AsyncBlock();
     this.takeBlock = new AsyncBlock();
+
+    this.takeBlock.block();
+
+    this._isClose = false;
   }
 
   async put(x: T): Promise<boolean> {
@@ -47,7 +51,7 @@ export class Channel<T> {
       if (0 < this.buffer.length) {
         const x = this.buffer.take();
 
-        if (this.buffer.length === 0) {
+        if (0 === this.buffer.length) {
           this.takeBlock.block();
         }
         if (this.buffer.length === this._limit - 1) {
@@ -64,15 +68,10 @@ export class Channel<T> {
 
   close() {
     if (!this.close) {
-      this._isClose = true;
-      this.buffer.clear();
       this.putBlock.unblock();
       this.takeBlock.unblock();
+      this._isClose = true;
     }
-  }
-
-  get isClose() {
-    return this._isClose;
   }
 
   get limit() {
@@ -83,60 +82,13 @@ export class Channel<T> {
     return this.buffer.length;
   }
 
+  get isClose() {
+    return this._isClose;
+  }
+
   private _limit: number;
-  private _isClose: boolean;
-  private readonly buffer: Buffer<T>;
+  private readonly buffer: LinkedList<T>;
   private readonly putBlock: AsyncBlock;
   private readonly takeBlock: AsyncBlock;
-}
-
-class Buffer<T> {
-  constructor() {
-    this._length = 0;
-  }
-
-  put(x: T) {
-    const node = { x };
-    if (this.tail === undefined) {
-      this.head = node;
-      this.tail = node;
-    } else {
-      this.tail.next = node;
-      this.tail = node;
-    }
-    this._length++;
-  }
-
-  take(): T {
-    if (this.head === undefined) {
-      throw "empty";
-    } else {
-      const result = this.head.x;
-      this.head = this.head.next;
-      this._length--;
-      if (this._length === 0) {
-        this.tail = undefined;
-      }
-
-      return result;
-    }
-  }
-
-  clear() {
-    this.head = undefined;
-    this.tail = undefined;
-  }
-
-  get length() {
-    return this._length;
-  }
-
-  private _length: number;
-  private head?: LinkedList<T>;
-  private tail?: LinkedList<T>;
-}
-
-interface LinkedList<T> {
-  x: T;
-  next?: LinkedList<T>;
+  private _isClose: boolean;
 }
