@@ -4,8 +4,8 @@ exports.last = exports.first = exports.some = exports.every = exports.include = 
 const type_1 = require("../type");
 const partition_collector_1 = require("../../common/partition-collector");
 const async_partition_by_collector_1 = require("../../common/partition-by-collector/async-partition-by-collector");
-const race_dispatcher_1 = require("../../common/async/race-dispatcher");
-const zip_collector_1 = require("../../common/async/zip-collector");
+const zip_handler_1 = require("../../common/async/zip-handler");
+const race_handler_1 = require("../../common/async/race-handler");
 function map(emit, f) {
     return async (x) => {
         const r = await f(x);
@@ -175,47 +175,42 @@ function zip(ee, emit) {
         emit(type_1.EmitType.Complete);
         return () => { };
     }
-    const collector = new zip_collector_1.ZipCollector(total);
+    const handler = new zip_handler_1.ZipHandler(total);
     let index = 0;
     const cancel_list = ee.map((emitter) => {
         const _index = index;
         index++;
-        return emitter(async (t, x) => {
+        const cancel = emitter(async (t, x) => {
             switch (t) {
                 case type_1.EmitType.Next:
-                    await collector.zip(_index, x);
+                    (await handler.zip(_index, x)) || cancel();
                     break;
                 case type_1.EmitType.Complete:
-                    cancel();
-                    collector.leave();
+                    handler.end();
                     break;
                 case type_1.EmitType.Error:
-                    cancel();
-                    collector.crash(x);
+                    handler.crash(x);
                     break;
             }
         });
+        return cancel;
     });
     const cancel = function () {
         for (const c of cancel_list) {
             c();
         }
+        handler.end();
     };
     (async function () {
-        while (true) {
-            try {
-                var [done, x] = await collector.next();
+        try {
+            for await (const x of handler) {
+                await emit(type_1.EmitType.Next, x);
             }
-            catch (e) {
-                emit(type_1.EmitType.Error, e);
-                return;
-            }
-            if (done) {
-                break;
-            }
-            await emit(type_1.EmitType.Next, x);
+            emit(type_1.EmitType.Complete);
         }
-        emit(type_1.EmitType.Complete);
+        catch (e) {
+            emit(type_1.EmitType.Error, e);
+        }
     })();
     return cancel;
 }
@@ -226,41 +221,39 @@ function race(ee, emit) {
         emit(type_1.EmitType.Complete);
         return () => { };
     }
-    const dispatcher = new race_dispatcher_1.RaceDispatcher(total);
-    const cancel_list = ee.map((emitter) => emitter(async (t, x) => {
-        switch (t) {
-            case type_1.EmitType.Next:
-                await dispatcher.race(x);
-                break;
-            case type_1.EmitType.Complete:
-                dispatcher.leave();
-                break;
-            case type_1.EmitType.Error:
-                cancel();
-                dispatcher.crash(x);
-                break;
-        }
-    }));
+    const handler = new race_handler_1.RaceHandler(total);
+    const cancel_list = ee.map((emitter) => {
+        const cancel = emitter(async (t, x) => {
+            switch (t) {
+                case type_1.EmitType.Next:
+                    (await handler.race(x)) || cancel();
+                    break;
+                case type_1.EmitType.Complete:
+                    handler.leave();
+                    break;
+                case type_1.EmitType.Error:
+                    handler.crash(x);
+                    break;
+            }
+        });
+        return cancel;
+    });
     const cancel = function () {
         for (const c of cancel_list) {
             c();
         }
+        handler.end();
     };
     (async function () {
-        while (true) {
-            try {
-                var [done, x] = await dispatcher.next();
+        try {
+            for await (const x of handler) {
+                await emit(type_1.EmitType.Next, x);
             }
-            catch (e) {
-                emit(type_1.EmitType.Error, e);
-                return;
-            }
-            if (done) {
-                break;
-            }
-            await emit(type_1.EmitType.Next, x);
+            emit(type_1.EmitType.Complete);
         }
-        emit(type_1.EmitType.Complete);
+        catch (e) {
+            emit(type_1.EmitType.Error, e);
+        }
     })();
     return cancel;
 }
