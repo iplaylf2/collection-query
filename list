@@ -1,2 +1,0 @@
-1.抽象 race-dispatcher zip-collector relay-handler的共同逻辑
-2.全面处理 emitter cancel和iterator return的取消逻辑
