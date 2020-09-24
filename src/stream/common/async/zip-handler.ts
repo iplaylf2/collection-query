@@ -1,6 +1,6 @@
 import { ControlledIterator, IteratorStatus } from "./controlled-iterator";
 import { AsyncBlock } from "../../../async-tool/async-block";
-import { Channel } from "../../../async-tool/channel";
+import { LazyChannel } from "../../../async-tool/lazy-channel";
 
 export class ZipHandler<T> extends ControlledIterator<T[]> {
   constructor(total: number) {
@@ -8,7 +8,7 @@ export class ZipHandler<T> extends ControlledIterator<T[]> {
     this.total = total;
     this.count = 0;
     this.content = new Array(total);
-    this.channel = new Channel();
+    this.channel = new LazyChannel();
     this.zipBlock = new AsyncBlock();
   }
 
@@ -25,9 +25,10 @@ export class ZipHandler<T> extends ControlledIterator<T[]> {
         this.count = 0;
 
         await this.channel.put(this.content);
+        this.zipBlock.unblock();
+      } else {
+        await this.zipBlock.wait;
       }
-
-      await this.zipBlock.wait;
 
       return this.status === IteratorStatus.Running;
     } else {
@@ -36,21 +37,18 @@ export class ZipHandler<T> extends ControlledIterator<T[]> {
   }
 
   protected async getNext(): Promise<T[]> {
-    if (this.count === 0) {
-      this.zipBlock.unblock();
-    }
-
     const [, x] = await this.channel.take();
     return x!;
   }
 
   protected onDispose(): void {
+    this.channel.close();
     this.zipBlock.unblock();
   }
 
   private readonly total: number;
   private count: number;
-  private content: T[];
-  private readonly channel: Channel<T[]>;
+  private readonly content: T[];
+  private readonly channel: LazyChannel<T[]>;
   private readonly zipBlock: AsyncBlock;
 }
