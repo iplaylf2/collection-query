@@ -1,6 +1,7 @@
 import { Action } from "../../../type";
 import { EmitForm } from "./type";
 import { EmitItem, EmitType } from "../type";
+import { Channel } from "../../../async-tool/channel";
 
 export function create<T, Te = never>(executor: Action<EmitForm<T, Te>>) {
   return (receiver: EmitForm<T, Te>) => {
@@ -15,8 +16,8 @@ export function create<T, Te = never>(executor: Action<EmitForm<T, Te>>) {
 class EmitterHandler<T, Te> {
   constructor(receiver: EmitForm<T, Te>) {
     this.receive = receiver;
+    this.queueChannel = new Channel(1);
     this.open = true;
-    this.queueBlock = Promise.resolve();
   }
 
   async start(executor: Action<EmitForm<T, Te>>) {
@@ -33,19 +34,15 @@ class EmitterHandler<T, Te> {
   cancel() {
     this.receive = null!;
     this.open = false;
+    this.queueChannel.close();
   }
 
   private async handle(...item: EmitItem<T, Te>) {
-    const block = this.queueBlock;
-
-    let unblock!: Action<void>;
-    this.queueBlock = new Promise((resolve) => (unblock = resolve));
-
-    await block;
+    await this.queueChannel.put();
 
     await this.handleReceive(...item);
 
-    unblock();
+    await this.queueChannel.take();
   }
 
   private async handleReceive(...[t, x]: EmitItem<T, Te>) {
@@ -86,7 +83,6 @@ class EmitterHandler<T, Te> {
   }
 
   private receive: EmitForm<T, Te>;
-
+  private readonly queueChannel: Channel<void>;
   private open: boolean;
-  private queueBlock: Promise<void>;
 }

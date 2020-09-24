@@ -7,14 +7,8 @@ import {
 } from "../../../type";
 import { PartitionCollector } from "../../common/partition-collector";
 import { AsyncPartitionByCollector } from "../../common/partition-by-collector/async-partition-by-collector";
-import {
-  ZipCollector,
-  ZipCollectorStatus,
-} from "../../common/async/zip-collector";
-import {
-  RaceDispatcher,
-  RaceDispatcherStatus,
-} from "../../common/async/race-dispatcher";
+import { ZipHandler } from "../../common/async/zip-handler";
+import { RaceHandler } from "../../common/async/race-handler";
 
 export async function* map<T, K>(
   iterator: AsyncIterableIterator<T>,
@@ -160,45 +154,25 @@ export async function* zip<T>(ss: Func<AsyncIterableIterator<T>>[]) {
     return;
   }
 
-  const collector = new ZipCollector<T>(total);
+  const handler = new ZipHandler<T>(total);
 
   let index = 0;
-  ss.map((s) => [s(), index++] as [AsyncIterableIterator<T>, number]).forEach(
-    async ([i, index]) => {
-      while (true) {
-        try {
-          var { done, value } = await i.next();
-        } catch (e) {
-          collector.crash(e);
+  ss.map((s) => s()).forEach(async (i) => {
+    const _index = index++;
+    try {
+      for await (const x of i) {
+        const isRunning = await handler.zip(_index, x);
+        if (!isRunning) {
           return;
         }
-
-        switch (collector.getStatus()) {
-          case ZipCollectorStatus.Active:
-            break;
-          default:
-            return;
-        }
-
-        if (done) {
-          break;
-        }
-
-        await collector.zip(index, value);
       }
-
-      collector.leave();
+      handler.end();
+    } catch (e) {
+      handler.crash(e);
     }
-  );
+  });
 
-  while (true) {
-    const [done, x] = await collector.next();
-    if (done) {
-      break;
-    }
-
-    yield x!;
-  }
+  yield* handler;
 }
 
 export async function* race<T>(ss: Func<AsyncIterableIterator<T>>[]) {
@@ -207,37 +181,21 @@ export async function* race<T>(ss: Func<AsyncIterableIterator<T>>[]) {
     return;
   }
 
-  const dispatcher = new RaceDispatcher<T>(total);
+  const handler = new RaceHandler<T>(total);
 
   ss.map((s) => s()).forEach(async (i) => {
-    while (true) {
-      try {
-        var { done, value } = await i.next();
-      } catch (e) {
-        dispatcher.crash(e);
-        return;
+    try {
+      for await (const x of i) {
+        const isRunning = await handler.race(x);
+        if (!isRunning) {
+          return;
+        }
       }
-
-      if (dispatcher.getStatus() === RaceDispatcherStatus.Crash) {
-        return;
-      }
-
-      if (done) {
-        break;
-      }
-
-      await dispatcher.race(value);
+      handler.leave();
+    } catch (e) {
+      handler.crash(e);
     }
-
-    dispatcher.leave();
   });
 
-  while (true) {
-    const [done, x] = await dispatcher.next();
-    if (done) {
-      break;
-    }
-
-    yield x!;
-  }
+  yield* handler;
 }
