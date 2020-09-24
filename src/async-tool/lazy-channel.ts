@@ -22,20 +22,19 @@ export class LazyChannel<T> {
 
     this.takeBlock.unblock();
 
-    begin: {
+    while (true) {
       await this.putBlock.wait;
 
       if (!this._isClose && 0 < this.buffer.length) {
-        break begin;
+        continue;
       }
 
       return this._isClose;
     }
-    throw "never";
   }
 
   async take(): Promise<[true] | [false, T]> {
-    begin: {
+    while (true) {
       await this.takeBlock.wait;
 
       if (0 < this.buffer.length) {
@@ -51,11 +50,10 @@ export class LazyChannel<T> {
 
           this.putBlock.unblock();
 
-          break begin;
+          continue;
         }
       }
     }
-    throw "never";
   }
 
   close() {

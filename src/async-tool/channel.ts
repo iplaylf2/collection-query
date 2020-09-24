@@ -15,7 +15,7 @@ export class Channel<T> {
   }
 
   async put(x: T): Promise<boolean> {
-    begin: {
+    while (true) {
       await this.putBlock.wait;
 
       if (this._isClose) {
@@ -34,14 +34,13 @@ export class Channel<T> {
 
         return true;
       } else {
-        break begin;
+        continue;
       }
     }
-    throw "never";
   }
 
   async take(): Promise<[true] | [false, T]> {
-    begin: {
+    while (true) {
       await this.takeBlock.wait;
 
       if (this._isClose) {
@@ -63,11 +62,10 @@ export class Channel<T> {
 
           return [false, x];
         } else {
-          break begin;
+          continue;
         }
       }
     }
-    throw "never";
   }
 
   close() {
