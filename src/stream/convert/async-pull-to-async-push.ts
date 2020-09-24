@@ -1,11 +1,11 @@
 import { AsyncPullStream, AsyncPushStream } from "../type";
 import { relay } from "../push/async/relay";
 import { EmitType, EmitItem } from "../push/type";
-import { Channel } from "../../async-tool/channel";
+import { LazyChannel } from "../../async-tool/lazy-channel";
 
 export function push<T>(s: AsyncPullStream<T>): AsyncPushStream<T, any> {
   return relay((emit) => {
-    const channel = new Channel<EmitItem<T, any>>();
+    const channel = new LazyChannel<EmitItem<T, any>>();
 
     (async () => {
       try {
@@ -27,7 +27,7 @@ export function push<T>(s: AsyncPullStream<T>): AsyncPushStream<T, any> {
           break;
         }
 
-        emit(...x!);
+        await emit(...x!);
       }
     })();
 
