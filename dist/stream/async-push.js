@@ -1,10 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.last = exports.first = exports.some = exports.every = exports.include = exports.count = exports.reduce = exports.race = exports.zip = exports.concatAll = exports.concat = exports.partitionBy = exports.partition = exports.skipWhile = exports.skip = exports.takeWhile = exports.take = exports.remove = exports.filter = exports.map = void 0;
+exports.sync = exports.last = exports.first = exports.some = exports.every = exports.include = exports.count = exports.reduce = exports.race = exports.zip = exports.concatAll = exports.concat = exports.partitionBy = exports.partition = exports.skipWhile = exports.skip = exports.takeWhile = exports.take = exports.remove = exports.filter = exports.map = void 0;
 const relay_next_1 = require("./push/async/relay-next");
 const core = require("./push/async/core");
 const relay_1 = require("./push/async/relay");
 const reduce_1 = require("./push/async/reduce");
+const relay_2 = require("./push/relay");
 const relay_next = relay_next_1.relayNext;
 function map(f) {
     return relay_next((emit) => core.map(emit, f));
@@ -86,3 +87,4 @@ function last(s) {
     return reduce_1.reduce(core.last)(s);
 }
 exports.last = last;
+exports.sync = relay_2.relay;

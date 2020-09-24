@@ -14,4 +14,3 @@ exports.create = void 0;
 const create_1 = require("./stream/push/create");
 exports.create = create_1.create;
 __exportStar(require("./stream/push"), exports);
-__exportStar(require("./stream/convert/sync-push-to-async-push"), exports);

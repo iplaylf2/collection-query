@@ -3,8 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.race = exports.zip = exports.concat = exports.partitionBy = exports.partition = exports.skipWhile = exports.skip = exports.takeWhile = exports.take = exports.remove = exports.filter = exports.map = void 0;
 const partition_collector_1 = require("../../common/partition-collector");
 const async_partition_by_collector_1 = require("../../common/partition-by-collector/async-partition-by-collector");
-const zip_handler_1 = require("../../common/async/zip-handler");
-const race_handler_1 = require("../../common/async/race-handler");
+const zip_collector_1 = require("../../common/async/zip-collector");
+const race_dispatcher_1 = require("../../common/async/race-dispatcher");
 async function* map(iterator, f) {
     for await (const x of iterator) {
         yield await f(x);
@@ -124,24 +124,37 @@ async function* zip(ss) {
     if (!(total > 0)) {
         return;
     }
-    const handler = new zip_handler_1.ZipHandler(total);
+    const collector = new zip_collector_1.ZipCollector(total);
     let index = 0;
-    ss.map((s) => s()).forEach(async (i) => {
-        const _index = index++;
-        try {
-            for await (const x of i) {
-                const isRunning = await handler.zip(_index, x);
-                if (!isRunning) {
-                    return;
-                }
+    ss.map((s) => [s(), index++]).forEach(async ([i, index]) => {
+        while (true) {
+            try {
+                var { done, value } = await i.next();
             }
-            handler.end();
+            catch (e) {
+                collector.crash(e);
+                return;
+            }
+            switch (collector.getStatus()) {
+                case zip_collector_1.ZipCollectorStatus.Active:
+                    break;
+                default:
+                    return;
+            }
+            if (done) {
+                break;
+            }
+            await collector.zip(index, value);
         }
-        catch (e) {
-            handler.crash(e);
-        }
+        collector.leave();
     });
-    yield* handler;
+    while (true) {
+        const [done, x] = await collector.next();
+        if (done) {
+            break;
+        }
+        yield x;
+    }
 }
 exports.zip = zip;
 async function* race(ss) {
@@ -149,21 +162,32 @@ async function* race(ss) {
     if (!(total > 0)) {
         return;
     }
-    const handler = new race_handler_1.RaceHandler(total);
+    const dispatcher = new race_dispatcher_1.RaceDispatcher(total);
     ss.map((s) => s()).forEach(async (i) => {
-        try {
-            for await (const x of i) {
-                const isRunning = await handler.race(x);
-                if (!isRunning) {
-                    return;
-                }
+        while (true) {
+            try {
+                var { done, value } = await i.next();
             }
-            handler.leave();
+            catch (e) {
+                dispatcher.crash(e);
+                return;
+            }
+            if (dispatcher.getStatus() === race_dispatcher_1.RaceDispatcherStatus.Crash) {
+                return;
+            }
+            if (done) {
+                break;
+            }
+            await dispatcher.race(value);
         }
-        catch (e) {
-            handler.crash(e);
-        }
+        dispatcher.leave();
     });
-    yield* handler;
+    while (true) {
+        const [done, x] = await dispatcher.next();
+        if (done) {
+            break;
+        }
+        yield x;
+    }
 }
 exports.race = race;

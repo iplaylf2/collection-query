@@ -1,4 +1,4 @@
-import { PushStream } from "./type";
+import { PushStream, AsyncPushStream } from "./type";
 import { Selector, Predicate, Aggregate } from "../type";
 export declare function map<T, Te, K>(f: Selector<T, K>): (s: PushStream<T, Te>) => PushStream<K, Te>;
 export declare function filter<T, Te>(f: Predicate<T>): (s: PushStream<T, Te>) => PushStream<T, Te>;
@@ -20,3 +20,4 @@ export declare function every<T>(s: PushStream<T>, f: Predicate<T>): Promise<boo
 export declare function some<T>(s: PushStream<T>, f: Predicate<T>): Promise<boolean>;
 export declare function first<T>(s: PushStream<T>): Promise<void | T>;
 export declare function last<T>(s: PushStream<T>): Promise<void | T>;
+export declare const async: <T, Te>(s: PushStream<T, Te>) => AsyncPushStream<T, Te>;
