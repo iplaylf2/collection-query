@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.create = void 0;
 const type_1 = require("../type");
+const channel_1 = require("../../../async-tool/channel");
 function create(executor) {
     return (receiver) => {
         const handler = new EmitterHandler(receiver);
@@ -14,8 +15,8 @@ exports.create = create;
 class EmitterHandler {
     constructor(receiver) {
         this.receive = receiver;
+        this.queueChannel = new channel_1.Channel(1);
         this.open = true;
-        this.queueBlock = Promise.resolve();
     }
     async start(executor) {
         await Promise.resolve();
@@ -30,14 +31,12 @@ class EmitterHandler {
     cancel() {
         this.receive = null;
         this.open = false;
+        this.queueChannel.close();
     }
     async handle(...item) {
-        const block = this.queueBlock;
-        let unblock;
-        this.queueBlock = new Promise((resolve) => (unblock = resolve));
-        await block;
+        await this.queueChannel.put();
         await this.handleReceive(...item);
-        unblock();
+        await this.queueChannel.take();
     }
     async handleReceive(...[t, x]) {
         if (this.open) {
