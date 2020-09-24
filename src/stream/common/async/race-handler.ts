@@ -1,25 +1,16 @@
 import { ControlledIterator, IteratorStatus } from "./controlled-iterator";
-import { AsyncBlock } from "../../../async-tool/async-block";
-import { Channel } from "../../../async-tool/channel";
+import { LazyChannel } from "../../../async-tool/lazy-channel";
 
 export class RaceHandler<T> extends ControlledIterator<T> {
   constructor(total: number) {
     super();
     this.count = total;
-    this.channel = new Channel();
-    this.raceBlock = new AsyncBlock();
+    this.channel = new LazyChannel();
   }
 
   async race(x: T) {
     if (this.status === IteratorStatus.Running) {
       await this.channel.put(x);
-      if (this.channel.length === 1) {
-        this.raceBlock.block();
-      }
-
-      do {
-        await this.raceBlock.wait;
-      } while (this.channel.length > 0);
 
       return this.status === IteratorStatus.Running;
     } else {
@@ -37,19 +28,14 @@ export class RaceHandler<T> extends ControlledIterator<T> {
   }
 
   protected async getNext(): Promise<T> {
-    if (this.channel.length === 0) {
-      this.raceBlock.unblock();
-    }
-
     const [, x] = await this.channel.take();
     return x!;
   }
 
   protected onDispose(): void {
-    this.raceBlock.unblock();
+    this.channel.close();
   }
 
   private count: number;
-  private readonly channel: Channel<T>;
-  private readonly raceBlock: AsyncBlock;
+  private readonly channel: LazyChannel<T>;
 }
