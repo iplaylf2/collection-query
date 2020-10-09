@@ -1,13 +1,22 @@
 import { PushStream } from "./type";
 import { relayNext as _relay_next, RelayNextHandler } from "./push/relay-next";
-import { Selector, Predicate, Aggregate } from "../type";
+import { Action, Selector, Predicate, Aggregate } from "../type";
 import * as core from "./push/core";
 import { relay } from "./push/relay";
 import { reduce as _reduce } from "./push/reduce";
+import { EmitType } from "./push/type";
 
 const relay_next: <T, Te, K = T>(
   handler: RelayNextHandler<T, Te, K>
 ) => (s: PushStream<T, Te>) => PushStream<K, Te> = _relay_next;
+
+export function forEach<T>(s: PushStream<T, any>, f: Action<T>) {
+  s((t, x?) => {
+    if (t === EmitType.Next) {
+      f(x!);
+    }
+  });
+}
 
 export function map<T, Te, K>(f: Selector<T, K>) {
   return relay_next<T, Te, K>((emit) => core.map(emit, f));
