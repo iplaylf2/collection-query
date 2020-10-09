@@ -1,3 +1,4 @@
+import "./jest"
 import { forEach } from "../pull";
 
 describe("pull", () => {
