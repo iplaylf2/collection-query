@@ -1,13 +1,32 @@
 import { PushStream } from "./type";
 import { relayNext as _relay_next, RelayNextHandler } from "./push/relay-next";
-import { Selector, Predicate, Aggregate } from "../type";
+import { Action, Selector, Predicate, Aggregate } from "../type";
 import * as core from "./push/core";
 import { relay } from "./push/relay";
 import { reduce as _reduce } from "./push/reduce";
+import { EmitType, EmitForm } from "./push/type";
+import { create as _create } from "./push/create";
+import { createFrom as _createFrom } from "./push/create-from";
 
 const relay_next: <T, Te, K = T>(
   handler: RelayNextHandler<T, Te, K>
 ) => (s: PushStream<T, Te>) => PushStream<K, Te> = _relay_next;
+
+export const create: <T, Te = never>(
+  executor: Action<EmitForm<T, Te>>
+) => PushStream<T, Te> = _create;
+
+export const createFrom: <T>(
+  i: Iterable<T>
+) => PushStream<T, any> = _createFrom;
+
+export function forEach<T>(s: PushStream<T, any>, f: Action<T>) {
+  s((t, x?) => {
+    if (t === EmitType.Next) {
+      f(x!);
+    }
+  });
+}
 
 export function map<T, Te, K>(f: Selector<T, K>) {
   return relay_next<T, Te, K>((emit) => core.map(emit, f));

@@ -11,6 +11,14 @@ import {
 } from "../type";
 import * as core from "./pull/async/core";
 
+export function createFrom<T>(i: Iterable<T>): AsyncPullStream<T> {
+  return async function* () {
+    for (const x of i) {
+      yield x;
+    }
+  };
+}
+
 export async function forEach<T>(
   s: AsyncPullStream<T>,
   f: Action<T> | AsyncAction<T>

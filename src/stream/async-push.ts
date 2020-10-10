@@ -4,6 +4,8 @@ import {
   RelayNextHandler,
 } from "./push/async/relay-next";
 import {
+  Action,
+  AsyncAction,
   Selector,
   AsyncSelector,
   Predicate,
@@ -14,10 +16,33 @@ import {
 import * as core from "./push/async/core";
 import { relay } from "./push/async/relay";
 import { reduce as _reduce } from "./push/async/reduce";
+import { EmitType } from "./push/type";
+import { EmitForm } from "./push/async/type";
+import { create as _create } from "./push/async/create";
+import { createFrom as _createFrom } from "./push/async/create-from";
 
 const relay_next: <T, Te, K = T>(
   handler: RelayNextHandler<T, Te, K>
 ) => (s: AsyncPushStream<T, Te>) => AsyncPushStream<K, Te> = _relay_next;
+
+export const create: <T, Te = never>(
+  executor: Action<EmitForm<T, Te>>
+) => AsyncPushStream<T, Te> = _create;
+
+export const createFrom: <T>(
+  i: Iterable<T>
+) => AsyncPushStream<T, any> = _createFrom;
+
+export function forEach<T>(
+  s: AsyncPushStream<T, any>,
+  f: Action<T> | AsyncAction<T>
+) {
+  s(async (t, x?) => {
+    if (t === EmitType.Next) {
+      await f(x!);
+    }
+  });
+}
 
 export function map<T, Te, K>(f: Selector<T, K> | AsyncSelector<T, K>) {
   return relay_next<T, Te, K>((emit) => core.map(emit, f));

@@ -18,7 +18,7 @@ export class PartitionCollector<T> {
   }
 
   getRest(): [true, T[]] | [false] {
-    return [(this.partition.length > 0) as true, this.partition];
+    return [(0 < this.partition.length) as true, this.partition];
   }
 
   private readonly n: number;
