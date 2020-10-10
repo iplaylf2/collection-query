@@ -2,6 +2,14 @@ import { PullStream } from "./type";
 import { Action, Selector, Predicate, Aggregate } from "../type";
 import * as core from "./pull/core";
 
+export function createFrom<T>(i: Iterable<T>): PullStream<T> {
+  return function* () {
+    for (const x of i) {
+      yield x;
+    }
+  };
+}
+
 export function forEach<T>(s: PullStream<T>, f: Action<T>) {
   for (const x of s()) {
     f(x);
