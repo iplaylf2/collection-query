@@ -3,7 +3,7 @@ import { Action } from "../../../type";
 
 export function zip<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T[], Te>) {
   const total = ee.length;
-  if (!(total > 0)) {
+  if (!(0 < total)) {
     emit(EmitType.Complete);
     return () => {};
   }

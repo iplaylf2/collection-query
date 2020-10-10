@@ -45,7 +45,7 @@ export async function* remove<T>(
 
 export async function* take<T>(iterator: AsyncIterableIterator<T>, n: number) {
   for await (const x of iterator) {
-    if (n > 0) {
+    if (0 < n) {
       n--;
       yield x;
     } else {
@@ -70,7 +70,7 @@ export async function* takeWhile<T>(
 
 export async function* skip<T>(iterator: AsyncIterableIterator<T>, n: number) {
   while (true) {
-    if (n > 0) {
+    if (0 < n) {
       const { done } = await iterator.next();
       if (done) {
         break;
@@ -150,7 +150,7 @@ export async function* concat<T>(
 
 export async function* zip<T>(ss: Func<AsyncIterableIterator<T>>[]) {
   const total = ss.length;
-  if (!(total > 0)) {
+  if (!(0 < total)) {
     return;
   }
 
@@ -177,7 +177,7 @@ export async function* zip<T>(ss: Func<AsyncIterableIterator<T>>[]) {
 
 export async function* race<T>(ss: Func<AsyncIterableIterator<T>>[]) {
   const total = ss.length;
-  if (!(total > 0)) {
+  if (!(0 < total)) {
     return;
   }
 

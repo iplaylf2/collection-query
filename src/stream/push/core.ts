@@ -27,7 +27,7 @@ export function remove<T>(emit: EmitForm<T, never>, f: Predicate<T>) {
 
 export function take<T>(emit: EmitForm<T, never>, n: number) {
   return (x: T) => {
-    if (n > 0) {
+    if (0 < n) {
       n--;
       emit(EmitType.Next, x);
     } else {
@@ -50,7 +50,7 @@ export function skip<T>(emit: EmitForm<T, never>, n: number) {
   let skip = true;
   return (x: T) => {
     if (skip) {
-      if (n > 0) {
+      if (0 < n) {
         n--;
       } else {
         skip = false;
@@ -81,7 +81,7 @@ export function partition<T, Te>(
   emit: EmitForm<T[], Te>,
   n: number
 ) {
-  if (!(n > 0)) {
+  if (!(0 < n)) {
     emit(EmitType.Complete);
     return () => {};
   }
@@ -179,7 +179,7 @@ export * from "./core/zip";
 
 export function race<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T, Te>) {
   let count = ee.length;
-  if (!(count > 0)) {
+  if (!(0 < count)) {
     emit(EmitType.Complete);
     return () => {};
   }
@@ -192,7 +192,7 @@ export function race<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T, Te>) {
           break;
         case EmitType.Complete:
           count--;
-          if (!(count > 0)) {
+          if (!(0 < count)) {
             emit(EmitType.Complete);
           }
           break;

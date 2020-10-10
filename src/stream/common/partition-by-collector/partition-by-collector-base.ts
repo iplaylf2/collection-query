@@ -5,7 +5,7 @@ export abstract class PartitionByCollectorBase<T> {
   }
 
   getRest(): [true, T[]] | [false] {
-    return [(this.partition.length > 0) as true, this.partition];
+    return [(0 < this.partition.length) as true, this.partition];
   }
 
   protected dispatch(key: any, x: T): [true, T[]] | [false] {
