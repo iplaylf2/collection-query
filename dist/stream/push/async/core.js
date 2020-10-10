@@ -33,7 +33,7 @@ function remove(emit, f) {
 exports.remove = remove;
 function take(emit, n) {
     return async (x) => {
-        if (n > 0) {
+        if (0 < n) {
             n--;
             await emit(type_1.EmitType.Next, x);
         }
@@ -59,7 +59,7 @@ function skip(emit, n) {
     let skip = true;
     return async (x) => {
         if (skip) {
-            if (n > 0) {
+            if (0 < n) {
                 n--;
             }
             else {
@@ -90,7 +90,7 @@ function skipWhile(emit, f) {
 }
 exports.skipWhile = skipWhile;
 function partition(emitter, emit, n) {
-    if (!(n > 0)) {
+    if (!(0 < n)) {
         emit(type_1.EmitType.Complete);
         return () => { };
     }
@@ -171,7 +171,7 @@ function concat(emitter1, emitter2, emit) {
 exports.concat = concat;
 function zip(ee, emit) {
     const total = ee.length;
-    if (!(total > 0)) {
+    if (!(0 < total)) {
         emit(type_1.EmitType.Complete);
         return () => { };
     }
@@ -217,7 +217,7 @@ function zip(ee, emit) {
 exports.zip = zip;
 function race(ee, emit) {
     const total = ee.length;
-    if (!(total > 0)) {
+    if (!(0 < total)) {
         emit(type_1.EmitType.Complete);
         return () => { };
     }

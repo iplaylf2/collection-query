@@ -38,7 +38,7 @@ function remove(emit, f) {
 exports.remove = remove;
 function take(emit, n) {
     return (x) => {
-        if (n > 0) {
+        if (0 < n) {
             n--;
             emit(type_1.EmitType.Next, x);
         }
@@ -63,7 +63,7 @@ function skip(emit, n) {
     let skip = true;
     return (x) => {
         if (skip) {
-            if (n > 0) {
+            if (0 < n) {
                 n--;
             }
             else {
@@ -93,7 +93,7 @@ function skipWhile(emit, f) {
 }
 exports.skipWhile = skipWhile;
 function partition(emitter, emit, n) {
-    if (!(n > 0)) {
+    if (!(0 < n)) {
         emit(type_1.EmitType.Complete);
         return () => { };
     }
@@ -175,7 +175,7 @@ exports.concat = concat;
 __exportStar(require("./core/zip"), exports);
 function race(ee, emit) {
     let count = ee.length;
-    if (!(count > 0)) {
+    if (!(0 < count)) {
         emit(type_1.EmitType.Complete);
         return () => { };
     }
@@ -186,7 +186,7 @@ function race(ee, emit) {
                 break;
             case type_1.EmitType.Complete:
                 count--;
-                if (!(count > 0)) {
+                if (!(0 < count)) {
                     emit(type_1.EmitType.Complete);
                 }
                 break;

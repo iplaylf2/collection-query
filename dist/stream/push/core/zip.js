@@ -4,7 +4,7 @@ exports.zip = void 0;
 const type_1 = require("../type");
 function zip(ee, emit) {
     const total = ee.length;
-    if (!(total > 0)) {
+    if (!(0 < total)) {
         emit(type_1.EmitType.Complete);
         return () => { };
     }

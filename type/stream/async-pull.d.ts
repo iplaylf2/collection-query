@@ -1,5 +1,6 @@
 import { AsyncPullStream } from "./type";
 import { Action, AsyncAction, Selector, AsyncSelector, Predicate, AsyncPredicate, Aggregate, AsyncAggregate } from "../type";
+export declare function createFrom<T>(i: Iterable<T>): AsyncPullStream<T>;
 export declare function forEach<T>(s: AsyncPullStream<T>, f: Action<T> | AsyncAction<T>): Promise<void>;
 export declare function map<T, K>(f: Selector<T, K> | AsyncSelector<T, K>): (s: AsyncPullStream<T>) => AsyncPullStream<K>;
 export declare function filter<T>(f: Predicate<T> | AsyncPredicate<T>): (s: AsyncPullStream<T>) => AsyncPullStream<T>;

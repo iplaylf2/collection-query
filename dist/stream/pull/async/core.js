@@ -31,7 +31,7 @@ async function* remove(iterator, f) {
 exports.remove = remove;
 async function* take(iterator, n) {
     for await (const x of iterator) {
-        if (n > 0) {
+        if (0 < n) {
             n--;
             yield x;
         }
@@ -55,7 +55,7 @@ async function* takeWhile(iterator, f) {
 exports.takeWhile = takeWhile;
 async function* skip(iterator, n) {
     while (true) {
-        if (n > 0) {
+        if (0 < n) {
             const { done } = await iterator.next();
             if (done) {
                 break;
@@ -121,7 +121,7 @@ async function* concat(s1, s2) {
 exports.concat = concat;
 async function* zip(ss) {
     const total = ss.length;
-    if (!(total > 0)) {
+    if (!(0 < total)) {
         return;
     }
     const handler = new zip_handler_1.ZipHandler(total);
@@ -146,7 +146,7 @@ async function* zip(ss) {
 exports.zip = zip;
 async function* race(ss) {
     const total = ss.length;
-    if (!(total > 0)) {
+    if (!(0 < total)) {
         return;
     }
     const handler = new race_handler_1.RaceHandler(total);

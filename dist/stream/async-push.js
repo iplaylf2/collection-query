@@ -1,11 +1,24 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.last = exports.first = exports.some = exports.every = exports.include = exports.count = exports.reduce = exports.race = exports.zip = exports.concatAll = exports.concat = exports.partitionBy = exports.partition = exports.skipWhile = exports.skip = exports.takeWhile = exports.take = exports.remove = exports.filter = exports.map = void 0;
+exports.last = exports.first = exports.some = exports.every = exports.include = exports.count = exports.reduce = exports.race = exports.zip = exports.concatAll = exports.concat = exports.partitionBy = exports.partition = exports.skipWhile = exports.skip = exports.takeWhile = exports.take = exports.remove = exports.filter = exports.map = exports.forEach = exports.createFrom = exports.create = void 0;
 const relay_next_1 = require("./push/async/relay-next");
 const core = require("./push/async/core");
 const relay_1 = require("./push/async/relay");
 const reduce_1 = require("./push/async/reduce");
+const type_1 = require("./push/type");
+const create_1 = require("./push/async/create");
+const create_from_1 = require("./push/async/create-from");
 const relay_next = relay_next_1.relayNext;
+exports.create = create_1.create;
+exports.createFrom = create_from_1.createFrom;
+function forEach(s, f) {
+    s(async (t, x) => {
+        if (t === type_1.EmitType.Next) {
+            await f(x);
+        }
+    });
+}
+exports.forEach = forEach;
 function map(f) {
     return relay_next((emit) => core.map(emit, f));
 }

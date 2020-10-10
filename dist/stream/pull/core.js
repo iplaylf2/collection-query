@@ -27,7 +27,7 @@ function* remove(iterator, f) {
 exports.remove = remove;
 function* take(iterator, n) {
     for (const x of iterator) {
-        if (n > 0) {
+        if (0 < n) {
             n--;
             yield x;
         }
@@ -50,7 +50,7 @@ function* takeWhile(iterator, f) {
 exports.takeWhile = takeWhile;
 function* skip(iterator, n) {
     while (true) {
-        if (n > 0) {
+        if (0 < n) {
             const { done } = iterator.next();
             if (done) {
                 break;

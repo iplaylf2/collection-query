@@ -1,5 +1,6 @@
 import { PullStream } from "./type";
 import { Action, Selector, Predicate, Aggregate } from "../type";
+export declare function createFrom<T>(i: Iterable<T>): PullStream<T>;
 export declare function forEach<T>(s: PullStream<T>, f: Action<T>): void;
 export declare function map<T, K>(f: Selector<T, K>): (s: PullStream<T>) => PullStream<K>;
 export declare function filter<T>(f: Predicate<T>): (s: PullStream<T>) => PullStream<T>;

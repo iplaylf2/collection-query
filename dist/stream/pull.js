@@ -1,7 +1,15 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.last = exports.first = exports.some = exports.every = exports.include = exports.count = exports.reduce = exports.zip = exports.concatAll = exports.concat = exports.partitionBy = exports.partition = exports.skipWhile = exports.skip = exports.takeWhile = exports.take = exports.remove = exports.filter = exports.map = exports.forEach = void 0;
+exports.last = exports.first = exports.some = exports.every = exports.include = exports.count = exports.reduce = exports.zip = exports.concatAll = exports.concat = exports.partitionBy = exports.partition = exports.skipWhile = exports.skip = exports.takeWhile = exports.take = exports.remove = exports.filter = exports.map = exports.forEach = exports.createFrom = void 0;
 const core = require("./pull/core");
+function createFrom(i) {
+    return function* () {
+        for (const x of i) {
+            yield x;
+        }
+    };
+}
+exports.createFrom = createFrom;
 function forEach(s, f) {
     for (const x of s()) {
         f(x);

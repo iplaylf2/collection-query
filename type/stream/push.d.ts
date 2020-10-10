@@ -1,5 +1,9 @@
 import { PushStream } from "./type";
-import { Selector, Predicate, Aggregate } from "../type";
+import { Action, Selector, Predicate, Aggregate } from "../type";
+import { EmitForm } from "./push/type";
+export declare const create: <T, Te = never>(executor: Action<EmitForm<T, Te>>) => PushStream<T, Te>;
+export declare const createFrom: <T>(i: Iterable<T>) => PushStream<T, any>;
+export declare function forEach<T>(s: PushStream<T, any>, f: Action<T>): void;
 export declare function map<T, Te, K>(f: Selector<T, K>): (s: PushStream<T, Te>) => PushStream<K, Te>;
 export declare function filter<T, Te>(f: Predicate<T>): (s: PushStream<T, Te>) => PushStream<T, Te>;
 export declare function remove<T, Te>(f: Predicate<T>): (s: PushStream<T, Te>) => PushStream<T, Te>;

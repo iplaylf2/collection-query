@@ -21,7 +21,7 @@ class RaceHandler extends controlled_iterator_1.ControlledIterator {
     leave() {
         if (this.status === controlled_iterator_1.IteratorStatus.Running) {
             this.count--;
-            if (!(this.count > 0)) {
+            if (!(0 < this.count)) {
                 this.end();
             }
         }

@@ -18,7 +18,7 @@ class PartitionCollector {
         }
     }
     getRest() {
-        return [(this.partition.length > 0), this.partition];
+        return [(0 < this.partition.length), this.partition];
     }
 }
 exports.PartitionCollector = PartitionCollector;
