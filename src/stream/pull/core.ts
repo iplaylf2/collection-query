@@ -71,14 +71,6 @@ export function* skipWhile<T>(iterator: IterableIterator<T>, f: Predicate<T>) {
   yield* iterator;
 }
 
-export function* flatten<T extends K[], K>(iterator: IterableIterator<T>) {
-  for (const element of iterator) {
-    for (const subElement of element) {
-      yield subElement!;
-    }
-  }
-}
-
 export function* partition<T>(iterator: IterableIterator<T>, n: number) {
   const collector = new PartitionCollector<T>(n);
 
@@ -111,6 +103,14 @@ export function* partitionBy<T>(
   const [rest, partition] = collector.getRest();
   if (rest) {
     yield partition!;
+  }
+}
+
+export function* flatten<T extends K[], K>(iterator: IterableIterator<T>) {
+  for (const xx of iterator) {
+    for (const x of xx) {
+      yield x;
+    }
   }
 }
 
