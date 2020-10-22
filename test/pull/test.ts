@@ -9,3 +9,22 @@ export function TestBase(f: Func<PullStream<any>>) {
     e.ExpectIterable(s());
   });
 }
+
+export function TestSameCollection(
+  f: Func<PullStream<any>>,
+  source: Iterable<any>
+) {
+  test("same collection", () => {
+    const s = f();
+
+    e.ExpectSameCollection(s(), source);
+  });
+}
+
+export function TestIdempotent(f: Func<PullStream<any>>) {
+  test("idempotent", () => {
+    const s = f();
+
+    e.ExpectSameCollection(s(), s());
+  });
+}
