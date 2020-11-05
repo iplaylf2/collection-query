@@ -1,8 +1,7 @@
-import { createFrom, forEach, map } from "../pull";
+import { createFrom, forEach, map, filter } from "../pull";
 import { PullStream } from "..";
 import "./jest";
 import * as t from "./pull/test";
-import { filter } from "../type/pull";
 
 describe("pull", () => {
   describe("create", () => {
@@ -19,14 +18,14 @@ describe("pull", () => {
   describe("foreach", () => {
     const s = createFrom("collection-query");
 
-    t.TestCollectionEach((f) => forEach(s, f), s());
+    t.TestCollectionEachIn((f) => forEach(s, f), s());
   });
 
   describe("map", () => {
     const data = "collection-query";
     const s = createFrom(data);
 
-    t.TestCollectionEach((f) => pullAll(map(f)(s)), data);
+    t.TestCollectionEachIn((f) => pullAll(map(f)(s)), data);
 
     const f = (x: any) => x.length;
     const expect = function* () {
@@ -42,7 +41,7 @@ describe("pull", () => {
     const data = "collection-query";
     const s = createFrom(data);
 
-    t.TestCollectionEach((f) => pullAll(filter((x) => (f(x), true))(s)), data);
+    t.TestCollectionEachIn((f) => pullAll(filter((x) => (f(x), true))(s)), data);
   });
 });
 

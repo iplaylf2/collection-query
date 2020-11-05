@@ -31,10 +31,10 @@ export function TestIdempotent(f: Func<PullStream<any>>, name = "idempotent") {
   });
 }
 
-export function TestCollectionEach(
+export function TestCollectionEachIn(
   f: Action<Action<any>>,
   source: Iterable<any>,
-  name = "collection each"
+  name = "collection each in"
 ) {
   test(name, () => {
     const mf = jest.fn();
