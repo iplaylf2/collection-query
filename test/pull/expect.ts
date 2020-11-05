@@ -1,6 +1,5 @@
 export function ExpectIterable(i: Iterable<any>) {
-  for (const _ of i) {
-  }
+  for (const _ of i);
 }
 
 export function ExpectSameCollection(a: Iterable<any>, b: Iterable<any>) {
