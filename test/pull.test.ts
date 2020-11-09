@@ -1,4 +1,4 @@
-import { createFrom, forEach, map, filter } from "../pull";
+import { createFrom, forEach, map } from "../pull";
 import { PullStream } from "..";
 import "./jest";
 import * as t from "./pull/test";
@@ -16,35 +16,36 @@ describe("pull", () => {
   });
 
   describe("foreach", () => {
-    const s = createFrom("collection-query");
+    const data = "collection-query";
+    const s = createFrom(data);
 
-    t.TestCollectionEachIn((f) => forEach(s, f), s());
+    t.TestCollectionEachIn(
+      (f) => forEach(s, f),
+      () => Array.from(data).map((x) => [x])
+    );
   });
 
   describe("map", () => {
     const data = "collection-query";
     const s = createFrom(data);
 
-    t.TestCollectionEachIn((f) => pullAll(map(f)(s)), data);
+    t.TestCollectionEachIn(
+      (f) => pullAll(map(f)(s)),
+      () => Array.from(data).map((x) => [x])
+    );
 
-    const f = (x: any) => x.length;
-    const expect = function* () {
-      for (const x of data) {
-        yield f(x);
-      }
-    };
-
-    t.TestTwoCollectionEqual(() => map(f)(s), expect(), "map<A[],f> == f<A>[]");
-  });
-
-  describe("filter", () => {
-    const data = "collection-query";
-    const s = createFrom(data);
-
-    t.TestCollectionEachIn((f) => pullAll(filter((x) => (f(x), true))(s)), data);
+    t.TestCollectionEachOut(
+      (f) => toArray(map(f)(s)),
+      (r1) => r1,
+      "map<f,a[]> == f<a>[]"
+    );
   });
 });
 
 function pullAll(s: PullStream<any>) {
   for (const _ of s());
+}
+
+function toArray(s: PullStream<any>) {
+  return Array.from(s());
 }

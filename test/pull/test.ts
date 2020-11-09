@@ -1,7 +1,6 @@
-import { Func } from "../type";
+import { Func, Selector } from "../type";
 import { PullStream } from "../..";
 import * as e from "./expect";
-import { Action } from "../../type/type";
 
 export function TestBase(f: Func<PullStream<any>>, name = "base") {
   test(name, () => {
@@ -32,15 +31,35 @@ export function TestIdempotent(f: Func<PullStream<any>>, name = "idempotent") {
 }
 
 export function TestCollectionEachIn(
-  f: Action<Action<any>>,
-  source: Iterable<any>,
+  f1: Selector<(...args: any[]) => void, any>,
+  f2: (r1: any) => Iterable<any>,
   name = "collection each in"
 ) {
   test(name, () => {
     const mf = jest.fn();
-    f(mf);
+    const r1 = f1(mf);
 
-    const args = mf.mock.calls.map((call: any) => call[0]);
-    e.ExpectSameCollection(args, source);
+    const in_array = mf.mock.calls.map((call: any) => call);
+
+    const expect = f2(r1);
+
+    e.ExpectSameCollection(in_array, expect);
+  });
+}
+
+export function TestCollectionEachOut(
+  f1: Selector<() => any, any>,
+  f2: (r1: any) => Iterable<any>,
+  name = "collection each out"
+) {
+  test(name, () => {
+    const mf = jest.fn(() => Math.random());
+    const r1 = f1(mf);
+
+    const out_array = mf.mock.results.map((result: any) => result.value);
+
+    const expect = f2(r1);
+
+    e.ExpectSameCollection(out_array, expect);
   });
 }
