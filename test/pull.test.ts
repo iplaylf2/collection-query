@@ -1,4 +1,4 @@
-import { createFrom, forEach, map } from "../pull";
+import { createFrom, forEach, map, filter } from "../pull";
 import { PullStream } from "..";
 import "./jest";
 import * as t from "./pull/test";
@@ -38,6 +38,22 @@ describe("pull", () => {
       (f) => toArray(map(f)(s)),
       (r1) => r1,
       "map<f,a[]> == f<a>[]"
+    );
+  });
+
+  describe("filter", () => {
+    const data = "collection-query";
+    const s = createFrom(data);
+
+    t.TestCollectionEachIn(
+      (f) => {
+        const p = function (x: any) {
+          f(x);
+          return true;
+        };
+        return pullAll(filter(p)(s));
+      },
+      () => Array.from(data).map((x) => [x])
     );
   });
 });
