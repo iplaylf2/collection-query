@@ -48,7 +48,7 @@ export function TestCollectionEachIn(
 }
 
 export function TestCollectionEachOut(
-  f1: Selector<() => any, any>,
+  f1: Selector<Func<number>, any>,
   f2: (r1: any) => Iterable<any>,
   name = "collection each out"
 ) {
