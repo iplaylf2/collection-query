@@ -46,6 +46,7 @@ describe("pull", () => {
     );
 
     t.TestCollectionEachOut(
+      () => Math.random(),
       (f) => toArray(map(f)(s)),
       (r1) => r1,
       "map<f,a[]> == f<a>[]"

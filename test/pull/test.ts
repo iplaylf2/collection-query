@@ -59,13 +59,14 @@ export function TestCollectionEachIn(
   });
 }
 
-export function TestCollectionEachOut(
-  f1: Selector<Func<number>, any>,
+export function TestCollectionEachOut<T>(
+  fi: Func<T>,
+  f1: Selector<Func<T>, any>,
   f2: (r1: any) => Iterable<any>,
   name = "collection each out"
 ) {
   test(name, () => {
-    const mf = jest.fn(() => Math.random());
+    const mf = jest.fn(fi);
     const r1 = f1(mf);
 
     const out_array = mf.mock.results.map((result: any) => result.value);
