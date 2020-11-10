@@ -1,4 +1,4 @@
-import { Func, Selector } from "../type";
+import { Action, Func, Selector } from "../type";
 import { PullStream } from "../..";
 import * as e from "./expect";
 
@@ -7,6 +7,18 @@ export function TestBase(f: Func<PullStream<any>>, name = "base") {
     const s = f();
 
     e.ExpectIterable(s());
+  });
+}
+
+export function TestEmptyCollection(
+  f: Action<(...args: any[]) => void>,
+  name = "empty collection"
+) {
+  test(name, () => {
+    const mf = jest.fn();
+    f(mf);
+
+    expect(mf).not.toHaveBeenCalled();
   });
 }
 

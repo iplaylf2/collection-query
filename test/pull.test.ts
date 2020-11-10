@@ -9,6 +9,13 @@ describe("pull", () => {
   });
 
   describe("createFrom", () => {
+    t.TestEmptyCollection((f) => {
+      const empty = createFrom("");
+      for (const _ of empty()) {
+        f();
+      }
+    });
+
     const data = "collection-query";
 
     t.TestTwoCollectionEqual(() => createFrom(data), data, "same collection");
@@ -16,6 +23,10 @@ describe("pull", () => {
   });
 
   describe("foreach", () => {
+    const empty = createFrom("");
+
+    t.TestEmptyCollection((f) => forEach(empty, f));
+
     const data = "collection-query";
     const s = createFrom(data);
 
@@ -26,6 +37,10 @@ describe("pull", () => {
   });
 
   describe("map", () => {
+    const empty = createFrom("");
+
+    t.TestEmptyCollection((f) => pullAll(map(f)(empty)));
+
     const data = "collection-query";
     const s = createFrom(data);
 
@@ -42,15 +57,19 @@ describe("pull", () => {
   });
 
   describe("filter", () => {
+    const empty = createFrom("");
+
+    t.TestEmptyCollection((f) => {
+      const p = () => (f(), true);
+      pullAll(filter(p)(empty));
+    });
+
     const data = "collection-query";
     const s = createFrom(data);
 
     t.TestCollectionEachIn(
       (f) => {
-        const p = function (x: any) {
-          f(x);
-          return true;
-        };
+        const p = (x: any) => (f(x), true);
         return pullAll(filter(p)(s));
       },
       () => Array.from(data).map((x) => [x])
