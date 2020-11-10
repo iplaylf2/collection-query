@@ -10,7 +10,7 @@ describe("pull", () => {
 
   describe("createFrom", () => {
     t.TestEmptyCollection((f) => {
-      const empty = createFrom("");
+      const empty = createFrom(new Array(0));
       for (const _ of empty()) {
         f();
       }
@@ -23,9 +23,7 @@ describe("pull", () => {
   });
 
   describe("foreach", () => {
-    const empty = createFrom("");
-
-    t.TestEmptyCollection((f) => forEach(empty, f));
+    t.TestEmptyCollection((f) => forEach(EMPTY, f));
 
     const data = randomData();
     const s = createFrom(data);
@@ -37,9 +35,7 @@ describe("pull", () => {
   });
 
   describe("map", () => {
-    const empty = createFrom("");
-
-    t.TestEmptyCollection((f) => pullAll(map(f)(empty)));
+    t.TestEmptyCollection((f) => pullAll(map(f)(EMPTY)));
 
     const data = randomData();
     const s = createFrom(data);
@@ -57,11 +53,9 @@ describe("pull", () => {
   });
 
   describe("filter", () => {
-    const empty = createFrom("");
-
     t.TestEmptyCollection((f) => {
       const p = () => (f(), true);
-      pullAll(filter(p)(empty));
+      pullAll(filter(p)(EMPTY));
     });
 
     const data = randomData();
@@ -76,6 +70,8 @@ describe("pull", () => {
     );
   });
 });
+
+const EMPTY: PullStream<never> = function* () {};
 
 function randomData(length = 10) {
   return new Array(length).fill(0).map(() => Math.random());
