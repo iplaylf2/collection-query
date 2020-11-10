@@ -16,7 +16,7 @@ describe("pull", () => {
       }
     });
 
-    const data = "collection-query";
+    const data = randomData();
 
     t.TestTwoCollectionEqual(() => createFrom(data), data, "same collection");
     t.TestIdempotent(() => createFrom(data));
@@ -27,12 +27,12 @@ describe("pull", () => {
 
     t.TestEmptyCollection((f) => forEach(empty, f));
 
-    const data = "collection-query";
+    const data = randomData();
     const s = createFrom(data);
 
     t.TestCollectionEachIn(
       (f) => forEach(s, f),
-      () => Array.from(data).map((x) => [x])
+      () => data.map((x) => [x])
     );
   });
 
@@ -41,12 +41,12 @@ describe("pull", () => {
 
     t.TestEmptyCollection((f) => pullAll(map(f)(empty)));
 
-    const data = "collection-query";
+    const data = randomData();
     const s = createFrom(data);
 
     t.TestCollectionEachIn(
       (f) => pullAll(map(f)(s)),
-      () => Array.from(data).map((x) => [x])
+      () => data.map((x) => [x])
     );
 
     t.TestCollectionEachOut(
@@ -64,7 +64,7 @@ describe("pull", () => {
       pullAll(filter(p)(empty));
     });
 
-    const data = "collection-query";
+    const data = randomData();
     const s = createFrom(data);
 
     t.TestCollectionEachIn(
@@ -72,10 +72,14 @@ describe("pull", () => {
         const p = (x: any) => (f(x), true);
         return pullAll(filter(p)(s));
       },
-      () => Array.from(data).map((x) => [x])
+      () => data.map((x) => [x])
     );
   });
 });
+
+function randomData(length = 10) {
+  return new Array(length).fill(0).map(() => Math.random());
+}
 
 function pullAll(s: PullStream<any>) {
   for (const _ of s());
