@@ -146,8 +146,8 @@ export function partitionBy<T, Te>(
   });
 }
 
-export function flatten<T extends K[], K>(emit: EmitForm<K, never>) {
-  return (xx: T) => {
+export function flatten<T>(emit: EmitForm<T, never>) {
+  return (xx: T[]) => {
     for (const x of xx) {
       emit(EmitType.Next, x);
     }
