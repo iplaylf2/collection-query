@@ -1,4 +1,4 @@
-import { createFrom, forEach, map, filter } from "../pull";
+import { createFrom, forEach, map, filter, remove } from "../pull";
 import { PullStream } from "..";
 import "./jest";
 import * as t from "./pull/test";
@@ -77,6 +77,34 @@ describe("pull", () => {
 
       const out_array = mf.mock.results.map((result: any) => result.value);
       const r2 = data.filter((_, i) => out_array[i]);
+
+      e.ExpectSameCollection(r1, r2);
+    });
+  });
+
+  describe("remove", () => {
+    t.TestEmptyCollection((f) => {
+      const p = () => (f(), true);
+      pullAll(remove(p)(EMPTY));
+    });
+
+    const data = randomData();
+    const s = createFrom(data);
+
+    t.TestCollectionEachIn(
+      (f) => {
+        const p = (x: any) => (f(x), true);
+        return pullAll(remove(p)(s));
+      },
+      () => data.map((x) => [x])
+    );
+
+    test("two way", () => {
+      const mf = jest.fn(() => Math.random() < 0.5);
+      const r1 = toArray(remove(mf)(s));
+
+      const out_array = mf.mock.results.map((result: any) => result.value);
+      const r2 = data.filter((_, i) => !out_array[i]);
 
       e.ExpectSameCollection(r1, r2);
     });
