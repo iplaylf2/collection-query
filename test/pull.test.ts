@@ -2,6 +2,7 @@ import { createFrom, forEach, map, filter } from "../pull";
 import { PullStream } from "..";
 import "./jest";
 import * as t from "./pull/test";
+import * as e from "./pull/expect";
 
 describe("pull", () => {
   describe("create", () => {
@@ -69,6 +70,16 @@ describe("pull", () => {
       },
       () => data.map((x) => [x])
     );
+
+    test("two way", () => {
+      const mf = jest.fn(() => Math.random() < 0.5);
+      const r1 = toArray(filter(mf)(s));
+
+      const out_array = mf.mock.results.map((result: any) => result.value);
+      const r2 = data.filter((_, i) => out_array[i]);
+
+      e.ExpectSameCollection(r1, r2);
+    });
   });
 });
 
