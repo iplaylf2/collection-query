@@ -70,8 +70,10 @@ export function partitionBy<T>(f: Selector<T, any>) {
     core.partitionBy(s(), f);
 }
 
-export function flatten<T extends K[], K>() {
-  return (s: AsyncPullStream<T>): AsyncPullStream<K> => () => core.flatten(s());
+export function flatten<T extends K[], K>(
+  s: AsyncPullStream<T>
+): AsyncPullStream<K> {
+  return () => core.flatten(s());
 }
 
 export function concat<T>(
