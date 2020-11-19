@@ -82,6 +82,10 @@ export function partitionBy<T, Te>(f: Selector<T, any>) {
     relay((emit) => core.partitionBy(s, emit, f));
 }
 
+export const flatten: <T extends K[], Te, K>(
+  s: AsyncPushStream<T, Te>
+) => AsyncPushStream<K, Te> = relay_next((emit) => core.flatten(emit));
+
 export function concat<T, Te>(
   s1: AsyncPushStream<T, Te>,
   s2: AsyncPushStream<T, Te>
