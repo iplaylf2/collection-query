@@ -10,6 +10,7 @@ export declare function skip<T>(emit: EmitForm<T, never>, n: number): (x: T) => 
 export declare function skipWhile<T>(emit: EmitForm<T, never>, f: Predicate<T> | AsyncPredicate<T>): (x: T) => Promise<void>;
 export declare function partition<T, Te>(emitter: Emitter<T, Te>, emit: EmitForm<T[], Te>, n: number): Action<void>;
 export declare function partitionBy<T, Te>(emitter: Emitter<T, Te>, emit: EmitForm<T[], Te>, f: Selector<T, any> | AsyncSelector<T, any>): Action<void>;
+export declare function flatten<T extends K[], K>(emit: EmitForm<K, never>): (xx: T) => Promise<void>;
 export declare function concat<T, Te>(emitter1: Emitter<T, Te>, emitter2: Emitter<T, Te>, emit: EmitForm<T, Te>): () => void;
 export declare function zip<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T[], Te>): () => void;
 export declare function race<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T, Te>): () => void;

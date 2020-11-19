@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.race = exports.zip = exports.concat = exports.partitionBy = exports.partition = exports.skipWhile = exports.skip = exports.takeWhile = exports.take = exports.remove = exports.filter = exports.map = void 0;
+exports.race = exports.zip = exports.concat = exports.flatten = exports.partitionBy = exports.partition = exports.skipWhile = exports.skip = exports.takeWhile = exports.take = exports.remove = exports.filter = exports.map = void 0;
 const partition_collector_1 = require("../../common/partition-collector");
 const async_partition_by_collector_1 = require("../../common/partition-by-collector/async-partition-by-collector");
 const zip_handler_1 = require("../../common/async/zip-handler");
@@ -110,6 +110,14 @@ async function* partitionBy(iterator, f) {
     }
 }
 exports.partitionBy = partitionBy;
+async function* flatten(iterator) {
+    for await (const xx of iterator) {
+        for (const x of xx) {
+            yield x;
+        }
+    }
+}
+exports.flatten = flatten;
 async function* concat(s1, s2) {
     for await (const x of s1()) {
         yield x;

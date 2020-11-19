@@ -13,6 +13,7 @@ export declare function skip<T, Te>(n: number): (s: PushStream<T, Te>) => PushSt
 export declare function skipWhile<T, Te>(f: Predicate<T>): (s: PushStream<T, Te>) => PushStream<T, Te>;
 export declare function partition<T, Te>(n: number): (s: PushStream<T, Te>) => PushStream<T[], Te>;
 export declare function partitionBy<T, Te>(f: Selector<T, any>): (s: PushStream<T, Te>) => PushStream<T[], Te>;
+export declare const flatten: <T extends K[], Te, K>(s: PushStream<T, Te>) => PushStream<K, Te>;
 export declare function concat<T, Te>(s1: PushStream<T, Te>, s2: PushStream<T, Te>): PushStream<T, Te>;
 export declare function concatAll<T, Te>([s, ...ss]: PushStream<T, Te>[]): PushStream<T, Te>;
 export declare function zip<T, Te>(ss: PushStream<T, Te>[]): PushStream<T[], Te>;

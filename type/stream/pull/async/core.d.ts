@@ -8,6 +8,7 @@ export declare function skip<T>(iterator: AsyncIterableIterator<T>, n: number): 
 export declare function skipWhile<T>(iterator: AsyncIterableIterator<T>, f: Predicate<T> | AsyncPredicate<T>): AsyncGenerator<T, void, undefined>;
 export declare function partition<T>(iterator: AsyncIterableIterator<T>, n: number): AsyncGenerator<T[], void, unknown>;
 export declare function partitionBy<T>(iterator: AsyncIterableIterator<T>, f: Predicate<T>): AsyncGenerator<T[], void, unknown>;
+export declare function flatten<T extends K[], K>(iterator: AsyncIterableIterator<T>): AsyncGenerator<K, void, unknown>;
 export declare function concat<T>(s1: Func<AsyncIterableIterator<T>>, s2: Func<AsyncIterableIterator<T>>): AsyncGenerator<T, void, unknown>;
 export declare function zip<T>(ss: Func<AsyncIterableIterator<T>>[]): AsyncGenerator<T[], void, undefined>;
 export declare function race<T>(ss: Func<AsyncIterableIterator<T>>[]): AsyncGenerator<T, void, undefined>;

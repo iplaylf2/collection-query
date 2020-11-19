@@ -10,7 +10,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !exports.hasOwnProperty(p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.last = exports.first = exports.some = exports.every = exports.include = exports.count = exports.reduce = exports.race = exports.concat = exports.partitionBy = exports.partition = exports.skipWhile = exports.skip = exports.takeWhile = exports.take = exports.remove = exports.filter = exports.map = void 0;
+exports.last = exports.first = exports.some = exports.every = exports.include = exports.count = exports.reduce = exports.race = exports.concat = exports.flatten = exports.partitionBy = exports.partition = exports.skipWhile = exports.skip = exports.takeWhile = exports.take = exports.remove = exports.filter = exports.map = void 0;
 const type_1 = require("./type");
 const partition_collector_1 = require("../common/partition-collector");
 const partition_by_collector_1 = require("../common/partition-by-collector/partition-by-collector");
@@ -150,6 +150,14 @@ function partitionBy(emitter, emit, f) {
     });
 }
 exports.partitionBy = partitionBy;
+function flatten(emit) {
+    return (xx) => {
+        for (const x of xx) {
+            emit(type_1.EmitType.Next, x);
+        }
+    };
+}
+exports.flatten = flatten;
 function concat(emitter1, emitter2, emit) {
     let cancel2 = function () { };
     const cancel1 = emitter1((t, x) => {

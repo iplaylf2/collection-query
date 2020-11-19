@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.zip = exports.concat = exports.partitionBy = exports.partition = exports.skipWhile = exports.skip = exports.takeWhile = exports.take = exports.remove = exports.filter = exports.map = void 0;
+exports.zip = exports.concat = exports.flatten = exports.partitionBy = exports.partition = exports.skipWhile = exports.skip = exports.takeWhile = exports.take = exports.remove = exports.filter = exports.map = void 0;
 const partition_collector_1 = require("../common/partition-collector");
 const partition_by_collector_1 = require("../common/partition-by-collector/partition-by-collector");
 function* map(iterator, f) {
@@ -104,6 +104,14 @@ function* partitionBy(iterator, f) {
     }
 }
 exports.partitionBy = partitionBy;
+function* flatten(iterator) {
+    for (const xx of iterator) {
+        for (const x of xx) {
+            yield x;
+        }
+    }
+}
+exports.flatten = flatten;
 function* concat(s1, s2) {
     for (const x of s1()) {
         yield x;
