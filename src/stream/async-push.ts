@@ -22,7 +22,7 @@ import { create as _create } from "./push/async/create";
 import { createFrom as _createFrom } from "./push/async/create-from";
 
 const relay_next: <T, Te, K = T>(
-  handler: RelayNextHandler<T, Te, K>
+  handler: RelayNextHandler<T, K>
 ) => (s: AsyncPushStream<T, Te>) => AsyncPushStream<K, Te> = _relay_next;
 
 export const create: <T, Te = never>(

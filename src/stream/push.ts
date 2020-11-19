@@ -9,7 +9,7 @@ import { create as _create } from "./push/create";
 import { createFrom as _createFrom } from "./push/create-from";
 
 const relay_next: <T, Te, K = T>(
-  handler: RelayNextHandler<T, Te, K>
+  handler: RelayNextHandler<T, K>
 ) => (s: PushStream<T, Te>) => PushStream<K, Te> = _relay_next;
 
 export const create: <T, Te = never>(

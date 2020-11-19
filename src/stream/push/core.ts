@@ -76,9 +76,9 @@ export function skipWhile<T>(emit: EmitForm<T, never>, f: Predicate<T>) {
   };
 }
 
-export function partition<T, Te>(
-  emitter: Emitter<T, Te>,
-  emit: EmitForm<T[], Te>,
+export function partition<T>(
+  emitter: Emitter<T, any>,
+  emit: EmitForm<T[], any>,
   n: number
 ) {
   if (!(0 < n)) {
@@ -108,14 +108,14 @@ export function partition<T, Te>(
         }
         break;
       case EmitType.Error:
-        emit(EmitType.Error, x as Te);
+        emit(EmitType.Error, x);
     }
   });
 }
 
-export function partitionBy<T, Te>(
-  emitter: Emitter<T, Te>,
-  emit: EmitForm<T[], Te>,
+export function partitionBy<T>(
+  emitter: Emitter<T, any>,
+  emit: EmitForm<T[], any>,
   f: Selector<T, any>
 ) {
   const collector = new PartitionByCollector<T>(f);
@@ -141,7 +141,7 @@ export function partitionBy<T, Te>(
         }
         break;
       case EmitType.Error:
-        emit(EmitType.Error, x as Te);
+        emit(EmitType.Error, x);
     }
   });
 }
@@ -154,10 +154,10 @@ export function flatten<T>(emit: EmitForm<T, never>) {
   };
 }
 
-export function concat<T, Te>(
-  emitter1: Emitter<T, Te>,
-  emitter2: Emitter<T, Te>,
-  emit: EmitForm<T, Te>
+export function concat<T>(
+  emitter1: Emitter<T, any>,
+  emitter2: Emitter<T, any>,
+  emit: EmitForm<T, any>
 ) {
   let cancel2: Action<void> = function () {};
 
@@ -170,7 +170,7 @@ export function concat<T, Te>(
         cancel2 = emitter2(emit);
         break;
       case EmitType.Error:
-        emit(EmitType.Error, x as Te);
+        emit(EmitType.Error, x);
         break;
     }
   });
@@ -185,7 +185,7 @@ export function concat<T, Te>(
 
 export * from "./core/zip";
 
-export function race<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T, Te>) {
+export function race<T>(ee: Emitter<T, any>[], emit: EmitForm<T, any>) {
   let count = ee.length;
   if (!(0 < count)) {
     emit(EmitType.Complete);
@@ -206,7 +206,7 @@ export function race<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T, Te>) {
           break;
         case EmitType.Error:
           cancel();
-          emit(EmitType.Error, x as Te);
+          emit(EmitType.Error, x);
           break;
       }
     })

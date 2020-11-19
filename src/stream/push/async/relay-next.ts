@@ -2,12 +2,12 @@ import { Emitter, EmitForm } from "./type";
 import { relay } from "./relay";
 import { EmitType } from "../type";
 
-export interface RelayNextHandler<T, Te, K> {
-  (emit: EmitForm<K, Te>): (x: T) => Promise<void>;
+export interface RelayNextHandler<T, K> {
+  (emit: EmitForm<K, any>): (x: T) => Promise<void>;
 }
 
-export function relayNext<T, Te, K = T>(handler: RelayNextHandler<T, Te, K>) {
-  return (emitter: Emitter<T, Te>): Emitter<K, Te> =>
+export function relayNext<T, K = T>(handler: RelayNextHandler<T, K>) {
+  return (emitter: Emitter<T, any>): Emitter<K, any> =>
     relay((emit) => {
       const handle_next = handler(emit);
       return emitter(async (t, x?) => {
@@ -19,7 +19,7 @@ export function relayNext<T, Te, K = T>(handler: RelayNextHandler<T, Te, K>) {
             emit(t);
             break;
           case EmitType.Error:
-            emit(t, x as Te);
+            emit(t, x);
             break;
         }
       });

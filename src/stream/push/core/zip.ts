@@ -1,7 +1,7 @@
 import { Emitter, EmitForm, EmitType } from "../type";
 import { Action } from "../../../type";
 
-export function zip<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T[], Te>) {
+export function zip<T>(ee: Emitter<T, any>[], emit: EmitForm<T[], any>) {
   const total = ee.length;
   if (!(0 < total)) {
     emit(EmitType.Complete);
@@ -58,7 +58,7 @@ export function zip<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T[], Te>) {
           break;
         case EmitType.Error:
           cancel();
-          emit(EmitType.Error, x as Te);
+          emit(EmitType.Error, x);
           break;
       }
     });
