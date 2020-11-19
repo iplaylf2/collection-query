@@ -1,21 +1,12 @@
 import { push } from "../async-pull";
-import { EmitType } from "..";
+import { flatten, forEach } from "../async-push";
 
-push(async function* () {
-  yield 1;
-  yield 2;
-  yield 3;
-})(async (t, x?) => {
-  switch (t) {
-    case EmitType.Next:
-      await new Promise((r) => setTimeout(r, 1000));
-      console.log(x);
-      break;
-    case EmitType.Complete:
-      console.log("Complete");
-      break;
-    case EmitType.Error:
-      console.log(x);
-      break;
-  }
+const p = push(async function* () {
+  yield [1, 5, 7];
+  yield [2, 4, 5];
+  yield [3, 3, 6];
+});
+
+forEach(flatten(p), (x) => {
+  console.log(x);
 });
