@@ -1,6 +1,7 @@
 import { EmitForm, Emitter } from "./type";
 import { Action } from "../../../type";
 import { create } from "./create";
+import { EmitType } from "../type";
 
 export interface RelayHandler<T> {
   (emit: EmitForm<T, any>): Action<void>;
@@ -21,7 +22,14 @@ export function relay<T>(handler: RelayHandler<T>): Emitter<T, any> {
       source_cancel = handler(emit);
     });
 
-    const relay_cancel = relay_emitter(receiver);
+    const relay_receiver: EmitForm<T, any> = async function (t, x?) {
+      if (t !== EmitType.Next) {
+        source_cancel();
+      }
+      await receiver(t as any, x);
+    };
+
+    const relay_cancel = relay_emitter(relay_receiver);
 
     const cancel = function () {
       relay_cancel();

@@ -1,4 +1,4 @@
-import { EmitForm, Emitter } from "./type";
+import { EmitForm, Emitter, EmitType } from "./type";
 import { Action } from "../../type";
 import { create } from "./create";
 
@@ -21,7 +21,14 @@ export function relay<T>(handler: RelayHandler<T>): Emitter<T, any> {
       source_cancel = handler(emit);
     });
 
-    const relay_cancel = relay_emitter(receiver);
+    const relay_receiver: EmitForm<T, any> = function (t, x?) {
+      if (t !== EmitType.Next) {
+        source_cancel();
+      }
+      receiver(t as any, x);
+    };
+
+    const relay_cancel = relay_emitter(relay_receiver);
 
     const cancel = function () {
       relay_cancel();

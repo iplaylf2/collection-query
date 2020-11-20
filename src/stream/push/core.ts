@@ -249,7 +249,6 @@ export function race<T>(ee: Emitter<T, any>[], emit: EmitForm<T, any>) {
           }
           break;
         case EmitType.Error:
-          cancel();
           emit(EmitType.Error, x);
           break;
       }
