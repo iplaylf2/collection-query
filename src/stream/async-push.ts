@@ -22,7 +22,7 @@ import { create as _create } from "./push/async/create";
 import { createFrom as _createFrom } from "./push/async/create-from";
 
 const relay_next: <T, Te, K = T>(
-  handler: RelayNextHandler<T, Te, K>
+  handler: RelayNextHandler<T, K>
 ) => (s: AsyncPushStream<T, Te>) => AsyncPushStream<K, Te> = _relay_next;
 
 export const create: <T, Te = never>(
@@ -82,9 +82,15 @@ export function partitionBy<T, Te>(f: Selector<T, any>) {
     relay((emit) => core.partitionBy(s, emit, f));
 }
 
-export const flatten: <T extends K[], Te, K>(
-  s: AsyncPushStream<T, Te>
-) => AsyncPushStream<K, Te> = relay_next((emit) => core.flatten(emit));
+export const flatten: <T, Te>(
+  s: AsyncPushStream<T[], Te>
+) => AsyncPushStream<T, Te> = relay_next((emit) => core.flatten(emit));
+
+export function incubate<T, Te>(
+  s: AsyncPushStream<Promise<T>, Te>
+): AsyncPushStream<T, Te> {
+  return relay((emit) => core.incubate(s, emit));
+}
 
 export function concat<T, Te>(
   s1: AsyncPushStream<T, Te>,

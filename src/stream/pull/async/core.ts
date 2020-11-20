@@ -136,9 +136,7 @@ export async function* partitionBy<T>(
   }
 }
 
-export async function* flatten<T extends K[], K>(
-  iterator: AsyncIterableIterator<T>
-) {
+export async function* flatten<T>(iterator: AsyncIterableIterator<T[]>) {
   for await (const xx of iterator) {
     for (const x of xx) {
       yield x;

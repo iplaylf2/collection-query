@@ -107,9 +107,9 @@ export function skipWhile<T>(
   };
 }
 
-export function partition<T, Te>(
-  emitter: Emitter<T, Te>,
-  emit: EmitForm<T[], Te>,
+export function partition<T>(
+  emitter: Emitter<T, any>,
+  emit: EmitForm<T[], any>,
   n: number
 ) {
   if (!(0 < n)) {
@@ -139,14 +139,14 @@ export function partition<T, Te>(
         }
         break;
       case EmitType.Error:
-        emit(EmitType.Error, x as Te);
+        emit(EmitType.Error, x);
     }
   });
 }
 
-export function partitionBy<T, Te>(
-  emitter: Emitter<T, Te>,
-  emit: EmitForm<T[], Te>,
+export function partitionBy<T>(
+  emitter: Emitter<T, any>,
+  emit: EmitForm<T[], any>,
   f: Selector<T, any> | AsyncSelector<T, any>
 ) {
   const collector = new AsyncPartitionByCollector<T>(f);
@@ -172,23 +172,66 @@ export function partitionBy<T, Te>(
         }
         break;
       case EmitType.Error:
-        emit(EmitType.Error, x as Te);
+        emit(EmitType.Error, x);
     }
   });
 }
 
-export function flatten<T extends K[], K>(emit: EmitForm<K, never>) {
-  return async (xx: T) => {
+export function flatten<T>(emit: EmitForm<T, never>) {
+  return async (xx: T[]) => {
     for (const x of xx) {
       await emit(EmitType.Next, x);
     }
   };
 }
 
-export function concat<T, Te>(
-  emitter1: Emitter<T, Te>,
-  emitter2: Emitter<T, Te>,
-  emit: EmitForm<T, Te>
+export function incubate<T>(
+  emitter: Emitter<Promise<T>, any>,
+  emit: EmitForm<T, any>
+) {
+  let exhausted = false,
+    count = 0;
+
+  return emitter(async (t, x?) => {
+    switch (t) {
+      case EmitType.Next:
+        count++;
+        const p: Promise<T> = x;
+
+        (async () => {
+          try {
+            const x = await p;
+            emit(EmitType.Next, x);
+
+            count--;
+            if (exhausted && 0 === count) {
+              emit(EmitType.Complete);
+            }
+          } catch (e) {
+            emit(EmitType.Error, e);
+          }
+        })();
+
+        break;
+      case EmitType.Complete:
+        exhausted = true;
+        if (0 === count) {
+          emit(EmitType.Complete);
+        }
+
+        break;
+      case EmitType.Error:
+        emit(EmitType.Error, x);
+
+        break;
+    }
+  });
+}
+
+export function concat<T>(
+  emitter1: Emitter<T, any>,
+  emitter2: Emitter<T, any>,
+  emit: EmitForm<T, any>
 ) {
   let cancel2: Action<void> = function () {};
 
@@ -201,7 +244,7 @@ export function concat<T, Te>(
         cancel2 = emitter2(emit);
         break;
       case EmitType.Error:
-        emit(EmitType.Error, x as Te);
+        emit(EmitType.Error, x);
         break;
     }
   });
@@ -214,7 +257,7 @@ export function concat<T, Te>(
   return cancel;
 }
 
-export function zip<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T[], Te>) {
+export function zip<T>(ee: Emitter<T, any>[], emit: EmitForm<T[], any>) {
   const total = ee.length;
   if (!(0 < total)) {
     emit(EmitType.Complete);
@@ -231,13 +274,13 @@ export function zip<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T[], Te>) {
     const cancel = emitter(async (t, x?) => {
       switch (t) {
         case EmitType.Next:
-          (await handler.zip(_index, x as T)) || cancel();
+          await handler.zip(_index, x as T);
           break;
         case EmitType.Complete:
           handler.end();
           break;
         case EmitType.Error:
-          handler.crash(x as Te);
+          handler.crash(x);
           break;
       }
     });
@@ -266,7 +309,7 @@ export function zip<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T[], Te>) {
   return cancel;
 }
 
-export function race<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T, Te>) {
+export function race<T>(ee: Emitter<T, any>[], emit: EmitForm<T, any>) {
   const total = ee.length;
   if (!(0 < total)) {
     emit(EmitType.Complete);
@@ -275,23 +318,21 @@ export function race<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T, Te>) {
 
   const handler = new RaceHandler<T>(total);
 
-  const cancel_list = ee.map((emitter) => {
-    const cancel = emitter(async (t, x?) => {
+  const cancel_list = ee.map((emitter) =>
+    emitter(async (t, x?) => {
       switch (t) {
         case EmitType.Next:
-          (await handler.race(x as T)) || cancel();
+          await handler.race(x as T);
           break;
         case EmitType.Complete:
           handler.leave();
           break;
         case EmitType.Error:
-          handler.crash(x as Te);
+          handler.crash(x);
           break;
       }
-    });
-
-    return cancel;
-  });
+    })
+  );
 
   const cancel = function () {
     for (const c of cancel_list) {

@@ -106,7 +106,7 @@ export function* partitionBy<T>(
   }
 }
 
-export function* flatten<T extends K[], K>(iterator: IterableIterator<T>) {
+export function* flatten<T>(iterator: IterableIterator<T[]>) {
   for (const xx of iterator) {
     for (const x of xx) {
       yield x;
