@@ -185,6 +185,49 @@ export function flatten<T>(emit: EmitForm<T, never>) {
   };
 }
 
+export function incubate<T>(
+  emitter: Emitter<Promise<T>, any>,
+  emit: EmitForm<T, any>
+) {
+  let exhausted = false,
+    count = 0;
+
+  return emitter(async (t, x?) => {
+    switch (t) {
+      case EmitType.Next:
+        count++;
+        const p: Promise<T> = x;
+
+        (async () => {
+          try {
+            const x = await p;
+            emit(EmitType.Next, x);
+
+            count--;
+            if (exhausted && 0 === count) {
+              emit(EmitType.Complete);
+            }
+          } catch (e) {
+            emit(EmitType.Error, e);
+          }
+        })();
+
+        break;
+      case EmitType.Complete:
+        exhausted = true;
+        if (0 === count) {
+          emit(EmitType.Complete);
+        }
+
+        break;
+      case EmitType.Error:
+        emit(EmitType.Error, x);
+
+        break;
+    }
+  });
+}
+
 export function concat<T>(
   emitter1: Emitter<T, any>,
   emitter2: Emitter<T, any>,

@@ -159,13 +159,12 @@ export function incubate<T>(
   emit: EmitForm<T, any>
 ) {
   let exhausted = false,
-    length = 0,
     count = 0;
 
   return emitter((t, x?) => {
     switch (t) {
       case EmitType.Next:
-        length++;
+        count++;
         const p: Promise<T> = x;
 
         (async () => {
@@ -173,8 +172,8 @@ export function incubate<T>(
             const x = await p;
             emit(EmitType.Next, x);
 
-            count++;
-            if (exhausted && count === length) {
+            count--;
+            if (exhausted && 0 === count) {
               emit(EmitType.Complete);
             }
           } catch (e) {
@@ -185,7 +184,7 @@ export function incubate<T>(
         break;
       case EmitType.Complete:
         exhausted = true;
-        if (count === length) {
+        if (0 === count) {
           emit(EmitType.Complete);
         }
 
