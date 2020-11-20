@@ -11,6 +11,10 @@ export class RaceHandler<T> extends ControlledIterator<T> {
   async race(x: T) {
     if (this.status === IteratorStatus.Running) {
       await this.channel.put(x);
+
+      return this.status === IteratorStatus.Running;
+    } else {
+      return false;
     }
   }
 
