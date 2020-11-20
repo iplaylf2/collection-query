@@ -29,10 +29,6 @@ export class ZipHandler<T> extends ControlledIterator<T[]> {
       } else {
         await this.zipBlock.wait;
       }
-
-      return this.status === IteratorStatus.Running;
-    } else {
-      return false;
     }
   }
 

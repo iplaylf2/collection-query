@@ -231,7 +231,7 @@ export function zip<T>(ee: Emitter<T, any>[], emit: EmitForm<T[], any>) {
     const cancel = emitter(async (t, x?) => {
       switch (t) {
         case EmitType.Next:
-          (await handler.zip(_index, x as T)) || cancel();
+          await handler.zip(_index, x as T);
           break;
         case EmitType.Complete:
           handler.end();
@@ -279,7 +279,7 @@ export function race<T>(ee: Emitter<T, any>[], emit: EmitForm<T, any>) {
     const cancel = emitter(async (t, x?) => {
       switch (t) {
         case EmitType.Next:
-          (await handler.race(x as T)) || cancel();
+          await handler.race(x as T);
           break;
         case EmitType.Complete:
           handler.leave();
