@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.last = exports.first = exports.some = exports.every = exports.include = exports.count = exports.reduce = exports.race = exports.zip = exports.concat = exports.flatten = exports.partitionBy = exports.partition = exports.skipWhile = exports.skip = exports.takeWhile = exports.take = exports.remove = exports.filter = exports.map = void 0;
+exports.last = exports.first = exports.some = exports.every = exports.include = exports.count = exports.reduce = exports.race = exports.zip = exports.concat = exports.incubate = exports.flatten = exports.partitionBy = exports.partition = exports.skipWhile = exports.skip = exports.takeWhile = exports.take = exports.remove = exports.filter = exports.map = void 0;
 const type_1 = require("../type");
 const partition_collector_1 = require("../../common/partition-collector");
 const async_partition_by_collector_1 = require("../../common/partition-by-collector/async-partition-by-collector");
@@ -155,6 +155,40 @@ function flatten(emit) {
     };
 }
 exports.flatten = flatten;
+function incubate(emitter, emit) {
+    let exhausted = false, count = 0;
+    return emitter(async (t, x) => {
+        switch (t) {
+            case type_1.EmitType.Next:
+                count++;
+                const p = x;
+                (async () => {
+                    try {
+                        const x = await p;
+                        emit(type_1.EmitType.Next, x);
+                        count--;
+                        if (exhausted && 0 === count) {
+                            emit(type_1.EmitType.Complete);
+                        }
+                    }
+                    catch (e) {
+                        emit(type_1.EmitType.Error, e);
+                    }
+                })();
+                break;
+            case type_1.EmitType.Complete:
+                exhausted = true;
+                if (0 === count) {
+                    emit(type_1.EmitType.Complete);
+                }
+                break;
+            case type_1.EmitType.Error:
+                emit(type_1.EmitType.Error, x);
+                break;
+        }
+    });
+}
+exports.incubate = incubate;
 function concat(emitter1, emitter2, emit) {
     let cancel2 = function () { };
     const cancel1 = emitter1(async (t, x) => {
@@ -191,7 +225,7 @@ function zip(ee, emit) {
         const cancel = emitter(async (t, x) => {
             switch (t) {
                 case type_1.EmitType.Next:
-                    (await handler.zip(_index, x)) || cancel();
+                    await handler.zip(_index, x);
                     break;
                 case type_1.EmitType.Complete:
                     handler.end();
@@ -230,22 +264,19 @@ function race(ee, emit) {
         return () => { };
     }
     const handler = new race_handler_1.RaceHandler(total);
-    const cancel_list = ee.map((emitter) => {
-        const cancel = emitter(async (t, x) => {
-            switch (t) {
-                case type_1.EmitType.Next:
-                    (await handler.race(x)) || cancel();
-                    break;
-                case type_1.EmitType.Complete:
-                    handler.leave();
-                    break;
-                case type_1.EmitType.Error:
-                    handler.crash(x);
-                    break;
-            }
-        });
-        return cancel;
-    });
+    const cancel_list = ee.map((emitter) => emitter(async (t, x) => {
+        switch (t) {
+            case type_1.EmitType.Next:
+                await handler.race(x);
+                break;
+            case type_1.EmitType.Complete:
+                handler.leave();
+                break;
+            case type_1.EmitType.Error:
+                handler.crash(x);
+                break;
+        }
+    }));
     const cancel = function () {
         for (const c of cancel_list) {
             c();

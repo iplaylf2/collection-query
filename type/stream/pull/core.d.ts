@@ -8,6 +8,6 @@ export declare function skip<T>(iterator: IterableIterator<T>, n: number): Gener
 export declare function skipWhile<T>(iterator: IterableIterator<T>, f: Predicate<T>): Generator<T, void, undefined>;
 export declare function partition<T>(iterator: IterableIterator<T>, n: number): Generator<T[], void, unknown>;
 export declare function partitionBy<T>(iterator: IterableIterator<T>, f: Predicate<T>): Generator<T[], void, unknown>;
-export declare function flatten<T extends K[], K>(iterator: IterableIterator<T>): Generator<K, void, unknown>;
+export declare function flatten<T>(iterator: IterableIterator<T[]>): Generator<T, void, unknown>;
 export declare function concat<T>(s1: Func<IterableIterator<T>>, s2: Func<IterableIterator<T>>): Generator<T, void, unknown>;
 export declare function zip<T>(ss: Func<IterableIterator<T>>[]): Generator<T[], void, unknown>;

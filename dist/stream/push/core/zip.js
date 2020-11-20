@@ -50,7 +50,6 @@ function zip(ee, emit) {
                     }
                     break;
                 case type_1.EmitType.Error:
-                    cancel();
                     emit(type_1.EmitType.Error, x);
                     break;
             }

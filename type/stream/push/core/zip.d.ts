@@ -1,2 +1,2 @@
 import { Emitter, EmitForm } from "../type";
-export declare function zip<T, Te>(ee: Emitter<T, Te>[], emit: EmitForm<T[], Te>): () => void;
+export declare function zip<T>(ee: Emitter<T, any>[], emit: EmitForm<T[], any>): () => void;

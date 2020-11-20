@@ -10,7 +10,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !exports.hasOwnProperty(p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.last = exports.first = exports.some = exports.every = exports.include = exports.count = exports.reduce = exports.race = exports.concat = exports.flatten = exports.partitionBy = exports.partition = exports.skipWhile = exports.skip = exports.takeWhile = exports.take = exports.remove = exports.filter = exports.map = void 0;
+exports.last = exports.first = exports.some = exports.every = exports.include = exports.count = exports.reduce = exports.race = exports.concat = exports.incubate = exports.flatten = exports.partitionBy = exports.partition = exports.skipWhile = exports.skip = exports.takeWhile = exports.take = exports.remove = exports.filter = exports.map = void 0;
 const type_1 = require("./type");
 const partition_collector_1 = require("../common/partition-collector");
 const partition_by_collector_1 = require("../common/partition-by-collector/partition-by-collector");
@@ -158,6 +158,40 @@ function flatten(emit) {
     };
 }
 exports.flatten = flatten;
+function incubate(emitter, emit) {
+    let exhausted = false, count = 0;
+    return emitter((t, x) => {
+        switch (t) {
+            case type_1.EmitType.Next:
+                count++;
+                const p = x;
+                (async () => {
+                    try {
+                        const x = await p;
+                        emit(type_1.EmitType.Next, x);
+                        count--;
+                        if (exhausted && 0 === count) {
+                            emit(type_1.EmitType.Complete);
+                        }
+                    }
+                    catch (e) {
+                        emit(type_1.EmitType.Error, e);
+                    }
+                })();
+                break;
+            case type_1.EmitType.Complete:
+                exhausted = true;
+                if (0 === count) {
+                    emit(type_1.EmitType.Complete);
+                }
+                break;
+            case type_1.EmitType.Error:
+                emit(type_1.EmitType.Error, x);
+                break;
+        }
+    });
+}
+exports.incubate = incubate;
 function concat(emitter1, emitter2, emit) {
     let cancel2 = function () { };
     const cancel1 = emitter1((t, x) => {
@@ -199,7 +233,6 @@ function race(ee, emit) {
                 }
                 break;
             case type_1.EmitType.Error:
-                cancel();
                 emit(type_1.EmitType.Error, x);
                 break;
         }
