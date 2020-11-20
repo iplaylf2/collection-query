@@ -275,8 +275,8 @@ export function race<T>(ee: Emitter<T, any>[], emit: EmitForm<T, any>) {
 
   const handler = new RaceHandler<T>(total);
 
-  const cancel_list = ee.map((emitter) => {
-    const cancel = emitter(async (t, x?) => {
+  const cancel_list = ee.map((emitter) =>
+    emitter(async (t, x?) => {
       switch (t) {
         case EmitType.Next:
           await handler.race(x as T);
@@ -288,10 +288,8 @@ export function race<T>(ee: Emitter<T, any>[], emit: EmitForm<T, any>) {
           handler.crash(x);
           break;
       }
-    });
-
-    return cancel;
-  });
+    })
+  );
 
   const cancel = function () {
     for (const c of cancel_list) {
