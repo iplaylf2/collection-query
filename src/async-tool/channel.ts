@@ -69,7 +69,7 @@ export class Channel<T> {
   }
 
   close() {
-    if (!this.close) {
+    if (!this.isClose) {
       this.putBlock.unblock();
       this.takeBlock.unblock();
       this._isClose = true;
