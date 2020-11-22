@@ -70,6 +70,11 @@ export const flatten: <T, Te>(
   s: PushStream<T[], Te>
 ) => PushStream<T, Te> = relay_next((emit) => core.flatten(emit));
 
+export function groupBy<T, Te, K>(f: Selector<T, K>) {
+  return (s: PushStream<T, Te>): PushStream<[K, PushStream<T, Te>], Te> =>
+    relay((emit) => core.groupBy(s, emit, f));
+}
+
 export function incubate<T, Te>(
   s: PushStream<Promise<T>, Te>
 ): PushStream<T, Te> {

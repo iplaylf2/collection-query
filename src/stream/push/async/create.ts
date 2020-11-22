@@ -1,9 +1,11 @@
 import { Action } from "../../../type";
-import { EmitForm } from "./type";
+import { EmitForm, Emitter } from "./type";
 import { EmitItem, EmitType } from "../type";
 import { Channel } from "../../../async-tool/channel";
 
-export function create<T, Te = never>(executor: Action<EmitForm<T, Te>>) {
+export function create<T, Te = never>(
+  executor: Action<EmitForm<T, Te>>
+): Emitter<T, Te> {
   return (receiver: EmitForm<T, Te>) => {
     const handler = new EmitterHandler(receiver);
     handler.start(executor);

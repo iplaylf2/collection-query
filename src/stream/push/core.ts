@@ -154,6 +154,8 @@ export function flatten<T>(emit: EmitForm<T, never>) {
   };
 }
 
+export * from "./core/group-by";
+
 export function incubate<T>(
   emitter: Emitter<Promise<T>, any>,
   emit: EmitForm<T, any>
