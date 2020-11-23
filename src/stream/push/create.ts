@@ -1,7 +1,9 @@
 import { Action } from "../../type";
 import { EmitForm, EmitItem, Emitter, EmitType } from "./type";
 
-export function create<T, Te = never>(executor: Action<EmitForm<T, Te>>):Emitter<T,Te> {
+export function create<T, Te = never>(
+  executor: Action<EmitForm<T, Te>>
+): Emitter<T, Te> {
   return (receiver: EmitForm<T, Te>) => {
     const handler = new EmitterHandler(receiver);
     handler.start(executor);
@@ -52,9 +54,8 @@ class EmitterHandler<T, Te> {
   private next(x: T) {
     try {
       this.receive(EmitType.Next, x);
-    } catch (e) {
+    } finally {
       this.cancel();
-      throw e;
     }
   }
 
