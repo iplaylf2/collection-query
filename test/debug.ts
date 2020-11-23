@@ -11,9 +11,10 @@ import {
 } from "../push";
 
 const s = create(async (emit) => {
-  let count = 200;
-  while (0 < count) {
-    emit(EmitType.Next, count--);
+  let count = 0;
+  while (true) {
+    await new Promise((r) => setTimeout(r, 10));
+    emit(EmitType.Next, count++);
   }
 });
 
@@ -33,7 +34,3 @@ const new_s = pipe([
 forEach(new_s, (x) => {
   console.log(x);
 });
-
-(async () => {
-  await new Promise((r) => setTimeout(r, 10000));
-})();
