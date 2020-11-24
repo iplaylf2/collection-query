@@ -1,7 +1,12 @@
-import { Emitter, EmitForm, EmitType } from "../type";
+import { Emitter, EmitForm, EmitType, Cancel } from "../type";
 import { PreCancel } from "../pre-cancel";
+import { Action } from "../../../type";
 
-export function zip<T>(ee: Emitter<T, any>[], emit: EmitForm<T[], any>) {
+export function zip<T>(
+  ee: Emitter<T, any>[],
+  emit: EmitForm<T[], any>,
+  expose: Action<Cancel>
+) {
   const total = ee.length;
   if (!(0 < total)) {
     emit(EmitType.Complete);

@@ -3,7 +3,7 @@ import { Action } from "../../type";
 import { create } from "./create";
 
 export interface RelayHandler<T> {
-  (emit: EmitForm<T, any>, expose: Action<Cancel>): Action<void>;
+  (emit: EmitForm<T, any>, expose: Action<Cancel>): void;
 }
 
 export function relay<T>(handler: RelayHandler<T>): Emitter<T, any> {

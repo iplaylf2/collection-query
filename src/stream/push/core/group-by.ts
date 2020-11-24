@@ -1,16 +1,17 @@
-import { EmitForm, Emitter, EmitType } from "../type";
-import { Selector } from "../../../type";
+import { Cancel, EmitForm, Emitter, EmitType } from "../type";
+import { Action, Selector } from "../../../type";
 import { Channel } from "../../../async-tool/channel";
 import { create } from "../create";
 
 export function groupBy<T, K>(
   emitter: Emitter<T, any>,
   emit: EmitForm<[K, Emitter<T, any>], any>,
+  expose: Action<Cancel>,
   f: Selector<T, K>
 ) {
   const channel_dispatch = new Map<K, Channel<[boolean, any]>>();
 
-  return emitter((t, x?) => {
+  emitter((t, x?) => {
     switch (t) {
       case EmitType.Next:
         const k = f(x);
@@ -53,5 +54,5 @@ export function groupBy<T, K>(
         }
         break;
     }
-  });
+  }, expose);
 }

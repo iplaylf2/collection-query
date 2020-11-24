@@ -1,4 +1,4 @@
-import { EmitForm, EmitType, Emitter, EmitItem } from "./type";
+import { EmitForm, EmitType, Emitter, EmitItem, Cancel } from "./type";
 import { Selector, Predicate, Action, Aggregate } from "../../type";
 import { PartitionCollector } from "../common/partition-collector";
 import { PartitionByCollector } from "../common/partition-by-collector/partition-by-collector";
@@ -79,15 +79,16 @@ export function skipWhile<T>(emit: EmitForm<T, never>, f: Predicate<T>) {
 export function partition<T>(
   emitter: Emitter<T, any>,
   emit: EmitForm<T[], any>,
+  expose: Action<Cancel>,
   n: number
 ) {
   if (!(0 < n)) {
+    expose(() => {});
     emit(EmitType.Complete);
-    return () => {};
   }
 
   const collector = new PartitionCollector<T>(n);
-  return emitter((t, x?) => {
+  emitter((t, x?) => {
     switch (t) {
       case EmitType.Next:
         {
@@ -110,17 +111,18 @@ export function partition<T>(
       case EmitType.Error:
         emit(EmitType.Error, x);
     }
-  });
+  }, expose);
 }
 
 export function partitionBy<T>(
   emitter: Emitter<T, any>,
   emit: EmitForm<T[], any>,
+  expose: Action<Cancel>,
   f: Selector<T, any>
 ) {
   const collector = new PartitionByCollector<T>(f);
 
-  return emitter((t, x?) => {
+  emitter((t, x?) => {
     switch (t) {
       case EmitType.Next:
         {
@@ -143,7 +145,7 @@ export function partitionBy<T>(
       case EmitType.Error:
         emit(EmitType.Error, x);
     }
-  });
+  }, expose);
 }
 
 export function flatten<T>(emit: EmitForm<T, never>) {
@@ -158,12 +160,13 @@ export * from "./core/group-by";
 
 export function incubate<T>(
   emitter: Emitter<Promise<T>, any>,
-  emit: EmitForm<T, any>
+  emit: EmitForm<T, any>,
+  expose: Action<Cancel>
 ) {
   let exhausted = false,
     count = 0;
 
-  return emitter((t, x?) => {
+  emitter((t, x?) => {
     switch (t) {
       case EmitType.Next:
         count++;
@@ -196,73 +199,93 @@ export function incubate<T>(
 
         break;
     }
-  });
+  }, expose);
 }
 
 export function concat<T>(
   emitter1: Emitter<T, any>,
   emitter2: Emitter<T, any>,
-  emit: EmitForm<T, any>
+  emit: EmitForm<T, any>,
+  expose: Action<Cancel>
 ) {
-  let cancel2: Action<void> = function () {};
-
-  const cancel1 = emitter1((t, x?) => {
-    switch (t) {
-      case EmitType.Next:
-        emit(EmitType.Next, x as T);
-        break;
-      case EmitType.Complete:
-        cancel2 = emitter2(emit);
-        break;
-      case EmitType.Error:
-        emit(EmitType.Error, x);
-        break;
-    }
-  });
+  let cancel1!: Cancel;
+  let cancel2: Cancel = function () {};
 
   const cancel = function () {
     cancel1();
     cancel2();
   };
 
-  return cancel;
-}
+  expose(cancel);
 
-export * from "./core/zip";
-
-export function race<T>(ee: Emitter<T, any>[], emit: EmitForm<T, any>) {
-  let count = ee.length;
-  if (!(0 < count)) {
-    emit(EmitType.Complete);
-    return () => {};
-  }
-
-  const cancel_list = ee.map((emitter) =>
-    emitter((t, x?) => {
+  emitter1(
+    (t, x?) => {
       switch (t) {
         case EmitType.Next:
           emit(EmitType.Next, x as T);
           break;
         case EmitType.Complete:
-          count--;
-          if (!(0 < count)) {
-            emit(EmitType.Complete);
-          }
+          emitter2(emit, (c) => (cancel2 = c));
           break;
         case EmitType.Error:
           emit(EmitType.Error, x);
           break;
       }
-    })
+    },
+    (c) => (cancel1 = c)
   );
+}
+
+export * from "./core/zip";
+
+export function race<T>(
+  ee: Emitter<T, any>[],
+  emit: EmitForm<T, any>,
+  expose: Action<Cancel>
+) {
+  let count = ee.length;
+  if (!(0 < count)) {
+    expose(() => {});
+    emit(EmitType.Complete);
+  }
+
+  let isCancel = false;
+  const cancel_list: Cancel[] = [];
 
   const cancel = function () {
+    isCancel = true;
     for (const c of cancel_list) {
       c();
     }
   };
 
-  return cancel;
+  expose(cancel);
+
+  for (const emitter of ee) {
+    if (isCancel) {
+      break;
+    }
+
+    emitter(
+      (t, x?) => {
+        switch (t) {
+          case EmitType.Next:
+            emit(EmitType.Next, x as T);
+            break;
+          case EmitType.Complete:
+            count--;
+            if (!(0 < count)) {
+              emit(EmitType.Complete);
+            }
+            break;
+          case EmitType.Error:
+            emit(EmitType.Error, x);
+            break;
+        }
+      },
+      (c) => cancel_list.push(c)
+    );
+  }
 }
 
 export function reduce<T, K>(
