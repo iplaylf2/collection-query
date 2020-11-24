@@ -22,13 +22,11 @@ class EmitterHandler<T, Te> {
     this.lastBlock = Promise.resolve();
   }
 
-  async start(executor: Action<EmitForm<T, Te>>) {
-    await Promise.resolve();
-
+  start(executor: Action<EmitForm<T, Te>>) {
     const receiver = this.handle.bind(this);
     try {
       executor(receiver);
-    } catch {
+    } finally {
       this.cancel();
     }
   }

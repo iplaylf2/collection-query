@@ -1,4 +1,5 @@
 import { Action } from "../../type";
+import { PreCancel } from "./pre-cancel";
 import { EmitForm, Emitter } from "./type";
 
 export interface ReduceHandler<T, K> {
@@ -8,18 +9,21 @@ export interface ReduceHandler<T, K> {
 export function reduce<T, K = T>(handler: ReduceHandler<T, K>) {
   return (emitter: Emitter<T>): Promise<K> =>
     new Promise((resolve, reject) => {
+      const pre_cancel = new PreCancel(() => cancel);
+
       const resolve_handle = function (x: K) {
-        cancel();
+        pre_cancel.cancel();
         resolve(x);
       };
 
       const reject_handle = function (x: any) {
-        cancel();
+        pre_cancel.cancel();
         reject(x);
       };
 
       const receiver = handler(resolve_handle, reject_handle);
-
       const cancel = emitter(receiver);
+
+      pre_cancel.tryCancel();
     });
 }

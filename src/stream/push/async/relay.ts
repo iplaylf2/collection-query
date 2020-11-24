@@ -2,6 +2,7 @@ import { EmitForm, Emitter } from "./type";
 import { Action } from "../../../type";
 import { create } from "./create";
 import { EmitType } from "../type";
+import { PreCancel } from "../pre-cancel";
 
 export interface RelayHandler<T> {
   (emit: EmitForm<T, any>): Action<void>;
@@ -9,22 +10,19 @@ export interface RelayHandler<T> {
 
 export function relay<T>(handler: RelayHandler<T>): Emitter<T, any> {
   return (receiver: EmitForm<T, any>) => {
-    let cancel_early = false;
-    let source_cancel: Action<void> = function () {
-      cancel_early = true;
-    };
+    let source_cancel: Action<void>;
+
+    const source_pre_cancel = new PreCancel(() => source_cancel);
 
     const relay_emitter = create<T, any>((emit) => {
-      if (cancel_early) {
-        return;
-      }
-
       source_cancel = handler(emit);
+
+      source_pre_cancel.tryCancel();
     });
 
     const relay_receiver: EmitForm<T, any> = async function (t, x?) {
       if (t !== EmitType.Next) {
-        source_cancel();
+        source_pre_cancel.cancel();
       }
       await receiver(t as any, x);
     };
