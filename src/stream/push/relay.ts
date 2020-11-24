@@ -1,37 +1,41 @@
-import { EmitForm, Emitter, EmitType } from "./type";
+import { Cancel, EmitForm, Emitter, EmitType } from "./type";
 import { Action } from "../../type";
 import { create } from "./create";
-import { PreCancel } from "./pre-cancel";
 
 export interface RelayHandler<T> {
-  (emit: EmitForm<T, any>): Action<void>;
+  (emit: EmitForm<T, any>, expose: Action<Cancel>): Action<void>;
 }
 
 export function relay<T>(handler: RelayHandler<T>): Emitter<T, any> {
-  return (receiver: EmitForm<T, any>) => {
-    let source_cancel: Action<void>;
-
-    const source_pre_cancel = new PreCancel(() => source_cancel);
+  return (receiver, expose) => {
+    let source_cancel!: Cancel;
 
     const relay_emitter = create<T, any>((emit) => {
-      source_cancel = handler(emit);
-      
-      source_pre_cancel.fulfil();
+      handler(emit, (c) => {
+        source_cancel = c;
+      });
     });
 
     const relay_receiver: EmitForm<T, any> = function (t, x?) {
       if (t !== EmitType.Next) {
-        source_pre_cancel.tryCancel();
+        source_cancel();
       }
       receiver(t as any, x);
     };
 
-    const relay_cancel = relay_emitter(relay_receiver);
+    let relay_cancel!: Cancel;
 
     const cancel = function () {
       relay_cancel();
       source_cancel();
     };
+
+    if (expose) {
+      expose(cancel);
+    }
+    relay_emitter(relay_receiver, (c) => {
+      relay_cancel = c;
+    });
 
     return cancel;
   };

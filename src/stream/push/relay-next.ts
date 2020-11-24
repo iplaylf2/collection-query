@@ -8,7 +8,7 @@ export interface RelayNextHandler<T, K> {
 
 export function relayNext<T, K = T>(handler: RelayNextHandler<T, K>) {
   return (emitter: Emitter<T, any>): Emitter<K, any> =>
-    relay((emit) => {
+    relay((emit, expose) => {
       const handle_next = handler(emit);
       return emitter((t, x?) => {
         switch (t) {
@@ -22,6 +22,6 @@ export function relayNext<T, K = T>(handler: RelayNextHandler<T, K>) {
             emit(t, x);
             break;
         }
-      });
+      }, expose);
     });
 }
