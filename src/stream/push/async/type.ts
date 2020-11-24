@@ -1,4 +1,4 @@
-import { EmitItem } from "../type";
+import { Cancel, EmitItem } from "../type";
 import { Action } from "../../../type";
 
 export interface EmitForm<T, Te> {
@@ -6,5 +6,5 @@ export interface EmitForm<T, Te> {
 }
 
 export interface Emitter<T, Te = never> {
-  (emit: EmitForm<T, Te>): Action<void>;
+  (emit: EmitForm<T, Te>, expose?: Action<Cancel>): Cancel;
 }

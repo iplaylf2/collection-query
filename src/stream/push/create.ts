@@ -4,11 +4,15 @@ import { EmitForm, EmitItem, Emitter, EmitType } from "./type";
 export function create<T, Te = never>(
   executor: Action<EmitForm<T, Te>>
 ): Emitter<T, Te> {
-  return (receiver: EmitForm<T, Te>) => {
+  return (receiver, expose) => {
     const handler = new EmitterHandler(receiver);
-    handler.start(executor);
-
     const cancel = handler.cancel.bind(handler);
+
+    if (expose) {
+      expose(cancel);
+    }
+    handler.start(executor);
+    
     return cancel;
   };
 }
