@@ -106,13 +106,13 @@ export function concatAll<T, Te>([s, ...ss]: AsyncPushStream<T, Te>[]) {
 export function zip<T, Te>(
   ss: AsyncPushStream<T, Te>[]
 ): AsyncPushStream<T[], Te> {
-  return relay((emit) => core.zip(ss, emit));
+  return relay((emit, expose) => core.zip(ss, emit, expose));
 }
 
 export function race<T, Te>(
   ss: AsyncPushStream<T, Te>[]
 ): AsyncPushStream<T, Te> {
-  return relay((emit) => core.race(ss, emit));
+  return relay((emit, expose) => core.race(ss, emit, expose));
 }
 
 export function reduce<T, K>(
