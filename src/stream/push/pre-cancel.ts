@@ -25,6 +25,10 @@ export class PreCancel {
     }
   }
 
+  get isCancelEarly() {
+    return this._isCancelEarly;
+  }
+
   private getCancel: GetCancel;
   private _isCancelEarly: boolean;
 }

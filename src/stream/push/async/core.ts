@@ -8,11 +8,12 @@ import {
   Aggregate,
   AsyncAggregate,
 } from "../../../type";
-import { EmitType, EmitItem } from "../type";
+import { EmitType, EmitItem, Cancel } from "../type";
 import { PartitionCollector } from "../../common/partition-collector";
 import { AsyncPartitionByCollector } from "../../common/partition-by-collector/async-partition-by-collector";
 import { ZipHandler } from "../../common/async/zip-handler";
 import { RaceHandler } from "../../common/async/race-handler";
+import { PreCancel } from "../pre-cancel";
 
 export function map<T, K>(
   emit: EmitForm<K, never>,
@@ -110,15 +111,16 @@ export function skipWhile<T>(
 export function partition<T>(
   emitter: Emitter<T, any>,
   emit: EmitForm<T[], any>,
+  expose: Action<Cancel>,
   n: number
 ) {
   if (!(0 < n)) {
+    expose(() => {});
     emit(EmitType.Complete);
-    return () => {};
   }
 
   const collector = new PartitionCollector<T>(n);
-  return emitter(async (t, x?) => {
+  emitter(async (t, x?) => {
     switch (t) {
       case EmitType.Next:
         {
@@ -141,17 +143,18 @@ export function partition<T>(
       case EmitType.Error:
         emit(EmitType.Error, x);
     }
-  });
+  }, expose);
 }
 
 export function partitionBy<T>(
   emitter: Emitter<T, any>,
   emit: EmitForm<T[], any>,
+  expose: Action<Cancel>,
   f: Selector<T, any> | AsyncSelector<T, any>
 ) {
   const collector = new AsyncPartitionByCollector<T>(f);
 
-  return emitter(async (t, x?) => {
+  emitter(async (t, x?) => {
     switch (t) {
       case EmitType.Next:
         {
@@ -174,7 +177,7 @@ export function partitionBy<T>(
       case EmitType.Error:
         emit(EmitType.Error, x);
     }
-  });
+  }, expose);
 }
 
 export function flatten<T>(emit: EmitForm<T, never>) {
@@ -187,12 +190,13 @@ export function flatten<T>(emit: EmitForm<T, never>) {
 
 export function incubate<T>(
   emitter: Emitter<Promise<T>, any>,
-  emit: EmitForm<T, any>
+  emit: EmitForm<T, any>,
+  expose: Action<Cancel>
 ) {
   let exhausted = false,
     count = 0;
 
-  return emitter(async (t, x?) => {
+  emitter(async (t, x?) => {
     switch (t) {
       case EmitType.Next:
         count++;
@@ -225,36 +229,41 @@ export function incubate<T>(
 
         break;
     }
-  });
+  }, expose);
 }
 
 export function concat<T>(
   emitter1: Emitter<T, any>,
   emitter2: Emitter<T, any>,
-  emit: EmitForm<T, any>
+  emit: EmitForm<T, any>,
+  expose: Action<Cancel>
 ) {
-  let cancel2: Action<void> = function () {};
-
-  const cancel1 = emitter1(async (t, x?) => {
-    switch (t) {
-      case EmitType.Next:
-        await emit(EmitType.Next, x as T);
-        break;
-      case EmitType.Complete:
-        cancel2 = emitter2(emit);
-        break;
-      case EmitType.Error:
-        emit(EmitType.Error, x);
-        break;
-    }
-  });
+  let cancel1!: Cancel;
+  let cancel2: Cancel = function () {};
 
   const cancel = function () {
     cancel1();
     cancel2();
   };
 
-  return cancel;
+  expose(cancel);
+
+  emitter1(
+    async (t, x?) => {
+      switch (t) {
+        case EmitType.Next:
+          await emit(EmitType.Next, x as T);
+          break;
+        case EmitType.Complete:
+          cancel2 = emitter2(emit);
+          break;
+        case EmitType.Error:
+          emit(EmitType.Error, x);
+          break;
+      }
+    },
+    (c) => (cancel1 = c)
+  );
 }
 
 export function zip<T>(ee: Emitter<T, any>[], emit: EmitForm<T[], any>) {

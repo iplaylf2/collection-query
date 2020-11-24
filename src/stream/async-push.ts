@@ -74,12 +74,12 @@ export function skipWhile<T, Te>(f: Predicate<T> | AsyncPredicate<T>) {
 
 export function partition<T, Te>(n: number) {
   return (s: AsyncPushStream<T, Te>): AsyncPushStream<T[], Te> =>
-    relay((emit) => core.partition(s, emit, n));
+    relay((emit, expose) => core.partition(s, emit, expose, n));
 }
 
 export function partitionBy<T, Te>(f: Selector<T, any>) {
   return (s: AsyncPushStream<T, Te>): AsyncPushStream<T[], Te> =>
-    relay((emit) => core.partitionBy(s, emit, f));
+    relay((emit, expose) => core.partitionBy(s, emit, expose, f));
 }
 
 export const flatten: <T, Te>(
@@ -89,14 +89,14 @@ export const flatten: <T, Te>(
 export function incubate<T, Te>(
   s: AsyncPushStream<Promise<T>, Te>
 ): AsyncPushStream<T, Te> {
-  return relay((emit) => core.incubate(s, emit));
+  return relay((emit, expose) => core.incubate(s, emit, expose));
 }
 
 export function concat<T, Te>(
   s1: AsyncPushStream<T, Te>,
   s2: AsyncPushStream<T, Te>
 ): AsyncPushStream<T, Te> {
-  return relay((emit) => core.concat(s1, s2, emit));
+  return relay((emit, expose) => core.concat(s1, s2, emit, expose));
 }
 
 export function concatAll<T, Te>([s, ...ss]: AsyncPushStream<T, Te>[]) {
