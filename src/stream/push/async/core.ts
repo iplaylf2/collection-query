@@ -271,7 +271,7 @@ export function zip<T>(ee: Emitter<T, any>[], emit: EmitForm<T[], any>) {
     const _index = index;
     index++;
 
-    const cancel = emitter(async (t, x?) => {
+    return emitter(async (t, x?) => {
       switch (t) {
         case EmitType.Next:
           await handler.zip(_index, x as T);
@@ -284,8 +284,6 @@ export function zip<T>(ee: Emitter<T, any>[], emit: EmitForm<T[], any>) {
           break;
       }
     });
-
-    return cancel;
   });
 
   const cancel = function () {
