@@ -10,7 +10,7 @@ export class PreCancel {
     this._isCancelEarly = false;
   }
 
-  cancel() {
+  tryCancel() {
     const cancel = this.getCancel();
     if (cancel) {
       cancel();
@@ -19,7 +19,7 @@ export class PreCancel {
     }
   }
 
-  tryCancel() {
+  fulfil() {
     if (this._isCancelEarly) {
       this.getCancel!();
     }

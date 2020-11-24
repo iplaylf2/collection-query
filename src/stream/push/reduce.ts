@@ -12,18 +12,18 @@ export function reduce<T, K = T>(handler: ReduceHandler<T, K>) {
       const pre_cancel = new PreCancel(() => cancel);
 
       const resolve_handle = function (x: K) {
-        pre_cancel.cancel();
+        pre_cancel.tryCancel();
         resolve(x);
       };
 
       const reject_handle = function (x: any) {
-        pre_cancel.cancel();
+        pre_cancel.tryCancel();
         reject(x);
       };
 
       const receiver = handler(resolve_handle, reject_handle);
       const cancel = emitter(receiver);
 
-      pre_cancel.tryCancel();
+      pre_cancel.fulfil();
     });
 }

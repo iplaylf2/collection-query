@@ -16,12 +16,12 @@ export function relay<T>(handler: RelayHandler<T>): Emitter<T, any> {
     const relay_emitter = create<T, any>((emit) => {
       source_cancel = handler(emit);
       
-      source_pre_cancel.tryCancel();
+      source_pre_cancel.fulfil();
     });
 
     const relay_receiver: EmitForm<T, any> = function (t, x?) {
       if (t !== EmitType.Next) {
-        source_pre_cancel.cancel();
+        source_pre_cancel.tryCancel();
       }
       receiver(t as any, x);
     };
