@@ -1,5 +1,4 @@
 import { Emitter, EmitForm, EmitType, Cancel } from "../type";
-import { PreCancel } from "../pre-cancel";
 import { Action } from "../../../type";
 
 export function zip<T>(
@@ -9,69 +8,13 @@ export function zip<T>(
 ) {
   const total = ee.length;
   if (!(0 < total)) {
+    expose(() => {});
     emit(EmitType.Complete);
-    return () => {};
   }
 
   const linked_zip_start = new LinkedZip<T>(total);
 
-  const cancel_list = ee.map((emitter, index) => {
-    let linked_zip = linked_zip_start;
-    linked_zip.arrive(index);
-
-    const pre_cancel = new PreCancel(() => cancel);
-
-    const cancel = emitter((t, x?) => {
-      switch (t) {
-        case EmitType.Next:
-          {
-            /*
-            if(linked_zip.isBroken){
-              //never
-            }
-            */
-
-            const [full, result] = linked_zip.zip(index, x as T);
-            if (full) {
-              emit(EmitType.Next, result!);
-            }
-
-            const next_linked = linked_zip.arriveNext(index);
-            if (next_linked.isBroken) {
-              if (next_linked.isAllArrival) {
-                emit(EmitType.Complete);
-              } else {
-                pre_cancel.tryCancel();
-              }
-            } else {
-              linked_zip = next_linked;
-            }
-          }
-          break;
-        case EmitType.Complete:
-          {
-            const check_in_list = linked_zip.break();
-
-            if (linked_zip.isAllArrival) {
-              emit(EmitType.Complete);
-            } else {
-              for (const i of check_in_list) {
-                if (i === index) continue;
-                cancel_list[i]();
-              }
-            }
-          }
-          break;
-        case EmitType.Error:
-          emit(EmitType.Error, x);
-          break;
-      }
-    });
-
-    pre_cancel.fulfil();
-
-    return cancel;
-  });
+  const cancel_list: Cancel[] = [];
 
   const cancel = function () {
     for (const c of cancel_list) {
@@ -79,7 +22,63 @@ export function zip<T>(
     }
   };
 
-  return cancel;
+  expose(cancel);
+
+  let index = 0;
+  for (const emitter of ee) {
+    let linked_zip = linked_zip_start;
+    if (linked_zip.isBroken) {
+      break;
+    }
+
+    const _index = index;
+    linked_zip.arrive(index);
+
+    emitter(
+      (t, x?) => {
+        switch (t) {
+          case EmitType.Next:
+            {
+              const [full, result] = linked_zip.zip(_index, x as T);
+              if (full) {
+                emit(EmitType.Next, result!);
+              }
+
+              const next_linked = linked_zip.arriveNext(_index);
+              if (next_linked.isBroken) {
+                if (next_linked.isAllArrival) {
+                  emit(EmitType.Complete);
+                } else {
+                  cancel_list[_index]();
+                }
+              } else {
+                linked_zip = next_linked;
+              }
+            }
+            break;
+          case EmitType.Complete:
+            {
+              const check_in_list = linked_zip.break();
+
+              if (linked_zip.isAllArrival) {
+                emit(EmitType.Complete);
+              } else {
+                for (const i of check_in_list) {
+                  cancel_list[i]();
+                }
+              }
+            }
+            break;
+          case EmitType.Error:
+            emit(EmitType.Error, x);
+            break;
+        }
+      },
+      (c) => cancel_list.push(c)
+    );
+
+    index++;
+  }
 }
 
 class LinkedZip<T> {
