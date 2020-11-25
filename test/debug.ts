@@ -13,8 +13,12 @@ import {
 const s = create(async (emit) => {
   let count = 0;
   while (true) {
-    await new Promise((r) => setTimeout(r, 10));
-    emit(EmitType.Next, count++);
+    await Promise.resolve();
+    console.log("at create " + count);
+    const open = emit(EmitType.Next, count++);
+    if (!open) {
+      break;
+    }
   }
 });
 
@@ -24,13 +28,29 @@ const new_s = pipe([
   take(100),
   groupBy((x: number) => x % 10),
   map(async ([k, s]: [any, any]) => {
-    s = filter((x: number) => x % 3 === 0)(s);
+    s = pipe([
+      map((x) => {
+        console.log("at group", x);
+        return x;
+      }),
+      filter((x: number) => x % 3 === 0),
+    ])(s);
     const r = await count(s);
+
+    await new Promise((r) => setTimeout(r, Math.random() * 10));
+
     return [k, r];
   }),
   incubate,
 ])(s);
 
+void new_s;
+
 forEach(new_s, (x) => {
   console.log(x);
 });
+
+((second: number) =>
+  new Promise((r) => setTimeout(r, 1000 * second)).then(() =>
+    console.log(`${second}s`)
+  ))(10);
