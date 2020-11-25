@@ -30,8 +30,9 @@ class EmitterHandler<T, Te> {
     const receiver = this.handle.bind(this);
     try {
       executor(receiver);
-    } finally {
+    } catch (e) {
       this.cancel();
+      throw e;
     }
   }
 
@@ -76,8 +77,9 @@ class EmitterHandler<T, Te> {
   private async next(x: T) {
     try {
       await this.receive(EmitType.Next, x);
-    } finally {
+    } catch (e) {
       this.cancel();
+      throw e;
     }
   }
 
