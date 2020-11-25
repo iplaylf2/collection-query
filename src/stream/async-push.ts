@@ -17,7 +17,7 @@ import * as core from "./push/async/core";
 import { relay } from "./push/async/relay";
 import { reduce as _reduce } from "./push/async/reduce";
 import { EmitType } from "./push/type";
-import { EmitForm } from "./push/async/type";
+import { Executor } from "./push/async/type";
 import { create as _create } from "./push/async/create";
 import { createFrom as _createFrom } from "./push/async/create-from";
 
@@ -26,7 +26,7 @@ const relay_next: <T, Te, K = T>(
 ) => (s: AsyncPushStream<T, Te>) => AsyncPushStream<K, Te> = _relay_next;
 
 export const create: <T, Te = never>(
-  executor: Action<EmitForm<T, Te>>
+  executor: Executor<T, Te>
 ) => AsyncPushStream<T, Te> = _create;
 
 export const createFrom: <T>(

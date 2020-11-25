@@ -4,7 +4,7 @@ import { Action, Selector, Predicate, Aggregate } from "../type";
 import * as core from "./push/core";
 import { relay } from "./push/relay";
 import { reduce as _reduce } from "./push/reduce";
-import { EmitType, EmitForm } from "./push/type";
+import { EmitType, Executor } from "./push/type";
 import { create as _create } from "./push/create";
 import { createFrom as _createFrom } from "./push/create-from";
 
@@ -13,7 +13,7 @@ const relay_next: <T, Te, K = T>(
 ) => (s: PushStream<T, Te>) => PushStream<K, Te> = _relay_next;
 
 export const create: <T, Te = never>(
-  executor: Action<EmitForm<T, Te>>
+  executor: Executor<T, Te>
 ) => PushStream<T, Te> = _create;
 
 export const createFrom: <T>(

@@ -255,7 +255,7 @@ export function concat<T>(
           await emit(EmitType.Next, x as T);
           break;
         case EmitType.Complete:
-          emitter2(emit, (c) => (cancel2 = c));
+          emitter2(emit as any, (c) => (cancel2 = c));
           break;
         case EmitType.Error:
           emit(EmitType.Error, x);

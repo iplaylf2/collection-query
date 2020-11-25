@@ -1,9 +1,9 @@
 import { Action } from "../../../type";
-import { EmitForm, Emitter } from "./type";
+import { ReceiveForm, Emitter, Executor } from "./type";
 import { EmitItem, EmitType } from "../type";
 
 export function create<T, Te = never>(
-  executor: Action<EmitForm<T, Te>>
+  executor: Executor<T, Te>
 ): Emitter<T, Te> {
   return (receiver, expose) => {
     const handler = new EmitterHandler(receiver);
@@ -19,14 +19,14 @@ export function create<T, Te = never>(
 }
 
 class EmitterHandler<T, Te> {
-  constructor(receiver: EmitForm<T, Te>) {
+  constructor(receiver: ReceiveForm<T, Te>) {
     this.receive = receiver;
     this.open = true;
 
     this.lastBlock = Promise.resolve();
   }
 
-  start(executor: Action<EmitForm<T, Te>>) {
+  start(executor: Executor<T, Te>) {
     const receiver = this.handle.bind(this);
     try {
       executor(receiver);
@@ -50,7 +50,7 @@ class EmitterHandler<T, Te> {
     await last_block;
 
     try {
-      await this.handleReceive(...item);
+      return await this.handleReceive(...item);
     } finally {
       resolve();
     }
@@ -70,6 +70,7 @@ class EmitterHandler<T, Te> {
           break;
       }
     }
+    return this.open;
   }
 
   private async next(x: T) {
@@ -92,7 +93,7 @@ class EmitterHandler<T, Te> {
     receive(EmitType.Error, x);
   }
 
-  private receive: EmitForm<T, Te>;
+  private receive: ReceiveForm<T, Te>;
   private open: boolean;
   private lastBlock: Promise<void>;
 }
