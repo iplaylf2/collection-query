@@ -6,7 +6,6 @@ export class Channel<T> {
     this._limit = 0 < limit ? limit : 1;
 
     this.buffer = new LinkedList();
-    this.putBlock = new AsyncBlock();
     this.takeBlock = new AsyncBlock();
 
     this.takeBlock.block();
@@ -14,28 +13,17 @@ export class Channel<T> {
     this._isClose = false;
   }
 
-  async put(x: T): Promise<boolean> {
-    while (true) {
-      await this.putBlock.wait;
+  put(x: T): boolean {
+    if (this.buffer.length < this._limit) {
+      this.buffer.put(x);
 
-      if (this._isClose) {
-        return false;
+      if (1 === this.buffer.length) {
+        this.takeBlock.unblock();
       }
 
-      if (this.buffer.length < this._limit) {
-        this.buffer.put(x);
-
-        if (this.buffer.length === this._limit) {
-          this.putBlock.block();
-        }
-        if (1 === this.buffer.length) {
-          this.takeBlock.unblock();
-        }
-
-        return true;
-      } else {
-        continue;
-      }
+      return true;
+    } else {
+      return false;
     }
   }
 
@@ -56,9 +44,6 @@ export class Channel<T> {
           if (0 === this.buffer.length) {
             this.takeBlock.block();
           }
-          if (this.buffer.length === this._limit - 1) {
-            this.putBlock.unblock();
-          }
 
           return [false, x];
         } else {
@@ -69,8 +54,7 @@ export class Channel<T> {
   }
 
   close() {
-    if (!this.close) {
-      this.putBlock.unblock();
+    if (!this.isClose) {
       this.takeBlock.unblock();
       this._isClose = true;
     }
@@ -90,7 +74,6 @@ export class Channel<T> {
 
   private _limit: number;
   private readonly buffer: LinkedList<T>;
-  private readonly putBlock: AsyncBlock;
   private readonly takeBlock: AsyncBlock;
   private _isClose: boolean;
 }

@@ -1,13 +1,15 @@
 import { Action } from "../../type";
-import { EmitForm, Emitter } from "./type";
+import { Emitter, Cancel, ReceiveForm } from "./type";
 
 export interface ReduceHandler<T, K> {
-  (resolve: Action<K>, reject: Action<any>): EmitForm<T, any>;
+  (resolve: Action<K>, reject: Action<any>): ReceiveForm<T, any>;
 }
 
 export function reduce<T, K = T>(handler: ReduceHandler<T, K>) {
   return (emitter: Emitter<T>): Promise<K> =>
     new Promise((resolve, reject) => {
+      let cancel!: Cancel;
+
       const resolve_handle = function (x: K) {
         cancel();
         resolve(x);
@@ -20,6 +22,8 @@ export function reduce<T, K = T>(handler: ReduceHandler<T, K>) {
 
       const receiver = handler(resolve_handle, reject_handle);
 
-      const cancel = emitter(receiver);
+      emitter(receiver, (c) => {
+        cancel = c;
+      });
     });
 }

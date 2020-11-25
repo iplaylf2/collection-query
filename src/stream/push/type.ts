@@ -11,10 +11,22 @@ export type EmitItem<T, Te> =
   | [EmitType.Complete]
   | [EmitType.Error, Te];
 
-export interface EmitForm<T, Te> {
+export interface Cancel {
+  (): void;
+}
+
+export interface ReceiveForm<T, Te> {
   (...x: EmitItem<T, Te>): void;
 }
 
 export interface Emitter<T, Te = never> {
-  (emit: EmitForm<T, Te>): Action<void>;
+  (receiver: ReceiveForm<T, Te>, expose?: Action<Cancel>): Cancel;
+}
+
+export interface EmitForm<T, Te> {
+  (...x: EmitItem<T, Te>): boolean;
+}
+
+export interface Executor<T, Te> {
+  (emit: EmitForm<T, Te>): void;
 }

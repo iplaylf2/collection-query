@@ -17,7 +17,7 @@ import * as core from "./push/async/core";
 import { relay } from "./push/async/relay";
 import { reduce as _reduce } from "./push/async/reduce";
 import { EmitType } from "./push/type";
-import { EmitForm } from "./push/async/type";
+import { Executor } from "./push/async/type";
 import { create as _create } from "./push/async/create";
 import { createFrom as _createFrom } from "./push/async/create-from";
 
@@ -26,7 +26,7 @@ const relay_next: <T, Te, K = T>(
 ) => (s: AsyncPushStream<T, Te>) => AsyncPushStream<K, Te> = _relay_next;
 
 export const create: <T, Te = never>(
-  executor: Action<EmitForm<T, Te>>
+  executor: Executor<T, Te>
 ) => AsyncPushStream<T, Te> = _create;
 
 export const createFrom: <T>(
@@ -74,12 +74,12 @@ export function skipWhile<T, Te>(f: Predicate<T> | AsyncPredicate<T>) {
 
 export function partition<T, Te>(n: number) {
   return (s: AsyncPushStream<T, Te>): AsyncPushStream<T[], Te> =>
-    relay((emit) => core.partition(s, emit, n));
+    relay((emit, expose) => core.partition(s, emit, expose, n));
 }
 
 export function partitionBy<T, Te>(f: Selector<T, any>) {
   return (s: AsyncPushStream<T, Te>): AsyncPushStream<T[], Te> =>
-    relay((emit) => core.partitionBy(s, emit, f));
+    relay((emit, expose) => core.partitionBy(s, emit, expose, f));
 }
 
 export const flatten: <T, Te>(
@@ -89,14 +89,14 @@ export const flatten: <T, Te>(
 export function incubate<T, Te>(
   s: AsyncPushStream<Promise<T>, Te>
 ): AsyncPushStream<T, Te> {
-  return relay((emit) => core.incubate(s, emit));
+  return relay((emit, expose) => core.incubate(s, emit, expose));
 }
 
 export function concat<T, Te>(
   s1: AsyncPushStream<T, Te>,
   s2: AsyncPushStream<T, Te>
 ): AsyncPushStream<T, Te> {
-  return relay((emit) => core.concat(s1, s2, emit));
+  return relay((emit, expose) => core.concat(s1, s2, emit, expose));
 }
 
 export function concatAll<T, Te>([s, ...ss]: AsyncPushStream<T, Te>[]) {
@@ -106,13 +106,13 @@ export function concatAll<T, Te>([s, ...ss]: AsyncPushStream<T, Te>[]) {
 export function zip<T, Te>(
   ss: AsyncPushStream<T, Te>[]
 ): AsyncPushStream<T[], Te> {
-  return relay((emit) => core.zip(ss, emit));
+  return relay((emit, expose) => core.zip(ss, emit, expose));
 }
 
 export function race<T, Te>(
   ss: AsyncPushStream<T, Te>[]
 ): AsyncPushStream<T, Te> {
-  return relay((emit) => core.race(ss, emit));
+  return relay((emit, expose) => core.race(ss, emit, expose));
 }
 
 export function reduce<T, K>(

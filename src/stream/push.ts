@@ -4,7 +4,7 @@ import { Action, Selector, Predicate, Aggregate } from "../type";
 import * as core from "./push/core";
 import { relay } from "./push/relay";
 import { reduce as _reduce } from "./push/reduce";
-import { EmitType, EmitForm } from "./push/type";
+import { EmitType, Executor } from "./push/type";
 import { create as _create } from "./push/create";
 import { createFrom as _createFrom } from "./push/create-from";
 
@@ -13,7 +13,7 @@ const relay_next: <T, Te, K = T>(
 ) => (s: PushStream<T, Te>) => PushStream<K, Te> = _relay_next;
 
 export const create: <T, Te = never>(
-  executor: Action<EmitForm<T, Te>>
+  executor: Executor<T, Te>
 ) => PushStream<T, Te> = _create;
 
 export const createFrom: <T>(
@@ -58,29 +58,34 @@ export function skipWhile<T, Te>(f: Predicate<T>) {
 
 export function partition<T, Te>(n: number) {
   return (s: PushStream<T, Te>): PushStream<T[], Te> =>
-    relay((emit) => core.partition(s, emit, n));
+    relay((emit, expose) => core.partition(s, emit, expose, n));
 }
 
 export function partitionBy<T, Te>(f: Selector<T, any>) {
   return (s: PushStream<T, Te>): PushStream<T[], Te> =>
-    relay((emit) => core.partitionBy(s, emit, f));
+    relay((emit, expose) => core.partitionBy(s, emit, expose, f));
 }
 
 export const flatten: <T, Te>(
   s: PushStream<T[], Te>
 ) => PushStream<T, Te> = relay_next((emit) => core.flatten(emit));
 
+export function groupBy<T, Te, K>(f: Selector<T, K>) {
+  return (s: PushStream<T, Te>): PushStream<[K, PushStream<T, Te>], Te> =>
+    relay((emit, expose) => core.groupBy(s, emit, expose, f));
+}
+
 export function incubate<T, Te>(
   s: PushStream<Promise<T>, Te>
 ): PushStream<T, Te> {
-  return relay((emit) => core.incubate(s, emit));
+  return relay((emit, expose) => core.incubate(s, emit, expose));
 }
 
 export function concat<T, Te>(
   s1: PushStream<T, Te>,
   s2: PushStream<T, Te>
 ): PushStream<T, Te> {
-  return relay((emit) => core.concat(s1, s2, emit));
+  return relay((emit, expose) => core.concat(s1, s2, emit, expose));
 }
 
 export function concatAll<T, Te>([s, ...ss]: PushStream<T, Te>[]) {
@@ -88,11 +93,11 @@ export function concatAll<T, Te>([s, ...ss]: PushStream<T, Te>[]) {
 }
 
 export function zip<T, Te>(ss: PushStream<T, Te>[]): PushStream<T[], Te> {
-  return relay((emit) => core.zip(ss, emit));
+  return relay((emit, expose) => core.zip(ss, emit, expose));
 }
 
 export function race<T, Te>(ss: PushStream<T, Te>[]): PushStream<T, Te> {
-  return relay((emit) => core.race(ss, emit));
+  return relay((emit, expose) => core.race(ss, emit, expose));
 }
 
 export function reduce<T, K>(s: PushStream<T>, f: Aggregate<T, K>, v: K) {

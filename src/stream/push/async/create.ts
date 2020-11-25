@@ -1,48 +1,60 @@
 import { Action } from "../../../type";
-import { EmitForm } from "./type";
+import { ReceiveForm, Emitter, Executor } from "./type";
 import { EmitItem, EmitType } from "../type";
-import { Channel } from "../../../async-tool/channel";
 
-export function create<T, Te = never>(executor: Action<EmitForm<T, Te>>) {
-  return (receiver: EmitForm<T, Te>) => {
+export function create<T, Te = never>(
+  executor: Executor<T, Te>
+): Emitter<T, Te> {
+  return (receiver, expose) => {
     const handler = new EmitterHandler(receiver);
+    const cancel = handler.cancel.bind(handler);
+
+    if (expose) {
+      expose(cancel);
+    }
     handler.start(executor);
 
-    const cancel = handler.cancel.bind(handler);
     return cancel;
   };
 }
 
 class EmitterHandler<T, Te> {
-  constructor(receiver: EmitForm<T, Te>) {
+  constructor(receiver: ReceiveForm<T, Te>) {
     this.receive = receiver;
-    this.queueChannel = new Channel(1);
     this.open = true;
+
+    this.lastBlock = Promise.resolve();
   }
 
-  async start(executor: Action<EmitForm<T, Te>>) {
-    await Promise.resolve();
-
+  start(executor: Executor<T, Te>) {
     const receiver = this.handle.bind(this);
     try {
       executor(receiver);
-    } catch {
+    } catch (e) {
       this.cancel();
+      throw e;
     }
   }
 
   cancel() {
     this.receive = null!;
     this.open = false;
-    this.queueChannel.close();
   }
 
   private async handle(...item: EmitItem<T, Te>) {
-    await this.queueChannel.put();
+    let resolve!: Action<void>;
+    const new_block = new Promise<void>((r) => (resolve = r));
 
-    await this.handleReceive(...item);
+    const last_block = this.lastBlock;
+    this.lastBlock = new_block;
 
-    await this.queueChannel.take();
+    await last_block;
+
+    try {
+      return await this.handleReceive(...item);
+    } finally {
+      resolve();
+    }
   }
 
   private async handleReceive(...[t, x]: EmitItem<T, Te>) {
@@ -59,6 +71,7 @@ class EmitterHandler<T, Te> {
           break;
       }
     }
+    return this.open;
   }
 
   private async next(x: T) {
@@ -82,7 +95,7 @@ class EmitterHandler<T, Te> {
     receive(EmitType.Error, x);
   }
 
-  private receive: EmitForm<T, Te>;
-  private readonly queueChannel: Channel<void>;
+  private receive: ReceiveForm<T, Te>;
   private open: boolean;
+  private lastBlock: Promise<void>;
 }
