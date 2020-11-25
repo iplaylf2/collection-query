@@ -6,6 +6,7 @@ const partition_collector_1 = require("../../common/partition-collector");
 const async_partition_by_collector_1 = require("../../common/partition-by-collector/async-partition-by-collector");
 const zip_handler_1 = require("../../common/async/zip-handler");
 const race_handler_1 = require("../../common/async/race-handler");
+const controlled_iterator_1 = require("../../common/async/controlled-iterator");
 function map(emit, f) {
     return async (x) => {
         const r = await f(x);
@@ -89,13 +90,13 @@ function skipWhile(emit, f) {
     };
 }
 exports.skipWhile = skipWhile;
-function partition(emitter, emit, n) {
+function partition(emitter, emit, expose, n) {
     if (!(0 < n)) {
+        expose(() => { });
         emit(type_1.EmitType.Complete);
-        return () => { };
     }
     const collector = new partition_collector_1.PartitionCollector(n);
-    return emitter(async (t, x) => {
+    emitter(async (t, x) => {
         switch (t) {
             case type_1.EmitType.Next:
                 {
@@ -117,12 +118,12 @@ function partition(emitter, emit, n) {
             case type_1.EmitType.Error:
                 emit(type_1.EmitType.Error, x);
         }
-    });
+    }, expose);
 }
 exports.partition = partition;
-function partitionBy(emitter, emit, f) {
+function partitionBy(emitter, emit, expose, f) {
     const collector = new async_partition_by_collector_1.AsyncPartitionByCollector(f);
-    return emitter(async (t, x) => {
+    emitter(async (t, x) => {
         switch (t) {
             case type_1.EmitType.Next:
                 {
@@ -144,7 +145,7 @@ function partitionBy(emitter, emit, f) {
             case type_1.EmitType.Error:
                 emit(type_1.EmitType.Error, x);
         }
-    });
+    }, expose);
 }
 exports.partitionBy = partitionBy;
 function flatten(emit) {
@@ -155,9 +156,9 @@ function flatten(emit) {
     };
 }
 exports.flatten = flatten;
-function incubate(emitter, emit) {
+function incubate(emitter, emit, expose) {
     let exhausted = false, count = 0;
-    return emitter(async (t, x) => {
+    emitter(async (t, x) => {
         switch (t) {
             case type_1.EmitType.Next:
                 count++;
@@ -186,43 +187,54 @@ function incubate(emitter, emit) {
                 emit(type_1.EmitType.Error, x);
                 break;
         }
-    });
+    }, expose);
 }
 exports.incubate = incubate;
-function concat(emitter1, emitter2, emit) {
+function concat(emitter1, emitter2, emit, expose) {
+    let cancel1;
     let cancel2 = function () { };
-    const cancel1 = emitter1(async (t, x) => {
+    const cancel = function () {
+        cancel1();
+        cancel2();
+    };
+    expose(cancel);
+    emitter1(async (t, x) => {
         switch (t) {
             case type_1.EmitType.Next:
                 await emit(type_1.EmitType.Next, x);
                 break;
             case type_1.EmitType.Complete:
-                cancel2 = emitter2(emit);
+                emitter2(emit, (c) => (cancel2 = c));
                 break;
             case type_1.EmitType.Error:
                 emit(type_1.EmitType.Error, x);
                 break;
         }
-    });
-    const cancel = function () {
-        cancel1();
-        cancel2();
-    };
-    return cancel;
+    }, (c) => (cancel1 = c));
 }
 exports.concat = concat;
-function zip(ee, emit) {
+function zip(ee, emit, expose) {
     const total = ee.length;
     if (!(0 < total)) {
+        expose(() => { });
         emit(type_1.EmitType.Complete);
-        return () => { };
     }
     const handler = new zip_handler_1.ZipHandler(total);
+    const cancel_list = [];
+    const cancel = function () {
+        for (const c of cancel_list) {
+            c();
+        }
+        handler.end();
+    };
+    expose(cancel);
     let index = 0;
-    const cancel_list = ee.map((emitter) => {
+    for (const emitter of ee) {
+        if (handler.status !== controlled_iterator_1.IteratorStatus.Running) {
+            break;
+        }
         const _index = index;
-        index++;
-        const cancel = emitter(async (t, x) => {
+        emitter(async (t, x) => {
             switch (t) {
                 case type_1.EmitType.Next:
                     await handler.zip(_index, x);
@@ -234,15 +246,9 @@ function zip(ee, emit) {
                     handler.crash(x);
                     break;
             }
-        });
-        return cancel;
-    });
-    const cancel = function () {
-        for (const c of cancel_list) {
-            c();
-        }
-        handler.end();
-    };
+        }, (c) => cancel_list.push(c));
+        index++;
+    }
     (async function () {
         try {
             for await (const x of handler) {
@@ -254,35 +260,41 @@ function zip(ee, emit) {
             emit(type_1.EmitType.Error, e);
         }
     })();
-    return cancel;
 }
 exports.zip = zip;
-function race(ee, emit) {
+function race(ee, emit, expose) {
     const total = ee.length;
     if (!(0 < total)) {
+        expose(() => { });
         emit(type_1.EmitType.Complete);
-        return () => { };
     }
     const handler = new race_handler_1.RaceHandler(total);
-    const cancel_list = ee.map((emitter) => emitter(async (t, x) => {
-        switch (t) {
-            case type_1.EmitType.Next:
-                await handler.race(x);
-                break;
-            case type_1.EmitType.Complete:
-                handler.leave();
-                break;
-            case type_1.EmitType.Error:
-                handler.crash(x);
-                break;
-        }
-    }));
+    const cancel_list = [];
     const cancel = function () {
         for (const c of cancel_list) {
             c();
         }
         handler.end();
     };
+    expose(cancel);
+    for (const emitter of ee) {
+        if (handler.status !== controlled_iterator_1.IteratorStatus.Running) {
+            break;
+        }
+        emitter(async (t, x) => {
+            switch (t) {
+                case type_1.EmitType.Next:
+                    await handler.race(x);
+                    break;
+                case type_1.EmitType.Complete:
+                    handler.leave();
+                    break;
+                case type_1.EmitType.Error:
+                    handler.crash(x);
+                    break;
+            }
+        }, (c) => cancel_list.push(c));
+    }
     (async function () {
         try {
             for await (const x of handler) {
@@ -294,7 +306,6 @@ function race(ee, emit) {
             emit(type_1.EmitType.Error, e);
         }
     })();
-    return cancel;
 }
 exports.race = race;
 function reduce(resolve, reject, f, v) {

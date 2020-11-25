@@ -1,6 +1,6 @@
 export declare class Channel<T> {
     constructor(limit?: number);
-    put(x: T): Promise<boolean>;
+    put(x: T): boolean;
     take(): Promise<[true] | [false, T]>;
     close(): void;
     get limit(): number;
@@ -8,7 +8,6 @@ export declare class Channel<T> {
     get isClose(): boolean;
     private _limit;
     private readonly buffer;
-    private readonly putBlock;
     private readonly takeBlock;
     private _isClose;
 }

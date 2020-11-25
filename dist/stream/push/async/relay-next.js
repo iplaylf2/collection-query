@@ -4,9 +4,9 @@ exports.relayNext = void 0;
 const relay_1 = require("./relay");
 const type_1 = require("../type");
 function relayNext(handler) {
-    return (emitter) => relay_1.relay((emit) => {
+    return (emitter) => relay_1.relay((emit, expose) => {
         const handle_next = handler(emit);
-        return emitter(async (t, x) => {
+        emitter(async (t, x) => {
             switch (t) {
                 case type_1.EmitType.Next:
                     await handle_next(x);
@@ -18,7 +18,7 @@ function relayNext(handler) {
                     emit(t, x);
                     break;
             }
-        });
+        }, expose);
     });
 }
 exports.relayNext = relayNext;

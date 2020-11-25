@@ -5,8 +5,9 @@ const relay_1 = require("../push/async/relay");
 const type_1 = require("../push/type");
 const lazy_channel_1 = require("../../async-tool/lazy-channel");
 function push(s) {
-    return relay_1.relay((emit) => {
+    return relay_1.relay((emit, expose) => {
         const channel = new lazy_channel_1.LazyChannel();
+        expose(() => channel.close());
         (async () => {
             try {
                 for await (const x of s()) {
@@ -28,7 +29,6 @@ function push(s) {
                 await emit(...x);
             }
         })();
-        return channel.close.bind(channel);
     });
 }
 exports.push = push;

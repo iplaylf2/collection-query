@@ -3,10 +3,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.create = void 0;
 const type_1 = require("./type");
 function create(executor) {
-    return (receiver) => {
+    return (receiver, expose) => {
         const handler = new EmitterHandler(receiver);
-        handler.start(executor);
         const cancel = handler.cancel.bind(handler);
+        if (expose) {
+            expose(cancel);
+        }
+        handler.start(executor);
         return cancel;
     };
 }
@@ -16,14 +19,14 @@ class EmitterHandler {
         this.receive = receiver;
         this.open = true;
     }
-    async start(executor) {
-        await Promise.resolve();
+    start(executor) {
         const receiver = this.handle.bind(this);
         try {
             executor(receiver);
         }
-        catch {
+        catch (e) {
             this.cancel();
+            throw e;
         }
     }
     cancel() {
@@ -44,6 +47,7 @@ class EmitterHandler {
                     break;
             }
         }
+        return this.open;
     }
     next(x) {
         try {

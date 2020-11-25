@@ -48,20 +48,20 @@ function skipWhile(f) {
 }
 exports.skipWhile = skipWhile;
 function partition(n) {
-    return (s) => relay_1.relay((emit) => core.partition(s, emit, n));
+    return (s) => relay_1.relay((emit, expose) => core.partition(s, emit, expose, n));
 }
 exports.partition = partition;
 function partitionBy(f) {
-    return (s) => relay_1.relay((emit) => core.partitionBy(s, emit, f));
+    return (s) => relay_1.relay((emit, expose) => core.partitionBy(s, emit, expose, f));
 }
 exports.partitionBy = partitionBy;
 exports.flatten = relay_next((emit) => core.flatten(emit));
 function incubate(s) {
-    return relay_1.relay((emit) => core.incubate(s, emit));
+    return relay_1.relay((emit, expose) => core.incubate(s, emit, expose));
 }
 exports.incubate = incubate;
 function concat(s1, s2) {
-    return relay_1.relay((emit) => core.concat(s1, s2, emit));
+    return relay_1.relay((emit, expose) => core.concat(s1, s2, emit, expose));
 }
 exports.concat = concat;
 function concatAll([s, ...ss]) {
@@ -69,11 +69,11 @@ function concatAll([s, ...ss]) {
 }
 exports.concatAll = concatAll;
 function zip(ss) {
-    return relay_1.relay((emit) => core.zip(ss, emit));
+    return relay_1.relay((emit, expose) => core.zip(ss, emit, expose));
 }
 exports.zip = zip;
 function race(ss) {
-    return relay_1.relay((emit) => core.race(ss, emit));
+    return relay_1.relay((emit, expose) => core.race(ss, emit, expose));
 }
 exports.race = race;
 function reduce(s, f, v) {

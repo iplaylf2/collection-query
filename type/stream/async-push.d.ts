@@ -1,7 +1,7 @@
 import { AsyncPushStream } from "./type";
 import { Action, AsyncAction, Selector, AsyncSelector, Predicate, AsyncPredicate, Aggregate, AsyncAggregate } from "../type";
-import { EmitForm } from "./push/async/type";
-export declare const create: <T, Te = never>(executor: Action<EmitForm<T, Te>>) => AsyncPushStream<T, Te>;
+import { Executor } from "./push/async/type";
+export declare const create: <T, Te = never>(executor: Executor<T, Te>) => AsyncPushStream<T, Te>;
 export declare const createFrom: <T>(i: Iterable<T>) => AsyncPushStream<T, any>;
 export declare function forEach<T>(s: AsyncPushStream<T, any>, f: Action<T> | AsyncAction<T>): void;
 export declare function map<T, Te, K>(f: Selector<T, K> | AsyncSelector<T, K>): (s: AsyncPushStream<T, Te>) => AsyncPushStream<K, Te>;

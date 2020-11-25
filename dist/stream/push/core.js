@@ -92,13 +92,13 @@ function skipWhile(emit, f) {
     };
 }
 exports.skipWhile = skipWhile;
-function partition(emitter, emit, n) {
+function partition(emitter, emit, expose, n) {
     if (!(0 < n)) {
+        expose(() => { });
         emit(type_1.EmitType.Complete);
-        return () => { };
     }
     const collector = new partition_collector_1.PartitionCollector(n);
-    return emitter((t, x) => {
+    emitter((t, x) => {
         switch (t) {
             case type_1.EmitType.Next:
                 {
@@ -120,12 +120,12 @@ function partition(emitter, emit, n) {
             case type_1.EmitType.Error:
                 emit(type_1.EmitType.Error, x);
         }
-    });
+    }, expose);
 }
 exports.partition = partition;
-function partitionBy(emitter, emit, f) {
+function partitionBy(emitter, emit, expose, f) {
     const collector = new partition_by_collector_1.PartitionByCollector(f);
-    return emitter((t, x) => {
+    emitter((t, x) => {
         switch (t) {
             case type_1.EmitType.Next:
                 {
@@ -147,7 +147,7 @@ function partitionBy(emitter, emit, f) {
             case type_1.EmitType.Error:
                 emit(type_1.EmitType.Error, x);
         }
-    });
+    }, expose);
 }
 exports.partitionBy = partitionBy;
 function flatten(emit) {
@@ -158,9 +158,10 @@ function flatten(emit) {
     };
 }
 exports.flatten = flatten;
-function incubate(emitter, emit) {
+__exportStar(require("./core/group-by"), exports);
+function incubate(emitter, emit, expose) {
     let exhausted = false, count = 0;
-    return emitter((t, x) => {
+    emitter((t, x) => {
         switch (t) {
             case type_1.EmitType.Next:
                 count++;
@@ -189,60 +190,69 @@ function incubate(emitter, emit) {
                 emit(type_1.EmitType.Error, x);
                 break;
         }
-    });
+    }, expose);
 }
 exports.incubate = incubate;
-function concat(emitter1, emitter2, emit) {
+function concat(emitter1, emitter2, emit, expose) {
+    let cancel1;
     let cancel2 = function () { };
-    const cancel1 = emitter1((t, x) => {
-        switch (t) {
-            case type_1.EmitType.Next:
-                emit(type_1.EmitType.Next, x);
-                break;
-            case type_1.EmitType.Complete:
-                cancel2 = emitter2(emit);
-                break;
-            case type_1.EmitType.Error:
-                emit(type_1.EmitType.Error, x);
-                break;
-        }
-    });
     const cancel = function () {
         cancel1();
         cancel2();
     };
-    return cancel;
-}
-exports.concat = concat;
-__exportStar(require("./core/zip"), exports);
-function race(ee, emit) {
-    let count = ee.length;
-    if (!(0 < count)) {
-        emit(type_1.EmitType.Complete);
-        return () => { };
-    }
-    const cancel_list = ee.map((emitter) => emitter((t, x) => {
+    expose(cancel);
+    emitter1((t, x) => {
         switch (t) {
             case type_1.EmitType.Next:
                 emit(type_1.EmitType.Next, x);
                 break;
             case type_1.EmitType.Complete:
-                count--;
-                if (!(0 < count)) {
-                    emit(type_1.EmitType.Complete);
-                }
+                emitter2(emit, (c) => (cancel2 = c));
                 break;
             case type_1.EmitType.Error:
                 emit(type_1.EmitType.Error, x);
                 break;
         }
-    }));
+    }, (c) => (cancel1 = c));
+}
+exports.concat = concat;
+__exportStar(require("./core/zip"), exports);
+function race(ee, emit, expose) {
+    let count = ee.length;
+    if (!(0 < count)) {
+        expose(() => { });
+        emit(type_1.EmitType.Complete);
+    }
+    let isCancel = false;
+    const cancel_list = [];
     const cancel = function () {
+        isCancel = true;
         for (const c of cancel_list) {
             c();
         }
     };
-    return cancel;
+    expose(cancel);
+    for (const emitter of ee) {
+        if (isCancel) {
+            break;
+        }
+        emitter((t, x) => {
+            switch (t) {
+                case type_1.EmitType.Next:
+                    emit(type_1.EmitType.Next, x);
+                    break;
+                case type_1.EmitType.Complete:
+                    count--;
+                    if (!(0 < count)) {
+                        emit(type_1.EmitType.Complete);
+                    }
+                    break;
+                case type_1.EmitType.Error:
+                    emit(type_1.EmitType.Error, x);
+                    break;
+            }
+        }, (c) => cancel_list.push(c));
+    }
 }
 exports.race = race;
 function reduce(resolve, reject, f, v) {

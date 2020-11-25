@@ -1,7 +1,7 @@
 import { PushStream } from "./type";
 import { Action, Selector, Predicate, Aggregate } from "../type";
-import { EmitForm } from "./push/type";
-export declare const create: <T, Te = never>(executor: Action<EmitForm<T, Te>>) => PushStream<T, Te>;
+import { Executor } from "./push/type";
+export declare const create: <T, Te = never>(executor: Executor<T, Te>) => PushStream<T, Te>;
 export declare const createFrom: <T>(i: Iterable<T>) => PushStream<T, any>;
 export declare function forEach<T>(s: PushStream<T, any>, f: Action<T>): void;
 export declare function map<T, Te, K>(f: Selector<T, K>): (s: PushStream<T, Te>) => PushStream<K, Te>;
@@ -14,6 +14,7 @@ export declare function skipWhile<T, Te>(f: Predicate<T>): (s: PushStream<T, Te>
 export declare function partition<T, Te>(n: number): (s: PushStream<T, Te>) => PushStream<T[], Te>;
 export declare function partitionBy<T, Te>(f: Selector<T, any>): (s: PushStream<T, Te>) => PushStream<T[], Te>;
 export declare const flatten: <T, Te>(s: PushStream<T[], Te>) => PushStream<T, Te>;
+export declare function groupBy<T, Te, K>(f: Selector<T, K>): (s: PushStream<T, Te>) => PushStream<[K, PushStream<T, Te>], Te>;
 export declare function incubate<T, Te>(s: PushStream<Promise<T>, Te>): PushStream<T, Te>;
 export declare function concat<T, Te>(s1: PushStream<T, Te>, s2: PushStream<T, Te>): PushStream<T, Te>;
 export declare function concatAll<T, Te>([s, ...ss]: PushStream<T, Te>[]): PushStream<T, Te>;

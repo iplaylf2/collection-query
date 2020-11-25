@@ -2,12 +2,14 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.create = void 0;
 const type_1 = require("../type");
-const channel_1 = require("../../../async-tool/channel");
 function create(executor) {
-    return (receiver) => {
+    return (receiver, expose) => {
         const handler = new EmitterHandler(receiver);
-        handler.start(executor);
         const cancel = handler.cancel.bind(handler);
+        if (expose) {
+            expose(cancel);
+        }
+        handler.start(executor);
         return cancel;
     };
 }
@@ -15,28 +17,35 @@ exports.create = create;
 class EmitterHandler {
     constructor(receiver) {
         this.receive = receiver;
-        this.queueChannel = new channel_1.Channel(1);
         this.open = true;
+        this.lastBlock = Promise.resolve();
     }
-    async start(executor) {
-        await Promise.resolve();
+    start(executor) {
         const receiver = this.handle.bind(this);
         try {
             executor(receiver);
         }
-        catch {
+        catch (e) {
             this.cancel();
+            throw e;
         }
     }
     cancel() {
         this.receive = null;
         this.open = false;
-        this.queueChannel.close();
     }
     async handle(...item) {
-        await this.queueChannel.put();
-        await this.handleReceive(...item);
-        await this.queueChannel.take();
+        let resolve;
+        const new_block = new Promise((r) => (resolve = r));
+        const last_block = this.lastBlock;
+        this.lastBlock = new_block;
+        await last_block;
+        try {
+            return await this.handleReceive(...item);
+        }
+        finally {
+            resolve();
+        }
     }
     async handleReceive(...[t, x]) {
         if (this.open) {
@@ -52,6 +61,7 @@ class EmitterHandler {
                     break;
             }
         }
+        return this.open;
     }
     async next(x) {
         try {

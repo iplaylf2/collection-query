@@ -1,1 +1,1 @@
-export declare function createFrom<T>(i: Iterable<T>): (receiver: import("./type").EmitForm<T, any>) => () => void;
+export declare function createFrom<T>(i: Iterable<T>): import("./type").Emitter<T, any>;

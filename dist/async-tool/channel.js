@@ -7,30 +7,20 @@ class Channel {
     constructor(limit = Infinity) {
         this._limit = 0 < limit ? limit : 1;
         this.buffer = new linked_list_1.LinkedList();
-        this.putBlock = new async_block_1.AsyncBlock();
         this.takeBlock = new async_block_1.AsyncBlock();
         this.takeBlock.block();
         this._isClose = false;
     }
-    async put(x) {
-        while (true) {
-            await this.putBlock.wait;
-            if (this._isClose) {
-                return false;
+    put(x) {
+        if (this.buffer.length < this._limit) {
+            this.buffer.put(x);
+            if (1 === this.buffer.length) {
+                this.takeBlock.unblock();
             }
-            if (this.buffer.length < this._limit) {
-                this.buffer.put(x);
-                if (this.buffer.length === this._limit) {
-                    this.putBlock.block();
-                }
-                if (1 === this.buffer.length) {
-                    this.takeBlock.unblock();
-                }
-                return true;
-            }
-            else {
-                continue;
-            }
+            return true;
+        }
+        else {
+            return false;
         }
     }
     async take() {
@@ -50,9 +40,6 @@ class Channel {
                     if (0 === this.buffer.length) {
                         this.takeBlock.block();
                     }
-                    if (this.buffer.length === this._limit - 1) {
-                        this.putBlock.unblock();
-                    }
                     return [false, x];
                 }
                 else {
@@ -62,8 +49,7 @@ class Channel {
         }
     }
     close() {
-        if (!this.close) {
-            this.putBlock.unblock();
+        if (!this.isClose) {
             this.takeBlock.unblock();
             this._isClose = true;
         }
