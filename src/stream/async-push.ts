@@ -86,10 +86,19 @@ export const flatten: <T>(
   s: AsyncPushStream<T[]>
 ) => AsyncPushStream<T> = relay_next((emit) => core.flatten(emit));
 
+export function _flatten<T>() {
+  return relay_next<T[], T>((emit) => core.flatten(emit));
+}
+
 export function incubate<T>(
   s: AsyncPushStream<Promise<T>>
 ): AsyncPushStream<T> {
   return relay((emit, expose) => core.incubate(s, emit, expose));
+}
+
+export function _incubate<T>() {
+  return (s: AsyncPushStream<Promise<T>>): AsyncPushStream<T> =>
+    relay((emit, expose) => core.incubate(s, emit, expose));
 }
 
 export function concat<T>(

@@ -56,6 +56,12 @@ export function flatten<T>(s: PullStream<T[]>): PullStream<T> {
   return () => core.flatten(s());
 }
 
+export function _flatten<T>() {
+  return (s: PullStream<T[]>): PullStream<T> => {
+    return () => core.flatten(s());
+  };
+}
+
 export function concat<T>(s1: PullStream<T>, s2: PullStream<T>): PullStream<T> {
   return () => core.concat(s1, s2);
 }

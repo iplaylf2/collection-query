@@ -74,6 +74,12 @@ export function flatten<T>(s: AsyncPullStream<T[]>): AsyncPullStream<T> {
   return () => core.flatten(s());
 }
 
+export function _flatten<T>() {
+  return (s: AsyncPullStream<T[]>): AsyncPullStream<T> => {
+    return () => core.flatten(s());
+  };
+}
+
 export function concat<T>(
   s1: AsyncPullStream<T>,
   s2: AsyncPullStream<T>
@@ -81,9 +87,10 @@ export function concat<T>(
   return () => core.concat(s1, s2);
 }
 
-export function concatAll<T>([s, ...ss]: AsyncPullStream<T>[]): AsyncPullStream<
-  T
-> {
+export function concatAll<T>([
+  s,
+  ...ss
+]: AsyncPullStream<T>[]): AsyncPullStream<T> {
   return ss.reduce((r, s) => concat(r, s), s);
 }
 
