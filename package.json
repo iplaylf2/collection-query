@@ -12,8 +12,8 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "typescript": "*",
-    "jest": "*"
+    "jest": "*",
+    "typescript": "*"
   },
   "jest": {
     "testMatch": [
