@@ -1,4 +1,4 @@
-import { pipe, EmitType } from "..";
+import { transfer, PushStream, EmitType } from "..";
 import {
   create,
   take,
@@ -6,11 +6,11 @@ import {
   map,
   filter,
   count,
-  incubate,
+  _incubate,
   forEach,
 } from "../push";
 
-const s = create(async (emit) => {
+const s = create<number>(async (emit) => {
   let count = 0;
   while (true) {
     await Promise.resolve();
@@ -24,25 +24,26 @@ const s = create(async (emit) => {
 
 void s;
 
-const new_s = pipe([
+const new_s = transfer(s, [
   take(100),
   groupBy((x: number) => x % 10),
-  map(async ([k, s]: [any, any]) => {
-    s = pipe([
+  map(async ([k, s]: [number, PushStream<number>]) => {
+    s = transfer(s, [
       map((x) => {
         console.log("at group", x);
         return x;
       }),
       filter((x: number) => x % 3 === 0),
-    ])(s);
+    ]);
+    
     const r = await count(s);
 
     await new Promise((r) => setTimeout(r, Math.random() * 10));
 
     return [k, r];
   }),
-  incubate,
-])(s);
+  _incubate<[number, number]>(),
+]);
 
 void new_s;
 
