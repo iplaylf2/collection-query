@@ -8,6 +8,23 @@ export {
 export { IterateItem } from "./stream/pull/type";
 export { EmitType, EmitItem } from "./stream/push/type";
 
-export function pipe<T = any, K = T>(list: any[]): (x: T) => K {
-  return (s) => list.reduce((r, f) => f(r), s);
+type Map<T, K> = (x: T) => K;
+type DoMap<T extends Map<K, any>, K> = T extends Map<K, infer U> ? U : never;
+
+type RecurMap<T extends Map<any, any>[], K> = [...T] extends [
+  infer U,
+  ...infer R
+]
+  ? U extends Map<K, any>
+    ? R extends Map<any, any>[]
+      ? RecurMap<R, DoMap<U, K>>
+      : never
+    : never
+  : K;
+
+export function transfer<T, K extends Map<any, any>[]>(
+  s: T,
+  list: [...K]
+): RecurMap<[...K], T> {
+  return list.reduce((r, f) => f(r), s) as any;
 }

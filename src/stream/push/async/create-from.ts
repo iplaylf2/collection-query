@@ -2,7 +2,7 @@ import { create } from "./create";
 import { EmitType } from "../type";
 
 export function createFrom<T>(i: Iterable<T>) {
-  return create<T, any>(async function (emit) {
+  return create<T>(async function (emit) {
     try {
       for (const x of i) {
         await emit(EmitType.Next, x);

@@ -9,7 +9,7 @@ export function pull<T>(s: AsyncPushStream<T>): AsyncPullStream<T> {
     const cancel = s(async (t, x?) => {
       switch (t) {
         case EmitType.Next:
-          (await handler.race(x as T)) || cancel();
+          (await handler.race(x)) || cancel();
           break;
         case EmitType.Complete:
           handler.end();

@@ -8,19 +8,15 @@ import { EmitType, Executor } from "./push/type";
 import { create as _create } from "./push/create";
 import { createFrom as _createFrom } from "./push/create-from";
 
-const relay_next: <T, Te, K = T>(
+const relay_next: <T, K = T>(
   handler: RelayNextHandler<T, K>
-) => (s: PushStream<T, Te>) => PushStream<K, Te> = _relay_next;
+) => (s: PushStream<T>) => PushStream<K> = _relay_next;
 
-export const create: <T, Te = never>(
-  executor: Executor<T, Te>
-) => PushStream<T, Te> = _create;
+export const create: <T>(executor: Executor<T>) => PushStream<T> = _create;
 
-export const createFrom: <T>(
-  i: Iterable<T>
-) => PushStream<T, any> = _createFrom;
+export const createFrom: <T>(i: Iterable<T>) => PushStream<T> = _createFrom;
 
-export function forEach<T>(s: PushStream<T, any>, f: Action<T>) {
+export function forEach<T>(s: PushStream<T>, f: Action<T>) {
   s((t, x?) => {
     if (t === EmitType.Next) {
       f(x!);
@@ -28,75 +24,79 @@ export function forEach<T>(s: PushStream<T, any>, f: Action<T>) {
   });
 }
 
-export function map<T, Te, K>(f: Selector<T, K>) {
-  return relay_next<T, Te, K>((emit) => core.map(emit, f));
+export function map<T, K>(f: Selector<T, K>) {
+  return relay_next<T, K>((emit) => core.map(emit, f));
 }
 
-export function filter<T, Te>(f: Predicate<T>) {
-  return relay_next<T, Te>((emit) => core.filter(emit, f));
+export function filter<T>(f: Predicate<T>) {
+  return relay_next<T>((emit) => core.filter(emit, f));
 }
 
-export function remove<T, Te>(f: Predicate<T>) {
-  return relay_next<T, Te>((emit) => core.remove(emit, f));
+export function remove<T>(f: Predicate<T>) {
+  return relay_next<T>((emit) => core.remove(emit, f));
 }
 
-export function take<T, Te>(n: number) {
-  return relay_next<T, Te>((emit) => core.take(emit, n));
+export function take<T>(n: number) {
+  return relay_next<T>((emit) => core.take(emit, n));
 }
 
-export function takeWhile<T, Te>(f: Predicate<T>) {
-  return relay_next<T, Te>((emit) => core.takeWhile(emit, f));
+export function takeWhile<T>(f: Predicate<T>) {
+  return relay_next<T>((emit) => core.takeWhile(emit, f));
 }
 
-export function skip<T, Te>(n: number) {
-  return relay_next<T, Te>((emit) => core.skip(emit, n));
+export function skip<T>(n: number) {
+  return relay_next<T>((emit) => core.skip(emit, n));
 }
 
-export function skipWhile<T, Te>(f: Predicate<T>) {
-  return relay_next<T, Te>((emit) => core.skipWhile(emit, f));
+export function skipWhile<T>(f: Predicate<T>) {
+  return relay_next<T>((emit) => core.skipWhile(emit, f));
 }
 
-export function partition<T, Te>(n: number) {
-  return (s: PushStream<T, Te>): PushStream<T[], Te> =>
+export function partition<T>(n: number) {
+  return (s: PushStream<T>): PushStream<T[]> =>
     relay((emit, expose) => core.partition(s, emit, expose, n));
 }
 
-export function partitionBy<T, Te>(f: Selector<T, any>) {
-  return (s: PushStream<T, Te>): PushStream<T[], Te> =>
+export function partitionBy<T>(f: Selector<T, any>) {
+  return (s: PushStream<T>): PushStream<T[]> =>
     relay((emit, expose) => core.partitionBy(s, emit, expose, f));
 }
 
-export const flatten: <T, Te>(
-  s: PushStream<T[], Te>
-) => PushStream<T, Te> = relay_next((emit) => core.flatten(emit));
+export const flatten: <T>(
+  s: PushStream<T[]>
+) => PushStream<T> = relay_next((emit) => core.flatten(emit));
 
-export function groupBy<T, Te, K>(f: Selector<T, K>) {
-  return (s: PushStream<T, Te>): PushStream<[K, PushStream<T, Te>], Te> =>
+export function _flatten<T>() {
+  return relay_next<T[], T>((emit) => core.flatten(emit));
+}
+
+export function groupBy<T, K>(f: Selector<T, K>) {
+  return (s: PushStream<T>): PushStream<[K, PushStream<T>]> =>
     relay((emit, expose) => core.groupBy(s, emit, expose, f));
 }
 
-export function incubate<T, Te>(
-  s: PushStream<Promise<T>, Te>
-): PushStream<T, Te> {
+export function incubate<T>(s: PushStream<Promise<T>>): PushStream<T> {
   return relay((emit, expose) => core.incubate(s, emit, expose));
 }
 
-export function concat<T, Te>(
-  s1: PushStream<T, Te>,
-  s2: PushStream<T, Te>
-): PushStream<T, Te> {
+export function _incubate<T>() {
+  return (s: PushStream<Promise<T>>): PushStream<T> =>
+    relay((emit, expose) => core.incubate(s, emit, expose));
+}
+
+export function concat<T>(s1: PushStream<T>, s2: PushStream<T>): PushStream<T> {
   return relay((emit, expose) => core.concat(s1, s2, emit, expose));
 }
 
-export function concatAll<T, Te>([s, ...ss]: PushStream<T, Te>[]) {
+export function concatAll<T>([s, ...ss]: PushStream<T>[]) {
   return ss.reduce((r, s) => concat(r, s), s);
 }
 
-export function zip<T, Te>(ss: PushStream<T, Te>[]): PushStream<T[], Te> {
+export function zip<T>(ss: PushStream<T>[]): PushStream<T[]> {
   return relay((emit, expose) => core.zip(ss, emit, expose));
 }
 
-export function race<T, Te>(ss: PushStream<T, Te>[]): PushStream<T, Te> {
+export function race<T>(ss: PushStream<T>[]): PushStream<T> {
   return relay((emit, expose) => core.race(ss, emit, expose));
 }
 

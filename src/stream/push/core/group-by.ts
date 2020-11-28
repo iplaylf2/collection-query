@@ -4,8 +4,8 @@ import { Channel } from "../../../async-tool/channel";
 import { create } from "../create";
 
 export function groupBy<T, K>(
-  emitter: Emitter<T, any>,
-  emit: EmitForm<[K, Emitter<T, any>], any>,
+  emitter: Emitter<T>,
+  emit: EmitForm<[K, Emitter<T>]>,
   expose: Action<Cancel>,
   f: Selector<T, K>
 ) {
@@ -23,7 +23,7 @@ export function groupBy<T, K>(
           channel.put([true, x]);
           channel_dispatch.set(k, channel);
 
-          const group_emitter = create<T, any>(async (emit) => {
+          const group_emitter = create<T>(async (emit) => {
             while (true) {
               const [end, x] = await channel.take();
               if (end) {
@@ -40,7 +40,7 @@ export function groupBy<T, K>(
               }
             }
           });
-          emit(EmitType.Next, [k, group_emitter] as [K, Emitter<T, any>]);
+          emit(EmitType.Next, [k, group_emitter] as [K, Emitter<T>]);
         }
         break;
       case EmitType.Complete:

@@ -2,9 +2,7 @@ import { Action } from "../../../type";
 import { ReceiveForm, Emitter, Executor } from "./type";
 import { EmitItem, EmitType } from "../type";
 
-export function create<T, Te = never>(
-  executor: Executor<T, Te>
-): Emitter<T, Te> {
+export function create<T>(executor: Executor<T>): Emitter<T> {
   return (receiver, expose) => {
     const handler = new EmitterHandler(receiver);
     const cancel = handler.cancel.bind(handler);
@@ -18,15 +16,15 @@ export function create<T, Te = never>(
   };
 }
 
-class EmitterHandler<T, Te> {
-  constructor(receiver: ReceiveForm<T, Te>) {
+class EmitterHandler<T> {
+  constructor(receiver: ReceiveForm<T>) {
     this.receive = receiver;
     this.open = true;
 
     this.lastBlock = Promise.resolve();
   }
 
-  start(executor: Executor<T, Te>) {
+  start(executor: Executor<T>) {
     const receiver = this.handle.bind(this);
     try {
       executor(receiver);
@@ -41,7 +39,7 @@ class EmitterHandler<T, Te> {
     this.open = false;
   }
 
-  private async handle(...item: EmitItem<T, Te>) {
+  private async handle(...item: EmitItem<T>) {
     let resolve!: Action<void>;
     const new_block = new Promise<void>((r) => (resolve = r));
 
@@ -57,17 +55,17 @@ class EmitterHandler<T, Te> {
     }
   }
 
-  private async handleReceive(...[t, x]: EmitItem<T, Te>) {
+  private async handleReceive(...[t, x]: EmitItem<T>) {
     if (this.open) {
       switch (t) {
         case EmitType.Next:
-          await this.next(x as T);
+          await this.next(x);
           break;
         case EmitType.Complete:
           this.complete();
           break;
         case EmitType.Error:
-          this.error(x as Te);
+          this.error(x);
           break;
       }
     }
@@ -89,13 +87,13 @@ class EmitterHandler<T, Te> {
     receive(EmitType.Complete);
   }
 
-  private error(x: Te) {
+  private error(x: any) {
     const receive = this.receive;
     this.cancel();
     receive(EmitType.Error, x);
   }
 
-  private receive: ReceiveForm<T, Te>;
+  private receive: ReceiveForm<T>;
   private open: boolean;
   private lastBlock: Promise<void>;
 }

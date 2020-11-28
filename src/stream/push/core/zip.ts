@@ -2,8 +2,8 @@ import { Emitter, EmitForm, EmitType, Cancel } from "../type";
 import { Action } from "../../../type";
 
 export function zip<T>(
-  ee: Emitter<T, any>[],
-  emit: EmitForm<T[], any>,
+  ee: Emitter<T>[],
+  emit: EmitForm<T[]>,
   expose: Action<Cancel>
 ) {
   const total = ee.length;
@@ -39,7 +39,7 @@ export function zip<T>(
         switch (t) {
           case EmitType.Next:
             {
-              const [full, result] = linked_zip.zip(_index, x as T);
+              const [full, result] = linked_zip.zip(_index, x);
               if (full) {
                 emit(EmitType.Next, result!);
               }

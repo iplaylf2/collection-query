@@ -3,7 +3,7 @@ import { Cancel } from "../type";
 import { Emitter, ReceiveForm } from "./type";
 
 export interface ReduceHandler<T, K> {
-  (resolve: Action<K>, reject: Action<any>): ReceiveForm<T, any>;
+  (resolve: Action<K>, reject: Action<any>): ReceiveForm<T>;
 }
 
 export function reduce<T, K = T>(handler: ReduceHandler<T, K>) {
