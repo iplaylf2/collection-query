@@ -1,8 +1,6 @@
 import { EmitItem, Emitter, EmitType, Executor, ReceiveForm } from "./type";
 
-export function create<T, Te = never>(
-  executor: Executor<T, Te>
-): Emitter<T, Te> {
+export function create<T>(executor: Executor<T>): Emitter<T> {
   return (receiver, expose) => {
     const handler = new EmitterHandler(receiver);
     const cancel = handler.cancel.bind(handler);
@@ -16,13 +14,13 @@ export function create<T, Te = never>(
   };
 }
 
-class EmitterHandler<T, Te> {
-  constructor(receiver: ReceiveForm<T, Te>) {
+class EmitterHandler<T> {
+  constructor(receiver: ReceiveForm<T>) {
     this.receive = receiver;
     this.open = true;
   }
 
-  start(executor: Executor<T, Te>) {
+  start(executor: Executor<T>) {
     const receiver = this.handle.bind(this);
     try {
       executor(receiver);
@@ -37,7 +35,7 @@ class EmitterHandler<T, Te> {
     this.open = false;
   }
 
-  private handle(...[t, x]: EmitItem<T, Te>) {
+  private handle(...[t, x]: EmitItem<T>) {
     if (this.open) {
       switch (t) {
         case EmitType.Next:
@@ -47,7 +45,7 @@ class EmitterHandler<T, Te> {
           this.complete();
           break;
         case EmitType.Error:
-          this.error(x as Te);
+          this.error(x);
           break;
       }
     }
@@ -69,13 +67,13 @@ class EmitterHandler<T, Te> {
     receive(EmitType.Complete);
   }
 
-  private error(x: Te) {
+  private error(x: any) {
     const receive = this.receive;
     this.cancel();
     receive(EmitType.Error, x);
   }
 
-  private receive: ReceiveForm<T, Te>;
+  private receive: ReceiveForm<T>;
 
   private open: boolean;
 }

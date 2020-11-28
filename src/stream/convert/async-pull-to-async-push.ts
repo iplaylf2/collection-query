@@ -3,9 +3,9 @@ import { relay } from "../push/async/relay";
 import { EmitType, EmitItem } from "../push/type";
 import { LazyChannel } from "../../async-tool/lazy-channel";
 
-export function push<T>(s: AsyncPullStream<T>): AsyncPushStream<T, any> {
+export function push<T>(s: AsyncPullStream<T>): AsyncPushStream<T> {
   return relay((emit, expose) => {
-    const channel = new LazyChannel<EmitItem<T, any>>();
+    const channel = new LazyChannel<EmitItem<T>>();
 
     expose(() => channel.close());
 

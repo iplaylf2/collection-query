@@ -3,13 +3,13 @@ import { Selector, Predicate, Action, Aggregate } from "../../type";
 import { PartitionCollector } from "../common/partition-collector";
 import { PartitionByCollector } from "../common/partition-by-collector/partition-by-collector";
 
-export function map<T, K>(emit: EmitForm<K, never>, f: Selector<T, K>) {
+export function map<T, K>(emit: EmitForm<K>, f: Selector<T, K>) {
   return (x: T) => {
     emit(EmitType.Next, f(x));
   };
 }
 
-export function filter<T>(emit: EmitForm<T, never>, f: Predicate<T>) {
+export function filter<T>(emit: EmitForm<T>, f: Predicate<T>) {
   return (x: T) => {
     if (f(x)) {
       emit(EmitType.Next, x);
@@ -17,7 +17,7 @@ export function filter<T>(emit: EmitForm<T, never>, f: Predicate<T>) {
   };
 }
 
-export function remove<T>(emit: EmitForm<T, never>, f: Predicate<T>) {
+export function remove<T>(emit: EmitForm<T>, f: Predicate<T>) {
   return (x: T) => {
     if (!f(x)) {
       emit(EmitType.Next, x);
@@ -25,7 +25,7 @@ export function remove<T>(emit: EmitForm<T, never>, f: Predicate<T>) {
   };
 }
 
-export function take<T>(emit: EmitForm<T, never>, n: number) {
+export function take<T>(emit: EmitForm<T>, n: number) {
   return (x: T) => {
     if (0 < n) {
       n--;
@@ -36,7 +36,7 @@ export function take<T>(emit: EmitForm<T, never>, n: number) {
   };
 }
 
-export function takeWhile<T>(emit: EmitForm<T, never>, f: Predicate<T>) {
+export function takeWhile<T>(emit: EmitForm<T>, f: Predicate<T>) {
   return (x: T) => {
     if (f(x)) {
       emit(EmitType.Next, x);
@@ -46,7 +46,7 @@ export function takeWhile<T>(emit: EmitForm<T, never>, f: Predicate<T>) {
   };
 }
 
-export function skip<T>(emit: EmitForm<T, never>, n: number) {
+export function skip<T>(emit: EmitForm<T>, n: number) {
   let skip = true;
   return (x: T) => {
     if (skip) {
@@ -62,7 +62,7 @@ export function skip<T>(emit: EmitForm<T, never>, n: number) {
   };
 }
 
-export function skipWhile<T>(emit: EmitForm<T, never>, f: Predicate<T>) {
+export function skipWhile<T>(emit: EmitForm<T>, f: Predicate<T>) {
   let skip = true;
   return (x: T) => {
     if (skip) {
@@ -77,8 +77,8 @@ export function skipWhile<T>(emit: EmitForm<T, never>, f: Predicate<T>) {
 }
 
 export function partition<T>(
-  emitter: Emitter<T, any>,
-  emit: EmitForm<T[], any>,
+  emitter: Emitter<T>,
+  emit: EmitForm<T[]>,
   expose: Action<Cancel>,
   n: number
 ) {
@@ -115,8 +115,8 @@ export function partition<T>(
 }
 
 export function partitionBy<T>(
-  emitter: Emitter<T, any>,
-  emit: EmitForm<T[], any>,
+  emitter: Emitter<T>,
+  emit: EmitForm<T[]>,
   expose: Action<Cancel>,
   f: Selector<T, any>
 ) {
@@ -148,7 +148,7 @@ export function partitionBy<T>(
   }, expose);
 }
 
-export function flatten<T>(emit: EmitForm<T, never>) {
+export function flatten<T>(emit: EmitForm<T>) {
   return (xx: T[]) => {
     for (const x of xx) {
       emit(EmitType.Next, x);
@@ -159,8 +159,8 @@ export function flatten<T>(emit: EmitForm<T, never>) {
 export * from "./core/group-by";
 
 export function incubate<T>(
-  emitter: Emitter<Promise<T>, any>,
-  emit: EmitForm<T, any>,
+  emitter: Emitter<Promise<T>>,
+  emit: EmitForm<T>,
   expose: Action<Cancel>
 ) {
   let exhausted = false,
@@ -203,9 +203,9 @@ export function incubate<T>(
 }
 
 export function concat<T>(
-  emitter1: Emitter<T, any>,
-  emitter2: Emitter<T, any>,
-  emit: EmitForm<T, any>,
+  emitter1: Emitter<T>,
+  emitter2: Emitter<T>,
+  emit: EmitForm<T>,
   expose: Action<Cancel>
 ) {
   let cancel1!: Cancel;
@@ -239,8 +239,8 @@ export function concat<T>(
 export * from "./core/zip";
 
 export function race<T>(
-  ee: Emitter<T, any>[],
-  emit: EmitForm<T, any>,
+  ee: Emitter<T>[],
+  emit: EmitForm<T>,
   expose: Action<Cancel>
 ) {
   let count = ee.length;
@@ -295,7 +295,7 @@ export function reduce<T, K>(
   v: K
 ) {
   let r = v;
-  return (...[t, x]: EmitItem<T, any>) => {
+  return (...[t, x]: EmitItem<T>) => {
     switch (t) {
       case EmitType.Next:
         r = f(r, x);
@@ -312,7 +312,7 @@ export function reduce<T, K>(
 
 export function count(resolve: Action<number>, reject: Action<any>) {
   let n = 0;
-  return (...[t, x]: EmitItem<any, any>) => {
+  return (...[t, x]: EmitItem<any>) => {
     switch (t) {
       case EmitType.Next:
         n++;
@@ -332,7 +332,7 @@ export function include<T>(
   reject: Action<any>,
   v: T
 ) {
-  return (...[t, x]: EmitItem<T, any>) => {
+  return (...[t, x]: EmitItem<T>) => {
     switch (t) {
       case EmitType.Next:
         if (x === v) {
@@ -354,7 +354,7 @@ export function every<T>(
   reject: Action<any>,
   f: Predicate<T>
 ) {
-  return (...[t, x]: EmitItem<T, any>) => {
+  return (...[t, x]: EmitItem<T>) => {
     switch (t) {
       case EmitType.Next:
         if (!f(x)) {
@@ -376,7 +376,7 @@ export function some<T>(
   reject: Action<any>,
   f: Predicate<T>
 ) {
-  return (...[t, x]: EmitItem<T, any>) => {
+  return (...[t, x]: EmitItem<T>) => {
     switch (t) {
       case EmitType.Next:
         if (f(x)) {
@@ -394,7 +394,7 @@ export function some<T>(
 }
 
 export function first<T>(resolve: Action<T | void>, reject: Action<any>) {
-  return (...[t, x]: EmitItem<T, any>) => {
+  return (...[t, x]: EmitItem<T>) => {
     switch (t) {
       case EmitType.Next:
         resolve(x);
@@ -411,7 +411,7 @@ export function first<T>(resolve: Action<T | void>, reject: Action<any>) {
 
 export function last<T>(resolve: Action<T | void>, reject: Action<any>) {
   let last: T | void;
-  return (...[t, x]: EmitItem<T, any>) => {
+  return (...[t, x]: EmitItem<T>) => {
     switch (t) {
       case EmitType.Next:
         last = x;

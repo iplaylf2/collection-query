@@ -3,11 +3,11 @@ import { relay } from "./relay";
 import { EmitType } from "../type";
 
 export interface RelayNextHandler<T, K> {
-  (emit: EmitForm<K, any>): (x: T) => Promise<void>;
+  (emit: EmitForm<K>): (x: T) => Promise<void>;
 }
 
 export function relayNext<T, K = T>(handler: RelayNextHandler<T, K>) {
-  return (emitter: Emitter<T, any>): Emitter<K, any> =>
+  return (emitter: Emitter<T>): Emitter<K> =>
     relay((emit, expose) => {
       const handle_next = handler(emit);
       emitter(async (t, x?) => {

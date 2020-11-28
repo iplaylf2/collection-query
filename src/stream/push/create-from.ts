@@ -2,7 +2,7 @@ import { create } from "./create";
 import { EmitType } from "./type";
 
 export function createFrom<T>(i: Iterable<T>) {
-  return create<T, any>(function (emit) {
+  return create<T>(function (emit) {
     try {
       for (const x of i) {
         emit(EmitType.Next, x);

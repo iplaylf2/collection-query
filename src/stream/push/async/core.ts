@@ -16,7 +16,7 @@ import { RaceHandler } from "../../common/async/race-handler";
 import { IteratorStatus } from "../../common/async/controlled-iterator";
 
 export function map<T, K>(
-  emit: EmitForm<K, never>,
+  emit: EmitForm<K>,
   f: Selector<T, K> | AsyncSelector<T, K>
 ) {
   return async (x: T) => {
@@ -26,7 +26,7 @@ export function map<T, K>(
 }
 
 export function filter<T>(
-  emit: EmitForm<T, never>,
+  emit: EmitForm<T>,
   f: Predicate<T> | AsyncPredicate<T>
 ) {
   return async (x: T) => {
@@ -38,7 +38,7 @@ export function filter<T>(
 }
 
 export function remove<T>(
-  emit: EmitForm<T, never>,
+  emit: EmitForm<T>,
   f: Predicate<T> | AsyncPredicate<T>
 ) {
   return async (x: T) => {
@@ -49,7 +49,7 @@ export function remove<T>(
   };
 }
 
-export function take<T>(emit: EmitForm<T, never>, n: number) {
+export function take<T>(emit: EmitForm<T>, n: number) {
   return async (x: T) => {
     if (0 < n) {
       n--;
@@ -61,7 +61,7 @@ export function take<T>(emit: EmitForm<T, never>, n: number) {
 }
 
 export function takeWhile<T>(
-  emit: EmitForm<T, never>,
+  emit: EmitForm<T>,
   f: Predicate<T> | AsyncPredicate<T>
 ) {
   return async (x: T) => {
@@ -74,7 +74,7 @@ export function takeWhile<T>(
   };
 }
 
-export function skip<T>(emit: EmitForm<T, never>, n: number) {
+export function skip<T>(emit: EmitForm<T>, n: number) {
   let skip = true;
   return async (x: T) => {
     if (skip) {
@@ -91,7 +91,7 @@ export function skip<T>(emit: EmitForm<T, never>, n: number) {
 }
 
 export function skipWhile<T>(
-  emit: EmitForm<T, never>,
+  emit: EmitForm<T>,
   f: Predicate<T> | AsyncPredicate<T>
 ) {
   let skip = true;
@@ -109,8 +109,8 @@ export function skipWhile<T>(
 }
 
 export function partition<T>(
-  emitter: Emitter<T, any>,
-  emit: EmitForm<T[], any>,
+  emitter: Emitter<T>,
+  emit: EmitForm<T[]>,
   expose: Action<Cancel>,
   n: number
 ) {
@@ -147,8 +147,8 @@ export function partition<T>(
 }
 
 export function partitionBy<T>(
-  emitter: Emitter<T, any>,
-  emit: EmitForm<T[], any>,
+  emitter: Emitter<T>,
+  emit: EmitForm<T[]>,
   expose: Action<Cancel>,
   f: Selector<T, any> | AsyncSelector<T, any>
 ) {
@@ -180,7 +180,7 @@ export function partitionBy<T>(
   }, expose);
 }
 
-export function flatten<T>(emit: EmitForm<T, never>) {
+export function flatten<T>(emit: EmitForm<T>) {
   return async (xx: T[]) => {
     for (const x of xx) {
       await emit(EmitType.Next, x);
@@ -189,8 +189,8 @@ export function flatten<T>(emit: EmitForm<T, never>) {
 }
 
 export function incubate<T>(
-  emitter: Emitter<Promise<T>, any>,
-  emit: EmitForm<T, any>,
+  emitter: Emitter<Promise<T>>,
+  emit: EmitForm<T>,
   expose: Action<Cancel>
 ) {
   let exhausted = false,
@@ -233,9 +233,9 @@ export function incubate<T>(
 }
 
 export function concat<T>(
-  emitter1: Emitter<T, any>,
-  emitter2: Emitter<T, any>,
-  emit: EmitForm<T, any>,
+  emitter1: Emitter<T>,
+  emitter2: Emitter<T>,
+  emit: EmitForm<T>,
   expose: Action<Cancel>
 ) {
   let cancel1!: Cancel;
@@ -267,8 +267,8 @@ export function concat<T>(
 }
 
 export function zip<T>(
-  ee: Emitter<T, any>[],
-  emit: EmitForm<T[], any>,
+  ee: Emitter<T>[],
+  emit: EmitForm<T[]>,
   expose: Action<Cancel>
 ) {
   const total = ee.length;
@@ -329,8 +329,8 @@ export function zip<T>(
 }
 
 export function race<T>(
-  ee: Emitter<T, any>[],
-  emit: EmitForm<T, any>,
+  ee: Emitter<T>[],
+  emit: EmitForm<T>,
   expose: Action<Cancel>
 ) {
   const total = ee.length;
@@ -394,7 +394,7 @@ export function reduce<T, K>(
   v: K
 ) {
   let r = v;
-  return async (...[t, x]: EmitItem<T, any>) => {
+  return async (...[t, x]: EmitItem<T>) => {
     switch (t) {
       case EmitType.Next:
         r = await f(r, x);
@@ -411,7 +411,7 @@ export function reduce<T, K>(
 
 export function count(resolve: Action<number>, reject: Action<any>) {
   let n = 0;
-  return async (...[t, x]: EmitItem<any, any>) => {
+  return async (...[t, x]: EmitItem<any>) => {
     switch (t) {
       case EmitType.Next:
         n++;
@@ -431,7 +431,7 @@ export function include<T>(
   reject: Action<any>,
   v: T
 ) {
-  return async (...[t, x]: EmitItem<T, any>) => {
+  return async (...[t, x]: EmitItem<T>) => {
     switch (t) {
       case EmitType.Next:
         if (x === v) {
@@ -453,7 +453,7 @@ export function every<T>(
   reject: Action<any>,
   f: Predicate<T> | AsyncPredicate<T>
 ) {
-  return async (...[t, x]: EmitItem<T, any>) => {
+  return async (...[t, x]: EmitItem<T>) => {
     switch (t) {
       case EmitType.Next:
         const p = await f(x);
@@ -476,7 +476,7 @@ export function some<T>(
   reject: Action<any>,
   f: Predicate<T> | AsyncPredicate<T>
 ) {
-  return async (...[t, x]: EmitItem<T, any>) => {
+  return async (...[t, x]: EmitItem<T>) => {
     switch (t) {
       case EmitType.Next:
         const p = await f(x);
@@ -495,7 +495,7 @@ export function some<T>(
 }
 
 export function first<T>(resolve: Action<T | void>, reject: Action<any>) {
-  return async (...[t, x]: EmitItem<T, any>) => {
+  return async (...[t, x]: EmitItem<T>) => {
     switch (t) {
       case EmitType.Next:
         resolve(x);
@@ -512,7 +512,7 @@ export function first<T>(resolve: Action<T | void>, reject: Action<any>) {
 
 export function last<T>(resolve: Action<T | void>, reject: Action<any>) {
   let last: T | void;
-  return async (...[t, x]: EmitItem<T, any>) => {
+  return async (...[t, x]: EmitItem<T>) => {
     switch (t) {
       case EmitType.Next:
         last = x;
