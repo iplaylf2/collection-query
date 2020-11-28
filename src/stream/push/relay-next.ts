@@ -13,7 +13,7 @@ export function relayNext<T, K = T>(handler: RelayNextHandler<T, K>) {
       return emitter((t, x?) => {
         switch (t) {
           case EmitType.Next:
-            handle_next(x as T);
+            handle_next(x);
             break;
           case EmitType.Complete:
             emit(t);

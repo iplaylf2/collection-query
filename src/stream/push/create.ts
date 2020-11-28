@@ -39,7 +39,7 @@ class EmitterHandler<T> {
     if (this.open) {
       switch (t) {
         case EmitType.Next:
-          this.next(x as T);
+          this.next(x);
           break;
         case EmitType.Complete:
           this.complete();

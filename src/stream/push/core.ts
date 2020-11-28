@@ -92,7 +92,7 @@ export function partition<T>(
     switch (t) {
       case EmitType.Next:
         {
-          const [full, partition] = collector.collect(x as T);
+          const [full, partition] = collector.collect(x);
           if (full) {
             emit(EmitType.Next, partition!);
           }
@@ -126,7 +126,7 @@ export function partitionBy<T>(
     switch (t) {
       case EmitType.Next:
         {
-          const [full, partition] = collector.collect(x as T);
+          const [full, partition] = collector.collect(x);
           if (full) {
             emit(EmitType.Next, partition!);
           }
@@ -222,7 +222,7 @@ export function concat<T>(
     (t, x?) => {
       switch (t) {
         case EmitType.Next:
-          emit(EmitType.Next, x as T);
+          emit(EmitType.Next, x);
           break;
         case EmitType.Complete:
           emitter2(emit, (c) => (cancel2 = c));
@@ -270,7 +270,7 @@ export function race<T>(
       (t, x?) => {
         switch (t) {
           case EmitType.Next:
-            emit(EmitType.Next, x as T);
+            emit(EmitType.Next, x);
             break;
           case EmitType.Complete:
             count--;

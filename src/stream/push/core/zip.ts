@@ -39,7 +39,7 @@ export function zip<T>(
         switch (t) {
           case EmitType.Next:
             {
-              const [full, result] = linked_zip.zip(_index, x as T);
+              const [full, result] = linked_zip.zip(_index, x);
               if (full) {
                 emit(EmitType.Next, result!);
               }

@@ -124,7 +124,7 @@ export function partition<T>(
     switch (t) {
       case EmitType.Next:
         {
-          const [full, partition] = collector.collect(x as T);
+          const [full, partition] = collector.collect(x);
           if (full) {
             await emit(EmitType.Next, partition!);
           }
@@ -158,7 +158,7 @@ export function partitionBy<T>(
     switch (t) {
       case EmitType.Next:
         {
-          const [full, partition] = await collector.collect(x as T);
+          const [full, partition] = await collector.collect(x);
           if (full) {
             await emit(EmitType.Next, partition!);
           }
@@ -252,7 +252,7 @@ export function concat<T>(
     async (t, x?) => {
       switch (t) {
         case EmitType.Next:
-          await emit(EmitType.Next, x as T);
+          await emit(EmitType.Next, x);
           break;
         case EmitType.Complete:
           emitter2(emit as any, (c) => (cancel2 = c));
@@ -301,7 +301,7 @@ export function zip<T>(
       async (t, x?) => {
         switch (t) {
           case EmitType.Next:
-            await handler.zip(_index, x as T);
+            await handler.zip(_index, x);
             break;
           case EmitType.Complete:
             handler.end();
@@ -361,7 +361,7 @@ export function race<T>(
       async (t, x?) => {
         switch (t) {
           case EmitType.Next:
-            await handler.race(x as T);
+            await handler.race(x);
             break;
           case EmitType.Complete:
             handler.leave();
