@@ -4,19 +4,19 @@ export declare enum EmitType {
     Complete = 1,
     Error = 2
 }
-export declare type EmitItem<T, Te> = [EmitType.Next, T] | [EmitType.Complete] | [EmitType.Error, Te];
+export declare type EmitItem<T> = [EmitType.Next, T] | [EmitType.Complete] | [EmitType.Error, any];
 export interface Cancel {
     (): void;
 }
-export interface ReceiveForm<T, Te> {
-    (...x: EmitItem<T, Te>): void;
+export interface ReceiveForm<T> {
+    (...x: EmitItem<T>): void;
 }
-export interface Emitter<T, Te = never> {
-    (receiver: ReceiveForm<T, Te>, expose?: Action<Cancel>): Cancel;
+export interface Emitter<T> {
+    (receiver: ReceiveForm<T>, expose?: Action<Cancel>): Cancel;
 }
-export interface EmitForm<T, Te> {
-    (...x: EmitItem<T, Te>): boolean;
+export interface EmitForm<T> {
+    (...x: EmitItem<T>): boolean;
 }
-export interface Executor<T, Te> {
-    (emit: EmitForm<T, Te>): void;
+export interface Executor<T> {
+    (emit: EmitForm<T>): void;
 }

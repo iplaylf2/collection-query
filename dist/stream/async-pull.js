@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.last = exports.first = exports.some = exports.every = exports.include = exports.count = exports.reduce = exports.race = exports.zip = exports.concatAll = exports.concat = exports.flatten = exports.partitionBy = exports.partition = exports.skipWhile = exports.skip = exports.takeWhile = exports.take = exports.remove = exports.filter = exports.map = exports.forEach = exports.createFrom = void 0;
+exports.last = exports.first = exports.some = exports.every = exports.include = exports.count = exports.reduce = exports.race = exports.zip = exports.concatAll = exports.concat = exports._flatten = exports.flatten = exports.partitionBy = exports.partition = exports.skipWhile = exports.skip = exports.takeWhile = exports.take = exports.remove = exports.filter = exports.map = exports.forEach = exports.createFrom = void 0;
 const core = require("./pull/async/core");
 function createFrom(i) {
     return async function* () {
@@ -56,6 +56,12 @@ function flatten(s) {
     return () => core.flatten(s());
 }
 exports.flatten = flatten;
+function _flatten() {
+    return (s) => {
+        return () => core.flatten(s());
+    };
+}
+exports._flatten = _flatten;
 function concat(s1, s2) {
     return () => core.concat(s1, s2);
 }

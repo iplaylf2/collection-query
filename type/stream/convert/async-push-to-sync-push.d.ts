@@ -1,2 +1,2 @@
 import { AsyncPushStream, PushStream } from "../type";
-export declare const sync: <T, Te>(s: AsyncPushStream<T, Te>) => PushStream<T, Te>;
+export declare const sync: <T>(s: AsyncPushStream<T>) => PushStream<T>;
