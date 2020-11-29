@@ -21,5 +21,5 @@ export declare function count(s: PullStream<any>): number;
 export declare function include<T>(s: PullStream<T>, x: T): boolean;
 export declare function every<T>(s: PullStream<T>, f: Predicate<T>): boolean;
 export declare function some<T>(s: PullStream<T>, f: Predicate<T>): boolean;
-export declare function first<T>(s: PullStream<T>): T;
-export declare function last<T>(s: PullStream<T>): T | undefined;
+export declare function first<T>(s: PullStream<T>): void | T;
+export declare function last<T>(s: PullStream<T>): void | T;

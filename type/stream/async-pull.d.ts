@@ -22,5 +22,5 @@ export declare function count(s: AsyncPullStream<any>): Promise<number>;
 export declare function include<T>(s: AsyncPullStream<T>, x: T): Promise<boolean>;
 export declare function every<T>(s: AsyncPullStream<T>, f: Predicate<T> | AsyncPredicate<T>): Promise<boolean>;
 export declare function some<T>(s: AsyncPullStream<T>, f: Predicate<T> | AsyncPredicate<T>): Promise<boolean>;
-export declare function first<T>(s: AsyncPullStream<T>): Promise<any>;
-export declare function last<T>(s: AsyncPullStream<T>): Promise<T | undefined>;
+export declare function first<T>(s: AsyncPullStream<T>): Promise<void | T>;
+export declare function last<T>(s: AsyncPullStream<T>): Promise<void | T>;
