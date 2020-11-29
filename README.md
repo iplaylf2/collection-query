@@ -98,5 +98,7 @@ import * as asyncPull from "collection-query/async-pull";
 import * as push from "collection-query/push";
 import * as asyncPush from "collection-query/async-push";
 
-// they all have a "take" method
+//For example, they all have a "take" method.
 ```
+
+[More methods.]("./doc/method.md")
