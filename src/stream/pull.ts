@@ -119,7 +119,7 @@ export function some<T>(s: PullStream<T>, f: Predicate<T>) {
 
 export function first<T>(s: PullStream<T>) {
   const [value] = s();
-  return value;
+  return value as T | void;
 }
 
 export function last<T>(s: PullStream<T>) {
@@ -127,5 +127,5 @@ export function last<T>(s: PullStream<T>) {
   for (const x of s()) {
     last = x;
   }
-  return last;
+  return last as T | void;
 }

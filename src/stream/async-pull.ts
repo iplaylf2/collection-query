@@ -159,7 +159,7 @@ export async function some<T>(
 
 export async function first<T>(s: AsyncPullStream<T>) {
   const { value } = await s().next();
-  return value;
+  return value as T | void;
 }
 
 export async function last<T>(s: AsyncPullStream<T>) {
@@ -167,5 +167,5 @@ export async function last<T>(s: AsyncPullStream<T>) {
   for await (const x of s()) {
     last = x;
   }
-  return last;
+  return last as T | void;
 }
