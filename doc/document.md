@@ -1,4 +1,4 @@
-# Method
+# Document
 
 ## command method
 

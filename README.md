@@ -101,4 +101,4 @@ import * as asyncPush from "collection-query/async-push";
 //For example, they all have a "take" method.
 ```
 
-[More methods](./doc/method.md)
+[Document](./doc/document.md)
