@@ -1,13 +1,14 @@
 {
   "name": "collection-query",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A collection processing library.",
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/type/index.d.ts",
   "scripts": {
     "build": "npx tsc",
     "test": "npx tsc --project tsconfig.test.json && jest",
-    "t-c": "npx jest --coverage"
+    "t-c": "npx jest --coverage",
+    "publish": "npm publish dist"
   },
   "author": "i-play-lf2",
   "license": "BSD-3-Clause",

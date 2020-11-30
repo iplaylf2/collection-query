@@ -26,6 +26,6 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     //Advanced
-    "declarationDir": "type"
+    "declarationDir": "dist/type"
   }
 }
