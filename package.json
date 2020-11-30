@@ -2,8 +2,8 @@
   "name": "collection-query",
   "version": "0.0.4",
   "description": "A collection processing library.",
-  "main": "./dist/index.js",
-  "types": "./dist/type/index.d.ts",
+  "main": "./dist/collection-query.js",
+  "types": "./dist/collection-query.d.ts",
   "scripts": {
     "build": "npx tsc",
     "test": "npx tsc --project tsconfig.test.json && jest",

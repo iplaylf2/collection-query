@@ -1,0 +1,4 @@
+{
+  "main": "../dist/push.js",
+  "types": "../dist/push.d.ts"
+}

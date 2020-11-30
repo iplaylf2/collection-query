@@ -1,0 +1,4 @@
+{
+  "main": "../dist/pull.js",
+  "types": "../dist/pull.d.ts"
+}
