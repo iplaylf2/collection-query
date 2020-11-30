@@ -1,4 +1,5 @@
 {
+  "private": true,
   "main": "../dist/async-pull.js",
   "types": "../dist/async-pull.d.ts"
 }
