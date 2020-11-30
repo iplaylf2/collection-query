@@ -8,7 +8,7 @@
     "build": "npx tsc",
     "test": "npx tsc --project tsconfig.test.json && jest",
     "t-c": "npx jest --coverage",
-    "publish": "npm run build && npm publish dist"
+    "publish": "npm run build && npm publish"
   },
   "author": "i-play-lf2",
   "license": "BSD-3-Clause",
