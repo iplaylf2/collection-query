@@ -1,5 +1,47 @@
 # Document
 
+- [Document](#document)
+  - [transfer](#transfer)
+  - [common method](#common-method)
+    - [create from iterable](#create-from-iterable)
+      - [createFrom](#createfrom)
+    - [each stream](#each-stream)
+      - [forEach](#foreach)
+    - [stream -> stream](#stream---stream)
+      - [map](#map)
+      - [filter](#filter)
+      - [remove](#remove)
+      - [take](#take)
+      - [takeWhile](#takewhile)
+      - [skip](#skip)
+      - [skipWhile](#skipwhile)
+      - [partition](#partition)
+      - [flatten](#flatten)
+    - [stream[] -> stream](#stream---stream-1)
+      - [concat](#concat)
+      - [concatAll](#concatall)
+    - [stream -> value](#stream---value)
+      - [reduce](#reduce)
+      - [count](#count)
+      - [include](#include)
+      - [every](#every)
+      - [some](#some)
+      - [first](#first)
+      - [last](#last)
+  - [other method](#other-method)
+    - [push stream create](#push-stream-create)
+      - [create](#create)
+    - [stream -> stream](#stream---stream-2)
+      - [groupBy](#groupby)
+      - [incubate](#incubate)
+    - [stream[] -> stream](#stream---stream-3)
+      - [race](#race)
+  - [stream convert](#stream-convert)
+    - [`async-pull` -> `async-push`](#async-pull---async-push)
+    - [`async-push` -> `async-pull`](#async-push---async-pull)
+    - [`async-push` -> `push`](#async-push---push)
+    - [`push` -> `async-push`](#push---async-push)
+
 ## transfer
 
 ``` typescript
@@ -8,7 +50,7 @@ function transfer(s: stream, list: []): stream
 
 `transfer` is a method that threads the stream through the list.
 
-### example
+**example**
 
 ``` typescript
 import { transfer } from "collection-query";
@@ -214,7 +256,7 @@ function race<T>(ss: Stream<T>[]): Stream<T>
 
 ### `async-pull` -> `async-push`
 
-#### push
+**push**
  
 ``` typescript
 function push<T>(s: AsyncPullStream<T>): AsyncPushStream<T>
@@ -222,7 +264,7 @@ function push<T>(s: AsyncPullStream<T>): AsyncPushStream<T>
 
 ### `async-push` -> `async-pull`
 
-#### pull
+**pull**
 
 ``` typescript
 function pull<T>(s: AsyncPushStream<T>): AsyncPullStream<T>
@@ -230,7 +272,7 @@ function pull<T>(s: AsyncPushStream<T>): AsyncPullStream<T>
 
 ### `async-push` -> `push`
 
-#### sync
+**sync**
 
 ``` typescript
 function sync<T>(s: AsyncPushStream<T>): PushStream<T>
@@ -238,7 +280,7 @@ function sync<T>(s: AsyncPushStream<T>): PushStream<T>
 
 ### `push` -> `async-push`
 
-#### async
+**async**
 
 ``` typescript
 function async<T>(s: PushStream<T>): AsyncPushStream<T>
