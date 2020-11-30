@@ -1,6 +1,6 @@
 {
   "name": "collection-query",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A collection processing library.",
   "main": "index.js",
   "types": "index.d.ts",
@@ -9,7 +9,7 @@
     "test": "npx tsc --project tsconfig.test.json && jest",
     "t-c": "npx jest --coverage"
   },
-  "author": "iplaylf2",
+  "author": "i-play-lf2",
   "license": "BSD-3-Clause",
   "devDependencies": {
     "jest": "^26.6",
