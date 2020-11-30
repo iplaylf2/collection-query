@@ -1,0 +1,4 @@
+{
+  "main": "../dist/async-push.js",
+  "types": "../dist/async-push.d.ts"
+}

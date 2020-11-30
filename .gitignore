@@ -1,7 +1,6 @@
 node_modules
 package-lock.json
 dist
-type
 test.out
 .vscode
 coverage
