@@ -53,6 +53,31 @@ export class Channel<T> {
     }
   }
 
+  async dump(): Promise<[true] | [false, T[]]> {
+    while (true) {
+      await this.takeBlock.wait;
+
+      if (this._isClose) {
+        if (0 < this.buffer.length) {
+          const all = this.buffer.dump();
+          return [false, all];
+        } else {
+          return [true];
+        }
+      } else {
+        if (0 < this.buffer.length) {
+          const all = this.buffer.dump();
+
+          this.takeBlock.block();
+
+          return [false, all];
+        } else {
+          continue;
+        }
+      }
+    }
+  }
+
   close() {
     if (!this.isClose) {
       this.takeBlock.unblock();

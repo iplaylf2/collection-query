@@ -25,17 +25,18 @@ export function groupBy<T, K>(
 
           const group_emitter = create<T>(async (emit) => {
             while (true) {
-              const [end, x] = await channel.take();
+              const [end, x] = await channel.dump();
               if (end) {
                 emit(EmitType.Complete);
-                break;
+                return;
               } else {
-                const [ok, value] = x!;
-                if (ok) {
-                  emit(EmitType.Next, value);
-                } else {
-                  emit(EmitType.Error, value);
-                  break;
+                for (const [ok, value] of x!) {
+                  if (ok) {
+                    emit(EmitType.Next, value);
+                  } else {
+                    emit(EmitType.Error, value);
+                    return;
+                  }
                 }
               }
             }

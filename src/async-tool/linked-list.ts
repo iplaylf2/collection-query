@@ -25,6 +25,21 @@ export class LinkedList<T> {
     throw "empty";
   }
 
+  dump(): T[] {
+    const all = new Array(this._length);
+
+    let current = this.head.next!;
+    for (let i = 0; i < this._length; i++) {
+      const x = current.value;
+      all[i] = x;
+      current = current.next!;
+    }
+    this.head.next = current;
+    this._length = 0;
+
+    return all;
+  }
+
   get length() {
     return this._length;
   }
