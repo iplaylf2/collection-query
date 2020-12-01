@@ -1,5 +1,11 @@
-import { createFrom, forEach, map, filter, remove } from "../pull";
-import { PullStream } from "..";
+import {
+  createFrom,
+  forEach,
+  map,
+  filter,
+  remove,
+} from "collection-query/pull";
+import { PullStream } from "collection-query";
 import "./jest";
 import * as t from "./pull/test";
 import * as e from "./pull/expect";
