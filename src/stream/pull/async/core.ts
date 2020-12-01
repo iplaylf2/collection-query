@@ -44,12 +44,13 @@ export async function* remove<T>(
 }
 
 export async function* take<T>(iterator: AsyncIterableIterator<T>, n: number) {
-  for await (const x of iterator) {
-    if (0 < n) {
-      n--;
+  if (0 < n) {
+    for await (const x of iterator) {
       yield x;
-    } else {
-      break;
+      n--;
+      if (n === 0) {
+        break;
+      }
     }
   }
 }
@@ -69,18 +70,15 @@ export async function* takeWhile<T>(
 }
 
 export async function* skip<T>(iterator: AsyncIterableIterator<T>, n: number) {
-  while (true) {
-    if (0 < n) {
-      const { done } = await iterator.next();
-      if (done) {
-        break;
-      } else {
-        n--;
-      }
-    } else {
+  while (0 < n) {
+    const { done } = await iterator.next();
+    if (done) {
       break;
+    } else {
+      n--;
     }
   }
+
   yield* iterator;
 }
 
