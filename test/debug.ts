@@ -1,4 +1,4 @@
-import { transfer, PushStream, EmitType } from "..";
+import { transfer, PushStream, EmitType } from "collection-query";
 import {
   create,
   take,
@@ -8,7 +8,7 @@ import {
   count,
   _incubate,
   forEach,
-} from "../push";
+} from "collection-query/push";
 
 const s = create<number>(async (emit) => {
   let count = 0;

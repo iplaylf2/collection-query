@@ -1,13 +1,10 @@
 {
-  //File Inclusion
-  "include": ["test"],
   //Compiler Options
   "compilerOptions": {
     //Project Options
     //"declaration": true,
     "lib": ["ESNext", "DOM"],
     "module": "CommonJS",
-    "outDir": "test.out",
     "target": "ESNext",
     "sourceMap": true,
     //Strict Checks
@@ -27,6 +24,5 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true
     //Advanced
-    //"declarationDir":"type"
   }
 }

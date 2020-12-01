@@ -2,36 +2,20 @@
   "name": "collection-query",
   "version": "0.0.5",
   "description": "A collection processing library.",
-  "main": "./dist/collection-query.js",
-  "types": "./dist/collection-query.d.ts",
+  "main": "./collection-query.js",
+  "types": "./collection-query.d.ts",
   "scripts": {
     "build": "npx tsc",
     "test": "npx tsc --project tsconfig.test.json && jest",
-    "t-c": "npx jest --coverage",
+    "test-coverage": "npx jest --coverage",
     "publish": "npm run build && npm publish"
   },
   "author": "i-play-lf2",
   "license": "BSD-3-Clause",
   "devDependencies": {
+    "gulp": "^4.0.2",
+    "gulp-typescript": "^6.0.0-alpha.1",
     "jest": "^26.6",
     "typescript": "^4.1.2"
-  },
-  "jest": {
-    "testMatch": [
-      "**/test.out/**/*.test.js"
-    ],
-    "coveragePathIgnorePatterns": [
-      "/node_modules/",
-      "/src/",
-      "/test/"
-    ],
-    "verbose": true
-  },
-  "files": [
-    "dist",
-    "async-pull",
-    "async-push",
-    "pull",
-    "push"
-  ]
+  }
 }
