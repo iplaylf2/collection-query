@@ -26,14 +26,19 @@ export function remove<T>(emit: EmitForm<T>, f: Predicate<T>) {
 }
 
 export function take<T>(emit: EmitForm<T>, n: number) {
-  return (x: T) => {
-    if (0 < n) {
-      n--;
+  if (0 < n) {
+    return (x: T) => {
       emit(EmitType.Next, x);
-    } else {
+      n--;
+      if (n === 0) {
+        emit(EmitType.Complete);
+      }
+    };
+  } else {
+    return () => {
       emit(EmitType.Complete);
-    }
-  };
+    };
+  }
 }
 
 export function takeWhile<T>(emit: EmitForm<T>, f: Predicate<T>) {
@@ -47,19 +52,23 @@ export function takeWhile<T>(emit: EmitForm<T>, f: Predicate<T>) {
 }
 
 export function skip<T>(emit: EmitForm<T>, n: number) {
-  let skip = true;
-  return (x: T) => {
-    if (skip) {
-      if (0 < n) {
+  if (0 < n) {
+    let skip = true;
+    return (x: T) => {
+      if (skip) {
         n--;
+        if (n === 0) {
+          skip = false;
+        }
       } else {
-        skip = false;
         emit(EmitType.Next, x);
       }
-    } else {
+    };
+  } else {
+    return (x: T) => {
       emit(EmitType.Next, x);
-    }
-  };
+    };
+  }
 }
 
 export function skipWhile<T>(emit: EmitForm<T>, f: Predicate<T>) {

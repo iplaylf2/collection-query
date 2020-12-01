@@ -50,14 +50,19 @@ export function remove<T>(
 }
 
 export function take<T>(emit: EmitForm<T>, n: number) {
-  return async (x: T) => {
-    if (0 < n) {
-      n--;
+  if (0 < n) {
+    return async (x: T) => {
       await emit(EmitType.Next, x);
-    } else {
+      n--;
+      if (n === 0) {
+        emit(EmitType.Complete);
+      }
+    };
+  } else {
+    return async () => {
       emit(EmitType.Complete);
-    }
-  };
+    };
+  }
 }
 
 export function takeWhile<T>(
@@ -75,19 +80,23 @@ export function takeWhile<T>(
 }
 
 export function skip<T>(emit: EmitForm<T>, n: number) {
-  let skip = true;
-  return async (x: T) => {
-    if (skip) {
-      if (0 < n) {
+  if (0 < n) {
+    let skip = true;
+    return async (x: T) => {
+      if (skip) {
         n--;
+        if (n === 0) {
+          skip = false;
+        }
       } else {
-        skip = false;
         await emit(EmitType.Next, x);
       }
-    } else {
+    };
+  } else {
+    return async (x: T) => {
       await emit(EmitType.Next, x);
-    }
-  };
+    };
+  }
 }
 
 export function skipWhile<T>(

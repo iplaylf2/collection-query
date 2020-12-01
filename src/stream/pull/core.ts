@@ -25,12 +25,13 @@ export function* remove<T>(iterator: IterableIterator<T>, f: Predicate<T>) {
 }
 
 export function* take<T>(iterator: IterableIterator<T>, n: number) {
-  for (const x of iterator) {
-    if (0 < n) {
-      n--;
+  if (0 < n) {
+    for (const x of iterator) {
       yield x;
-    } else {
-      break;
+      n--;
+      if (n === 0) {
+        break;
+      }
     }
   }
 }
@@ -46,18 +47,15 @@ export function* takeWhile<T>(iterator: IterableIterator<T>, f: Predicate<T>) {
 }
 
 export function* skip<T>(iterator: IterableIterator<T>, n: number) {
-  while (true) {
-    if (0 < n) {
-      const { done } = iterator.next();
-      if (done) {
-        break;
-      } else {
-        n--;
-      }
-    } else {
+  while (0 < n) {
+    const { done } = iterator.next();
+    if (done) {
       break;
+    } else {
+      n--;
     }
   }
+
   yield* iterator;
 }
 
