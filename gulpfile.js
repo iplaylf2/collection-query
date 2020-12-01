@@ -3,8 +3,8 @@ const fs = require("fs");
 const ts = require("gulp-typescript");
 
 const package = "package";
-const tsProject = ts.createProject("tsconfig.json");
-const code_dist = tsProject.config.compilerOptions.outDir;
+const project = ts.createProject("tsconfig.json");
+const code_dist = project.config.compilerOptions.outDir;
 const attached = ["LICENSE", "README.md"];
 
 function cleanDir(name, cb) {
@@ -16,7 +16,7 @@ function cleanCodeDist(cb) {
 }
 
 function compile() {
-  return tsProject.src().pipe(tsProject()).pipe(dest(code_dist));
+  return project.src().pipe(project()).pipe(dest(code_dist));
 }
 
 function copyConfig() {

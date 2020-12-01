@@ -5,3 +5,4 @@ test.out
 .vscode
 coverage
 package
+test/output

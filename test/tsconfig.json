@@ -1,12 +1,14 @@
 {
+  //File Inclusion
   //Compiler Options
   "compilerOptions": {
     //Project Options
-    //"declaration": true,
+    "declaration": true,
     "lib": ["ESNext", "DOM"],
     "module": "CommonJS",
-    "target": "ESNext",
+    "outDir": "output",
     "sourceMap": true,
+    "target": "ESNext",
     //Strict Checks
     "alwaysStrict": true,
     "noImplicitAny": true,
