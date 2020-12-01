@@ -1,5 +1,5 @@
 import { Action, Func, Selector } from "../type";
-import { PullStream } from "../..";
+import { PullStream } from "collection-query";
 import * as e from "./expect";
 
 export function TestBase(f: Func<PullStream<any>>, name = "base") {

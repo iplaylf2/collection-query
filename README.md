@@ -101,4 +101,4 @@ import * as asyncPush from "collection-query/async-push";
 //For example, they all have a "take" method.
 ```
 
-[Document](./doc/document.md)
+[Document](https://github.com/Iplaylf2/collection-query/blob/master/doc/document.md)
