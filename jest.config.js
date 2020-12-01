@@ -1,5 +1,10 @@
 module.exports = {
-  testMatch: ["**/test.out/**/*.test.js"],
-  coveragePathIgnorePatterns: ["/node_modules/", "/src/", "/test/"],
+  testMatch: ["**/test/output/**/*.test.js"],
+  coveragePathIgnorePatterns: [
+    "/node_modules/",
+    "/src/",
+    "/test/",
+    "/package/",
+  ],
   verbose: true,
 };
