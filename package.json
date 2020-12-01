@@ -9,7 +9,7 @@
     "build": "npx gulp build",
     "test": "npx tsc --project test/tsconfig.json && jest",
     "test-coverage": "npx tsc --project test/tsconfig.json && jest --coverage",
-    "publish": "npx gulp pack && npm publish package"
+    "publish": "npx gulp pack && npm publish ./package"
   },
   "author": "i-play-lf2",
   "license": "BSD-3-Clause",
