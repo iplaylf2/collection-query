@@ -30,7 +30,7 @@ function cleanPackage(cb) {
 }
 
 function dumpLibrary() {
-  return src(`${code_dist}/*`).pipe(dest(package));
+  return src(`${code_dist}/**/*`).pipe(dest(package));
 }
 
 function fillPackage() {
