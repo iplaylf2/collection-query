@@ -1,6 +1,6 @@
 import { ControlledIterator, IteratorStatus } from "./controlled-iterator";
-import { AsyncBlock } from "../../../async-tool/async-block";
-import { LazyChannel } from "../../../async-tool/lazy-channel";
+import { AsyncBlock } from "../../../tool/async-block";
+import { LazyChannel } from "../../../tool/lazy-channel";
 
 export class ZipHandler<T> extends ControlledIterator<T[]> {
   constructor(total: number) {

@@ -1,6 +1,6 @@
 import { Cancel, EmitForm, Emitter, EmitType } from "../type";
 import { Action, Selector } from "../../../type";
-import { Channel } from "../../../async-tool/channel";
+import { Channel } from "../../../tool/channel";
 import { create } from "../create";
 
 export function groupBy<T, K>(
