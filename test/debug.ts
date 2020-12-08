@@ -10,10 +10,9 @@ import {
   forEach,
 } from "collection-query/push";
 
-const s = create<number>(async (emit) => {
+const s = create<number>((emit) => {
   let count = 0;
   while (true) {
-    await Promise.resolve();
     console.log("at create " + count);
     const open = emit(EmitType.Next, count++);
     if (!open) {
@@ -35,7 +34,7 @@ const new_s = transfer(s, [
       }),
       filter((x: number) => x % 3 === 0),
     ]);
-    
+
     const r = await count(s);
 
     await new Promise((r) => setTimeout(r, Math.random() * 10));
