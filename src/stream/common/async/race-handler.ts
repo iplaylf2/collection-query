@@ -1,5 +1,5 @@
 import { ControlledIterator, IteratorStatus } from "./controlled-iterator";
-import { LazyChannel } from "../../../async-tool/lazy-channel";
+import { LazyChannel } from "../../../tool/lazy-channel";
 
 export class RaceHandler<T> extends ControlledIterator<T> {
   constructor(total: number) {

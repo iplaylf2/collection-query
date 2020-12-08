@@ -1,7 +1,7 @@
-import { Cancel, EmitForm, Emitter, EmitType } from "../type";
+import { Cancel, EmitForm, EmitItem, Emitter, EmitType } from "../type";
 import { Action, Selector } from "../../../type";
-import { Channel } from "../../../async-tool/channel";
 import { create } from "../create";
+import { LinkedList } from "../../../tool/linked-list";
 
 export function groupBy<T, K>(
   emitter: Emitter<T>,
@@ -9,49 +9,58 @@ export function groupBy<T, K>(
   expose: Action<Cancel>,
   f: Selector<T, K>
 ) {
-  const channel_dispatch = new Map<K, Channel<[boolean, any]>>();
+  const group_dispatch = new Map<K, EmitForm<T>>();
 
   emitter((t, x?) => {
     switch (t) {
       case EmitType.Next:
         const k = f(x);
-        const channel = channel_dispatch.get(k);
-        if (channel) {
-          channel.put([true, x]);
+        const dispatch_emit = group_dispatch.get(k);
+        if (dispatch_emit) {
+          dispatch_emit(EmitType.Next, x);
         } else {
-          const channel = new Channel<[boolean, any]>();
-          channel.put([true, x]);
-          channel_dispatch.set(k, channel);
+          let dispatch_emit!: EmitForm<T>;
+          const cancel_dispatch = create<T>((emit) => {
+            dispatch_emit = emit;
+          })((...x) => {
+            if (group_emit) {
+              const open = group_emit(...x);
+              if (!open) {
+                cancel_dispatch();
+              }
+            } else {
+              buffer.put(x);
+            }
+          });
 
-          const group_emitter = create<T>(async (emit) => {
-            while (true) {
-              const [end, x] = await channel.dump();
-              if (end) {
-                emit(EmitType.Complete);
-                return;
-              } else {
-                for (const [ok, value] of x!) {
-                  if (ok) {
-                    emit(EmitType.Next, value);
-                  } else {
-                    emit(EmitType.Error, value);
-                    return;
-                  }
-                }
+          group_dispatch.set(k, dispatch_emit);
+
+          const buffer = new LinkedList<EmitItem<T>>();
+          buffer.put([EmitType.Next, x]);
+
+          let group_emit: EmitForm<T>;
+          const group_emitter = create<T>((emit) => {
+            group_emit = emit;
+            for (const x of buffer.dump()) {
+              const open = group_emit(...x);
+              if (!open) {
+                cancel_dispatch();
+                break;
               }
             }
           });
+
           emit(EmitType.Next, [k, group_emitter] as [K, Emitter<T>]);
         }
         break;
       case EmitType.Complete:
-        for (const channel of channel_dispatch.values()) {
-          channel.close();
+        for (const emit of group_dispatch.values()) {
+          emit(EmitType.Complete);
         }
         break;
       case EmitType.Error:
-        for (const channel of channel_dispatch.values()) {
-          channel.put([false, x]);
+        for (const emit of group_dispatch.values()) {
+          emit(EmitType.Error, x);
         }
         break;
     }
