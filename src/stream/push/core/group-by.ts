@@ -1,4 +1,11 @@
-import { Cancel, EmitForm, EmitItem, Emitter, EmitType } from "../type";
+import {
+  Cancel,
+  EmitForm,
+  EmitItem,
+  Emitter,
+  EmitType,
+  ReceiveForm,
+} from "../type";
 import { Action, Selector } from "../../../type";
 import { create } from "../create";
 import { LinkedList } from "../../../tool/linked-list";
@@ -9,31 +16,28 @@ export function groupBy<T, K>(
   expose: Action<Cancel>,
   f: Selector<T, K>
 ) {
-  const group_dispatch = new Map<K, EmitForm<T>>();
+  const group_dispatch = new Map<K, ReceiveForm<T>>();
 
   emitter((t, x?) => {
     switch (t) {
       case EmitType.Next:
         const k = f(x);
-        const dispatch_emit = group_dispatch.get(k);
-        if (dispatch_emit) {
-          dispatch_emit(EmitType.Next, x);
+        const dispatch = group_dispatch.get(k);
+        if (dispatch) {
+          dispatch(EmitType.Next, x);
         } else {
-          let dispatch_emit!: EmitForm<T>;
-          const cancel_dispatch = create<T>((emit) => {
-            dispatch_emit = emit;
-          })((...x) => {
+          const dispatch: ReceiveForm<T> = function (...x) {
             if (group_emit) {
               const open = group_emit(...x);
               if (!open) {
-                cancel_dispatch();
+                group_dispatch.set(k, () => {});
               }
             } else {
               buffer.put(x);
             }
-          });
+          };
 
-          group_dispatch.set(k, dispatch_emit);
+          group_dispatch.set(k, dispatch);
 
           const buffer = new LinkedList<EmitItem<T>>();
           buffer.put([EmitType.Next, x]);
@@ -44,7 +48,7 @@ export function groupBy<T, K>(
             for (const x of buffer.dump()) {
               const open = group_emit(...x);
               if (!open) {
-                cancel_dispatch();
+                group_dispatch.set(k, () => {});
                 break;
               }
             }
@@ -54,13 +58,13 @@ export function groupBy<T, K>(
         }
         break;
       case EmitType.Complete:
-        for (const emit of group_dispatch.values()) {
-          emit(EmitType.Complete);
+        for (const dispatch of group_dispatch.values()) {
+          dispatch(EmitType.Complete);
         }
         break;
       case EmitType.Error:
-        for (const emit of group_dispatch.values()) {
-          emit(EmitType.Error, x);
+        for (const dispatch of group_dispatch.values()) {
+          dispatch(EmitType.Error, x);
         }
         break;
     }
