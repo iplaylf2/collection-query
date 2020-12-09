@@ -2,6 +2,9 @@
 
 A collection processing library.
 
+English | [中文](https://github.com/Iplaylf2/collection-query/blob/master/doc/README.cn.md)
+-
+
 ## feature
 
 - Simple to use.
@@ -79,6 +82,8 @@ const push_stream = create(function (emit) {
 });
 ```
 
+Push stream can generate data synchronously or asynchronously.
+
 ``` typescript
 const async_push_stream = create_async(function (emit) {
   emit(EmitType.Next, 0);
@@ -86,7 +91,7 @@ const async_push_stream = create_async(function (emit) {
 });
 ```
 
-Push stream and async push stream can generate data synchronously or asynchronously.
+Async push stream always generates data asynchronously.
 
 ## method
 
