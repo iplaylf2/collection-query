@@ -24,7 +24,7 @@ const s = create<number>((emit) => {
 void s;
 
 const new_s = transfer(s, [
-  take(100),
+  take<number>(100),
   groupBy((x: number) => x % 10),
   map(async ([k, s]: [number, PushStream<number>]) => {
     s = transfer(s, [
@@ -39,7 +39,7 @@ const new_s = transfer(s, [
 
     await new Promise((r) => setTimeout(r, Math.random() * 10));
 
-    return [k, r];
+    return [k, r] as [number, number];
   }),
   _incubate<[number, number]>(),
 ]);
