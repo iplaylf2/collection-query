@@ -5,13 +5,29 @@ import { PartitionByCollector } from "../common/partition-by-collector/partition
 
 export function map<T, K>(emit: EmitForm<K>, f: Selector<T, K>) {
   return (x: T) => {
-    emit(EmitType.Next, f(x));
+    let y: K;
+    try {
+      y = f(x);
+    } catch (e) {
+      emit(EmitType.Error, e);
+      return;
+    }
+
+    emit(EmitType.Next, y);
   };
 }
 
 export function filter<T>(emit: EmitForm<T>, f: Predicate<T>) {
   return (x: T) => {
-    if (f(x)) {
+    let y: boolean;
+    try {
+      y = f(x);
+    } catch (e) {
+      emit(EmitType.Error, e);
+      return;
+    }
+
+    if (y) {
       emit(EmitType.Next, x);
     }
   };
@@ -19,7 +35,15 @@ export function filter<T>(emit: EmitForm<T>, f: Predicate<T>) {
 
 export function remove<T>(emit: EmitForm<T>, f: Predicate<T>) {
   return (x: T) => {
-    if (!f(x)) {
+    let y: boolean;
+    try {
+      y = f(x);
+    } catch (e) {
+      emit(EmitType.Error, e);
+      return;
+    }
+
+    if (!y) {
       emit(EmitType.Next, x);
     }
   };
@@ -43,7 +67,15 @@ export function take<T>(emit: EmitForm<T>, n: number) {
 
 export function takeWhile<T>(emit: EmitForm<T>, f: Predicate<T>) {
   return (x: T) => {
-    if (f(x)) {
+    let y: boolean;
+    try {
+      y = f(x);
+    } catch (e) {
+      emit(EmitType.Error, e);
+      return;
+    }
+
+    if (y) {
       emit(EmitType.Next, x);
     } else {
       emit(EmitType.Complete);
@@ -75,7 +107,15 @@ export function skipWhile<T>(emit: EmitForm<T>, f: Predicate<T>) {
   let skip = true;
   return (x: T) => {
     if (skip) {
-      if (!f(x)) {
+      let y: boolean;
+      try {
+        y = f(x);
+      } catch (e) {
+        emit(EmitType.Error, e);
+        return;
+      }
+
+      if (!y) {
         skip = false;
         emit(EmitType.Next, x);
       }
@@ -135,7 +175,14 @@ export function partitionBy<T>(
     switch (t) {
       case EmitType.Next:
         {
-          const [full, partition] = collector.collect(x);
+          let full: boolean, partition: T[] | undefined;
+          try {
+            [full, partition] = collector.collect(x);
+          } catch (e) {
+            emit(EmitType.Error, e);
+            return;
+          }
+
           if (full) {
             emit(EmitType.Next, partition!);
           }
@@ -307,7 +354,11 @@ export function reduce<T, K>(
   return (...[t, x]: EmitItem<T>) => {
     switch (t) {
       case EmitType.Next:
-        r = f(r, x);
+        try {
+          r = f(r, x);
+        } catch (e) {
+          reject(e);
+        }
         break;
       case EmitType.Complete:
         resolve(r);
@@ -366,7 +417,15 @@ export function every<T>(
   return (...[t, x]: EmitItem<T>) => {
     switch (t) {
       case EmitType.Next:
-        if (!f(x)) {
+        let y;
+        try {
+          y = f(x);
+        } catch (e) {
+          reject(e);
+          return;
+        }
+
+        if (!y) {
           resolve(false);
         }
         break;
@@ -388,7 +447,15 @@ export function some<T>(
   return (...[t, x]: EmitItem<T>) => {
     switch (t) {
       case EmitType.Next:
-        if (f(x)) {
+        let y;
+        try {
+          y = f(x);
+        } catch (e) {
+          reject(e);
+          return;
+        }
+
+        if (y) {
           resolve(true);
         }
         break;

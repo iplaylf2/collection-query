@@ -21,7 +21,17 @@ export function groupBy<T, K>(
   emitter((t, x?) => {
     switch (t) {
       case EmitType.Next:
-        const k = f(x);
+        let k: K;
+        try {
+          k = f(x);
+        } catch (e) {
+          emit(EmitType.Error, e);
+          for (const dispatch of group_dispatch.values()) {
+            dispatch(EmitType.Complete);
+          }
+          return;
+        }
+
         const dispatch = group_dispatch.get(k);
         if (dispatch) {
           dispatch(EmitType.Next, x);
@@ -58,13 +68,15 @@ export function groupBy<T, K>(
         }
         break;
       case EmitType.Complete:
+        emit(EmitType.Complete);
         for (const dispatch of group_dispatch.values()) {
           dispatch(EmitType.Complete);
         }
         break;
       case EmitType.Error:
+        emit(EmitType.Error, x);
         for (const dispatch of group_dispatch.values()) {
-          dispatch(EmitType.Error, x);
+          dispatch(EmitType.Complete);
         }
         break;
     }
