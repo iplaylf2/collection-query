@@ -5,29 +5,29 @@ import { PartitionByCollector } from "../common/partition-by-collector/partition
 
 export function map<T, K>(emit: EmitForm<K>, f: Selector<T, K>) {
   return (x: T) => {
-    let y: K;
+    let r: K;
     try {
-      y = f(x);
+      r = f(x);
     } catch (e) {
       emit(EmitType.Error, e);
       return;
     }
 
-    emit(EmitType.Next, y);
+    emit(EmitType.Next, r);
   };
 }
 
 export function filter<T>(emit: EmitForm<T>, f: Predicate<T>) {
   return (x: T) => {
-    let y: boolean;
+    let p: boolean;
     try {
-      y = f(x);
+      p = f(x);
     } catch (e) {
       emit(EmitType.Error, e);
       return;
     }
 
-    if (y) {
+    if (p) {
       emit(EmitType.Next, x);
     }
   };
@@ -35,15 +35,15 @@ export function filter<T>(emit: EmitForm<T>, f: Predicate<T>) {
 
 export function remove<T>(emit: EmitForm<T>, f: Predicate<T>) {
   return (x: T) => {
-    let y: boolean;
+    let p: boolean;
     try {
-      y = f(x);
+      p = f(x);
     } catch (e) {
       emit(EmitType.Error, e);
       return;
     }
 
-    if (!y) {
+    if (!p) {
       emit(EmitType.Next, x);
     }
   };
@@ -67,15 +67,15 @@ export function take<T>(emit: EmitForm<T>, n: number) {
 
 export function takeWhile<T>(emit: EmitForm<T>, f: Predicate<T>) {
   return (x: T) => {
-    let y: boolean;
+    let p: boolean;
     try {
-      y = f(x);
+      p = f(x);
     } catch (e) {
       emit(EmitType.Error, e);
       return;
     }
 
-    if (y) {
+    if (p) {
       emit(EmitType.Next, x);
     } else {
       emit(EmitType.Complete);
@@ -107,15 +107,15 @@ export function skipWhile<T>(emit: EmitForm<T>, f: Predicate<T>) {
   let skip = true;
   return (x: T) => {
     if (skip) {
-      let y: boolean;
+      let p: boolean;
       try {
-        y = f(x);
+        p = f(x);
       } catch (e) {
         emit(EmitType.Error, e);
         return;
       }
 
-      if (!y) {
+      if (!p) {
         skip = false;
         emit(EmitType.Next, x);
       }
@@ -415,15 +415,15 @@ export function every<T>(
   return (...[t, x]: EmitItem<T>) => {
     switch (t) {
       case EmitType.Next:
-        let y;
+        let p: boolean;
         try {
-          y = f(x);
+          p = f(x);
         } catch (e) {
           reject(e);
           return;
         }
 
-        if (!y) {
+        if (!p) {
           resolve(false);
         }
         break;
@@ -445,15 +445,15 @@ export function some<T>(
   return (...[t, x]: EmitItem<T>) => {
     switch (t) {
       case EmitType.Next:
-        let y;
+        let p: boolean;
         try {
-          y = f(x);
+          p = f(x);
         } catch (e) {
           reject(e);
           return;
         }
 
-        if (y) {
+        if (p) {
           resolve(true);
         }
         break;
