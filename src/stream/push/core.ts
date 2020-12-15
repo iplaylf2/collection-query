@@ -226,21 +226,19 @@ export function incubate<T>(
     switch (t) {
       case EmitType.Next:
         count++;
+
         const p: Promise<T> = x;
+        p.then((x) => {
+          emit(EmitType.Next, x);
 
-        (async () => {
-          try {
-            const x = await p;
-            emit(EmitType.Next, x);
-
-            count--;
-            if (exhausted && 0 === count) {
-              emit(EmitType.Complete);
-            }
-          } catch (e) {
-            emit(EmitType.Error, e);
+          count--;
+          if (exhausted && 0 === count) {
+            emit(EmitType.Complete);
           }
-        })();
+        });
+        p.catch((e) => {
+          emit(EmitType.Error, e);
+        });
 
         break;
       case EmitType.Complete:
