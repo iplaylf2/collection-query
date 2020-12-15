@@ -5,13 +5,29 @@ import { PartitionByCollector } from "../common/partition-by-collector/partition
 
 export function map<T, K>(emit: EmitForm<K>, f: Selector<T, K>) {
   return (x: T) => {
-    emit(EmitType.Next, f(x));
+    let r: K;
+    try {
+      r = f(x);
+    } catch (e) {
+      emit(EmitType.Error, e);
+      return;
+    }
+
+    emit(EmitType.Next, r);
   };
 }
 
 export function filter<T>(emit: EmitForm<T>, f: Predicate<T>) {
   return (x: T) => {
-    if (f(x)) {
+    let p: boolean;
+    try {
+      p = f(x);
+    } catch (e) {
+      emit(EmitType.Error, e);
+      return;
+    }
+
+    if (p) {
       emit(EmitType.Next, x);
     }
   };
@@ -19,7 +35,15 @@ export function filter<T>(emit: EmitForm<T>, f: Predicate<T>) {
 
 export function remove<T>(emit: EmitForm<T>, f: Predicate<T>) {
   return (x: T) => {
-    if (!f(x)) {
+    let p: boolean;
+    try {
+      p = f(x);
+    } catch (e) {
+      emit(EmitType.Error, e);
+      return;
+    }
+
+    if (!p) {
       emit(EmitType.Next, x);
     }
   };
@@ -43,7 +67,15 @@ export function take<T>(emit: EmitForm<T>, n: number) {
 
 export function takeWhile<T>(emit: EmitForm<T>, f: Predicate<T>) {
   return (x: T) => {
-    if (f(x)) {
+    let p: boolean;
+    try {
+      p = f(x);
+    } catch (e) {
+      emit(EmitType.Error, e);
+      return;
+    }
+
+    if (p) {
       emit(EmitType.Next, x);
     } else {
       emit(EmitType.Complete);
@@ -75,7 +107,15 @@ export function skipWhile<T>(emit: EmitForm<T>, f: Predicate<T>) {
   let skip = true;
   return (x: T) => {
     if (skip) {
-      if (!f(x)) {
+      let p: boolean;
+      try {
+        p = f(x);
+      } catch (e) {
+        emit(EmitType.Error, e);
+        return;
+      }
+
+      if (!p) {
         skip = false;
         emit(EmitType.Next, x);
       }
@@ -135,7 +175,14 @@ export function partitionBy<T>(
     switch (t) {
       case EmitType.Next:
         {
-          const [full, partition] = collector.collect(x);
+          let full: boolean, partition: T[] | undefined;
+          try {
+            [full, partition] = collector.collect(x);
+          } catch (e) {
+            emit(EmitType.Error, e);
+            return;
+          }
+
           if (full) {
             emit(EmitType.Next, partition!);
           }
@@ -179,21 +226,19 @@ export function incubate<T>(
     switch (t) {
       case EmitType.Next:
         count++;
+
         const p: Promise<T> = x;
+        p.then((x) => {
+          emit(EmitType.Next, x);
 
-        (async () => {
-          try {
-            const x = await p;
-            emit(EmitType.Next, x);
-
-            count--;
-            if (exhausted && 0 === count) {
-              emit(EmitType.Complete);
-            }
-          } catch (e) {
-            emit(EmitType.Error, e);
+          count--;
+          if (exhausted && 0 === count) {
+            emit(EmitType.Complete);
           }
-        })();
+        });
+        p.catch((e) => {
+          emit(EmitType.Error, e);
+        });
 
         break;
       case EmitType.Complete:
@@ -307,7 +352,11 @@ export function reduce<T, K>(
   return (...[t, x]: EmitItem<T>) => {
     switch (t) {
       case EmitType.Next:
-        r = f(r, x);
+        try {
+          r = f(r, x);
+        } catch (e) {
+          reject(e);
+        }
         break;
       case EmitType.Complete:
         resolve(r);
@@ -366,7 +415,15 @@ export function every<T>(
   return (...[t, x]: EmitItem<T>) => {
     switch (t) {
       case EmitType.Next:
-        if (!f(x)) {
+        let p: boolean;
+        try {
+          p = f(x);
+        } catch (e) {
+          reject(e);
+          return;
+        }
+
+        if (!p) {
           resolve(false);
         }
         break;
@@ -388,7 +445,15 @@ export function some<T>(
   return (...[t, x]: EmitItem<T>) => {
     switch (t) {
       case EmitType.Next:
-        if (f(x)) {
+        let p: boolean;
+        try {
+          p = f(x);
+        } catch (e) {
+          reject(e);
+          return;
+        }
+
+        if (p) {
           resolve(true);
         }
         break;

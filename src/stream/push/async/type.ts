@@ -5,7 +5,7 @@ export interface ReceiveForm<T> {
   (...x: EmitItem<T>): Promise<void>;
 }
 export interface Emitter<T> {
-  (emit: ReceiveForm<T>, expose?: Action<Cancel>): Cancel;
+  (receiver: ReceiveForm<T>, expose?: Action<Cancel>): Cancel;
 }
 
 export interface EmitForm<T> {
