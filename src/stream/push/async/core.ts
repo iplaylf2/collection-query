@@ -20,7 +20,14 @@ export function map<T, K>(
   f: Selector<T, K> | AsyncSelector<T, K>
 ) {
   return async (x: T) => {
-    const r = await f(x);
+    let r: K;
+    try {
+      r = await f(x);
+    } catch (e) {
+      emit(EmitType.Error, e);
+      return;
+    }
+
     await emit(EmitType.Next, r);
   };
 }
@@ -30,7 +37,14 @@ export function filter<T>(
   f: Predicate<T> | AsyncPredicate<T>
 ) {
   return async (x: T) => {
-    const p = await f(x);
+    let p: boolean;
+    try {
+      p = await f(x);
+    } catch (e) {
+      emit(EmitType.Error, e);
+      return;
+    }
+
     if (p) {
       await emit(EmitType.Next, x);
     }
@@ -42,7 +56,14 @@ export function remove<T>(
   f: Predicate<T> | AsyncPredicate<T>
 ) {
   return async (x: T) => {
-    const p = await f(x);
+    let p: boolean;
+    try {
+      p = await f(x);
+    } catch (e) {
+      emit(EmitType.Error, e);
+      return;
+    }
+
     if (!p) {
       await emit(EmitType.Next, x);
     }
@@ -70,7 +91,14 @@ export function takeWhile<T>(
   f: Predicate<T> | AsyncPredicate<T>
 ) {
   return async (x: T) => {
-    const p = await f(x);
+    let p: boolean;
+    try {
+      p = await f(x);
+    } catch (e) {
+      emit(EmitType.Error, e);
+      return;
+    }
+
     if (p) {
       await emit(EmitType.Next, x);
     } else {
@@ -106,7 +134,14 @@ export function skipWhile<T>(
   let skip = true;
   return async (x: T) => {
     if (skip) {
-      const p = await f(x);
+      let p: boolean;
+      try {
+        p = await f(x);
+      } catch (e) {
+        emit(EmitType.Error, e);
+        return;
+      }
+
       if (!p) {
         skip = false;
         await emit(EmitType.Next, x);
@@ -167,7 +202,14 @@ export function partitionBy<T>(
     switch (t) {
       case EmitType.Next:
         {
-          const [full, partition] = await collector.collect(x);
+          let full: boolean, partition: T[] | undefined;
+          try {
+            [full, partition] = await collector.collect(x);
+          } catch (e) {
+            emit(EmitType.Error, e);
+            return;
+          }
+
           if (full) {
             await emit(EmitType.Next, partition!);
           }
@@ -209,21 +251,19 @@ export function incubate<T>(
     switch (t) {
       case EmitType.Next:
         count++;
+
         const p: Promise<T> = x;
+        p.then((x) => {
+          emit(EmitType.Next, x);
 
-        (async () => {
-          try {
-            const x = await p;
-            emit(EmitType.Next, x);
-
-            count--;
-            if (exhausted && 0 === count) {
-              emit(EmitType.Complete);
-            }
-          } catch (e) {
-            emit(EmitType.Error, e);
+          count--;
+          if (exhausted && 0 === count) {
+            emit(EmitType.Complete);
           }
-        })();
+        });
+        p.catch((e) => {
+          emit(EmitType.Error, e);
+        });
 
         break;
       case EmitType.Complete:
@@ -406,7 +446,11 @@ export function reduce<T, K>(
   return async (...[t, x]: EmitItem<T>) => {
     switch (t) {
       case EmitType.Next:
-        r = await f(r, x);
+        try {
+          r = await f(r, x);
+        } catch (e) {
+          reject(e);
+        }
         break;
       case EmitType.Complete:
         resolve(r);
@@ -465,7 +509,14 @@ export function every<T>(
   return async (...[t, x]: EmitItem<T>) => {
     switch (t) {
       case EmitType.Next:
-        const p = await f(x);
+        let p: boolean;
+        try {
+          p = await f(x);
+        } catch (e) {
+          reject(e);
+          return;
+        }
+
         if (!p) {
           resolve(false);
         }
@@ -488,7 +539,14 @@ export function some<T>(
   return async (...[t, x]: EmitItem<T>) => {
     switch (t) {
       case EmitType.Next:
-        const p = await f(x);
+        let p: boolean;
+        try {
+          p = await f(x);
+        } catch (e) {
+          reject(e);
+          return;
+        }
+
         if (p) {
           resolve(true);
         }
