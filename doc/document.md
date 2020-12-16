@@ -1,6 +1,6 @@
 # Document
 
-- [Transfer](#transfer)
+- [transfer](#transfer)
 - [Common method](#common-method)
   - [Create from iterable](#create-from-iterable)
     - [createFrom](#createfrom)
@@ -40,8 +40,9 @@
   - [`async-push` -> `async-pull`](#async-push---async-pull)
   - [`async-push` -> `push`](#async-push---push)
   - [`push` -> `async-push`](#push---async-push)
+- [Callback signature](#callback-signature)
 
-## Transfer
+## transfer
 
 ``` typescript
 function transfer(s: stream, list: []): stream
@@ -55,18 +56,21 @@ function transfer(s: stream, list: []): stream
 import { transfer } from "collection-query";
 import { map, filter, take } from "collection-query/pull";
 
+// Create a pull stream
 const s = function* () {
   while (true) {
     yield;
   }
 };
 
+// Convert the stream to another
 const new_s = transfer(s, [
   map((_) => Math.random()),
   filter((x: number) => x < 0.5),
   take<number>(10),
 ]);
 
+// Each the pull stream
 for (const x of new_s()) {
   console.log(x);
 }
@@ -284,3 +288,8 @@ function sync<T>(s: AsyncPushStream<T>): PushStream<T>
 ``` typescript
 function async<T>(s: PushStream<T>): AsyncPushStream<T>
 ```
+
+## Callback signature
+
+[definition file](https://github.com/Iplaylf2/collection-query/blob/master/src/type.ts)
+

@@ -40,6 +40,7 @@
   - [`async-push` -> `async-pull`](#async-push---async-pull)
   - [`async-push` -> `push`](#async-push---push)
   - [`push` -> `async-push`](#push---async-push)
+- [回调签名](#回调签名)
 
 ## transfer
 
@@ -55,18 +56,21 @@ function transfer(s: stream, list: []): stream
 import { transfer } from "collection-query";
 import { map, filter, take } from "collection-query/pull";
 
+// 创建一个pull流
 const s = function* () {
   while (true) {
     yield;
   }
 };
 
+// 将流转化成另一个流
 const new_s = transfer(s, [
   map((_) => Math.random()),
   filter((x: number) => x < 0.5),
   take<number>(10),
 ]);
 
+// 遍历pull流里的数据
 for (const x of new_s()) {
   console.log(x);
 }
@@ -284,3 +288,8 @@ function sync<T>(s: AsyncPushStream<T>): PushStream<T>
 ``` typescript
 function async<T>(s: PushStream<T>): AsyncPushStream<T>
 ```
+
+## 回调签名
+
+[定义文件](https://github.com/Iplaylf2/collection-query/blob/master/src/type.ts)
+
