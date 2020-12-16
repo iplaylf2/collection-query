@@ -22,7 +22,7 @@ npm install collection-query
 ``` typescript
 import { take } from "collection-query/pull";
 
-// 创建一个pull流
+// 创建一个 pull 流
 const s = function* () {
   let count = 0;
   while (true) {
@@ -33,7 +33,7 @@ const s = function* () {
 // 将流转化成另一个流
 const new_s = take(3)(s);
 
-// 遍历pull流里的数据
+// 遍历 pull 流里的数据
 for (const x of new_s()) {
   console.log(x);
 }

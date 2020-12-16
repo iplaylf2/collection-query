@@ -56,7 +56,7 @@ function transfer(s: stream, list: []): stream
 import { transfer } from "collection-query";
 import { map, filter, take } from "collection-query/pull";
 
-// 创建一个pull流
+// 创建一个 pull 流
 const s = function* () {
   while (true) {
     yield;
@@ -70,7 +70,7 @@ const new_s = transfer(s, [
   take<number>(10),
 ]);
 
-// 遍历pull流里的数据
+// 遍历 pull 流里的数据
 for (const x of new_s()) {
   console.log(x);
 }
@@ -292,4 +292,3 @@ function async<T>(s: PushStream<T>): AsyncPushStream<T>
 ## 回调签名
 
 [定义文件](https://github.com/Iplaylf2/collection-query/blob/master/src/type.ts)
-

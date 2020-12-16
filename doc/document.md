@@ -292,4 +292,3 @@ function async<T>(s: PushStream<T>): AsyncPushStream<T>
 ## Callback signature
 
 [definition file](https://github.com/Iplaylf2/collection-query/blob/master/src/type.ts)
-
