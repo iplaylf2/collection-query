@@ -1,10 +1,10 @@
 # Document
 
-- [transfer](#transfer)
-- [common method](#common-method)
-  - [create from iterable](#create-from-iterable)
+- [Transfer](#transfer)
+- [Common method](#common-method)
+  - [Create from iterable](#create-from-iterable)
     - [createFrom](#createfrom)
-  - [each stream](#each-stream)
+  - [Each stream](#each-stream)
     - [forEach](#foreach)
   - [stream -> stream](#stream---stream)
     - [map](#map)
@@ -27,21 +27,21 @@
     - [some](#some)
     - [first](#first)
     - [last](#last)
-- [other method](#other-method)
-  - [push stream create](#push-stream-create)
+- [Other method](#other-method)
+  - [Push stream create](#push-stream-create)
     - [create](#create)
   - [stream -> stream](#stream---stream-2)
     - [groupBy](#groupby)
     - [incubate](#incubate)
   - [stream[] -> stream](#stream---stream-3)
     - [race](#race)
-- [stream convert](#stream-convert)
+- [Stream convert](#stream-convert)
   - [`async-pull` -> `async-push`](#async-pull---async-push)
   - [`async-push` -> `async-pull`](#async-push---async-pull)
   - [`async-push` -> `push`](#async-push---push)
   - [`push` -> `async-push`](#push---async-push)
 
-## transfer
+## Transfer
 
 ``` typescript
 function transfer(s: stream, list: []): stream
@@ -74,10 +74,10 @@ for (const x of new_s()) {
 ```
 
 
-## common method
+## Common method
 
 
-### create from iterable
+### Create from iterable
 
 #### createFrom
 
@@ -85,7 +85,7 @@ for (const x of new_s()) {
 function createFrom<T>(i: Iterable<T>): Stream<T>
 ```
 
-### each stream
+### Each stream
 
 #### forEach
 
@@ -211,9 +211,9 @@ function first<T>(s: Stream<T>): T | void
 function last<T>(s: Stream<T>): T | void
 ```
 
-## other method
+## Other method
 
-### push stream create
+### Push stream create
 
 #### create
 
@@ -251,7 +251,7 @@ Support for `async-pull`, `push` and `async-push`.
 function race<T>(ss: Stream<T>[]): Stream<T>
 ```
 
-## stream convert
+## Stream convert
 
 ### `async-pull` -> `async-push`
 
