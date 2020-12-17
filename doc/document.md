@@ -41,6 +41,8 @@
   - [`async-push` -> `push`](#async-push---push)
   - [`push` -> `async-push`](#push---async-push)
 - [Callback signature](#callback-signature)
+- [PullStream](#pullstream)
+- [AsyncPullStream](#asyncpullstream)
 
 ## transfer
 
@@ -292,3 +294,19 @@ function async<T>(s: PushStream<T>): AsyncPushStream<T>
 ## Callback signature
 
 [definition file](https://github.com/Iplaylf2/collection-query/blob/master/src/type.ts)
+
+## PullStream
+
+PullStream is an alias for generator function, which is a standard built-in object in javascript.
+
+*Find more details about generator in [MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator)*
+
+`collection-query` provides a series of methods to assess PullStream. They all in `collection-query/pull`.
+
+## AsyncPullStream
+
+AsyncPullStream is an alias for async generator function, which is a standard built-in object in javascript.
+
+*Find more details about async generator in [ES9](https://www.ecma-international.org/ecma-262/9.0/#sec-asyncgenerator-objects)*
+
+`collection-query` provides a series of methods to assess AsyncPullStream. They all in `collection-query/async-pull`.

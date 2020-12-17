@@ -41,6 +41,8 @@
   - [`async-push` -> `push`](#async-push---push)
   - [`push` -> `async-push`](#push---async-push)
 - [回调签名](#回调签名)
+- [PullStream](#pullstream)
+- [AsyncPullStream](#asyncpullstream)
 
 ## transfer
 
@@ -292,3 +294,19 @@ function async<T>(s: PushStream<T>): AsyncPushStream<T>
 ## 回调签名
 
 [定义文件](https://github.com/Iplaylf2/collection-query/blob/master/src/type.ts)
+
+## PullStream
+
+PullStream 实际上是 javascript 标准内置对象 generator function 的别名。
+
+*generator 详情见 [MDN](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Generator)*
+
+`collection-query` 提供一系列方法操作 PullStream。它们都在`collection-query/pull`之中。
+
+## AsyncPullStream
+
+AsyncPullStream 实际上是 javascript 标准内置对象 async generator function 的别名。
+
+*async generator 详情见 [ES9](https://www.ecma-international.org/ecma-262/9.0/#sec-asyncgenerator-objects)*
+
+`collection-query` 提供一系列方法操作 AsyncPullStream。它们都在 `collection-query/async-pull`之中。
