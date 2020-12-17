@@ -173,7 +173,7 @@ function concatAll<T>([s, ...ss]: Stream<T>[]): Stream<T>
 
 ### stream -> value
 
-If the stream is not a "pull" stream, the following methods always return `promise<X>`.
+If the stream is not a PullStream, the following methods always return `promise<X>`.
 
 #### reduce
 
