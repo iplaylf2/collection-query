@@ -16,7 +16,7 @@ import {
 import * as core from "./push/async/core";
 import { relay } from "./push/async/relay";
 import { reduce as _reduce } from "./push/async/reduce";
-import { EmitType } from "./push/type";
+import { Cancel, EmitType } from "./push/type";
 import { Executor } from "./push/async/type";
 import { create as _create } from "./push/async/create";
 import { createFrom as _createFrom } from "./push/async/create-from";
@@ -36,11 +36,30 @@ export const createFrom: <T>(
 export function forEach<T>(
   s: AsyncPushStream<T>,
   f: Action<T> | AsyncAction<T>
-) {
-  s(async (t, x?) => {
-    if (t === EmitType.Next) {
-      await f(x!);
-    }
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    let cancel: Cancel;
+    s(
+      async (t, x?) => {
+        switch (t) {
+          case EmitType.Next:
+            try {
+              await f(x);
+            } catch (e) {
+              cancel();
+              reject(e);
+            }
+            break;
+          case EmitType.Complete:
+            resolve();
+            break;
+          case EmitType.Error:
+            reject(x);
+            break;
+        }
+      },
+      (c) => (cancel = c)
+    );
   });
 }
 

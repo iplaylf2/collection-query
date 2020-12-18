@@ -4,7 +4,7 @@ import { Action, Selector, Predicate, Aggregate } from "../type";
 import * as core from "./push/core";
 import { relay } from "./push/relay";
 import { reduce as _reduce } from "./push/reduce";
-import { EmitType, Executor } from "./push/type";
+import { Cancel, EmitType, Executor } from "./push/type";
 import { create as _create } from "./push/create";
 import { createFrom as _createFrom } from "./push/create-from";
 
@@ -16,11 +16,30 @@ export const create: <T>(executor: Executor<T>) => PushStream<T> = _create;
 
 export const createFrom: <T>(i: Iterable<T>) => PushStream<T> = _createFrom;
 
-export function forEach<T>(s: PushStream<T>, f: Action<T>) {
-  s((t, x?) => {
-    if (t === EmitType.Next) {
-      f(x!);
-    }
+export function forEach<T>(s: PushStream<T>, f: Action<T>): Promise<void> {
+  return new Promise((resolve, reject) => {
+    let cancel: Cancel;
+    s(
+      (t, x?) => {
+        switch (t) {
+          case EmitType.Next:
+            try {
+              f(x);
+            } catch (e) {
+              cancel();
+              reject(e);
+            }
+            break;
+          case EmitType.Complete:
+            resolve();
+            break;
+          case EmitType.Error:
+            reject(x);
+            break;
+        }
+      },
+      (c) => (cancel = c)
+    );
   });
 }
 
