@@ -6,7 +6,7 @@ export {
 } from "./stream/type";
 
 export { IterateItem } from "./stream/pull/type";
-export { EmitType, EmitItem } from "./stream/push/type";
+export { EmitType, EmitItem, Cancel } from "./stream/push/type";
 
 type Map<T, K> = (x: T) => K;
 type DoMap<T extends Map<K, any>, K> = T extends Map<K, infer U> ? U : never;
