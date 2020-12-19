@@ -43,6 +43,13 @@
 - [Callback signature](#callback-signature)
 - [PullStream](#pullstream)
 - [AsyncPullStream](#asyncpullstream)
+- [PushStream](#pushstream)
+  - [receiver](#receiver)
+    - [Throw exception in receiver](#throw-exception-in-receiver)
+  - [cancel](#cancel)
+  - [expose](#expose)
+  - [create PullStream](#create-pullstream)
+- [AsyncPushStream](#asyncpushstream)
 
 ## transfer
 
@@ -310,3 +317,206 @@ AsyncPullStream is an alias for async generator function, which is a standard bu
 *Find more details about async generator in [ES9](https://www.ecma-international.org/ecma-262/9.0/#sec-asyncgenerator-objects)*
 
 `collection-query` provides a series of methods to assess AsyncPullStream. They all in `collection-query/async-pull`.
+
+## PushStream
+
+**Type of PushStream:**
+
+``` typescript
+function PushStream<T>(receiver: ReceiveForm<T>, expose?: Action<Cancel>): Cancel
+```
+
+**Usage:**
+
+``` typescript
+import { PushStream, EmitType } from "collection-query";
+import { createFrom } from "collection-query/push";
+
+// Create a PushStream from [1, 2, 3, 4]
+const s: PushStream<number> = createFrom([1, 2, 3, 4]);
+
+// Consume the PushStream
+s((t: EmitType, x?: number) => {
+  switch (t) {
+    case EmitType.Next:
+      console.log("next", x);
+      break;
+    case EmitType.Complete:
+      console.log("completed");
+      break;
+    case EmitType.Error:
+      console.log("error", x);
+      break;
+  }
+});
+
+// Print:
+
+// next 1
+// next 2
+// next 3
+// next 4
+// completed
+```
+
+### receiver
+
+The parameter `receiver` in PushStream is a function for consuming data.
+
+When the stream emits data, `receiver` will be called repeatedly until it is closed.
+
+`receiver` accepts two arguments, emit type and x.
+
+There are three emit enums that represents three states.
+- `EmitType.Next`: Received data from the stream, and x is the data.
+- `EmitType.Complete`: Received completed sign from the closed stream, and x is void.
+- `EmitType.Error`: Received error from the closed stream, and x is the error.
+
+#### Throw exception in receiver
+
+When a exception thrown in receiver, the stream will be closed and throw it out again. But stream does not emit `EmitType.Error`.
+
+**example**
+
+``` typescript
+import { PushStream, EmitType } from "collection-query";
+import { createFrom } from "collection-query/push";
+
+// Create a PullStream from [1, 2, 3, 4]
+const s: PushStream<number> = createFrom([1, 2, 3, 4]);
+
+// Consume the PullStream
+s((t: EmitType, x?: number) => {
+  switch (t) {
+    case EmitType.Next:
+      console.log("next", x);
+      if (x! > 2) {
+        throw "x > 2";
+      }
+      break;
+    case EmitType.Complete:
+      console.log("completed");
+      break;
+    case EmitType.Error:
+      console.log("error", x);
+      break;
+  }
+});
+
+console.log("after consume"); // No print
+
+// Print:
+
+// next 1
+// next 2
+// next 3
+
+// ------
+// Process exited because uncaught exception
+
+```
+
+### cancel
+
+PushStream accepts `receiver` and return the `cancel` function. Call the `cancel` will close the stream.
+
+**usage**
+
+``` typescript
+import { PushStream, EmitType } from "collection-query";
+import { create } from "collection-query/push";
+
+// Create a PullStream
+const s: PushStream<number> = create<number>((emit) => {
+  emit(EmitType.Next, 1);
+  emit(EmitType.Next, 2);
+  emit(EmitType.Next, 3);
+
+  setTimeout(() => {
+    // Stream is already closed
+
+    console.log("after 10 ms");
+    emit(EmitType.Next, 4); // Execute the statement, but do nothing
+    emit(EmitType.Next, 5); // Execute the statement, but do nothing
+  }, 10);
+});
+
+// Consume the PullStream
+const cancel = s((t: EmitType, x?: number) => {
+  switch (t) {
+    case EmitType.Next:
+      console.log("next", x);
+      break;
+    case EmitType.Complete:
+      console.log("completed");
+      break;
+    case EmitType.Error:
+      console.log("error", x);
+      break;
+  }
+});
+
+// Close the stream
+cancel();
+
+// Print:
+
+// next 1
+// next 2
+// next 3
+// after 10 ms
+
+```
+
+### expose
+
+`expose` is an optional parameter of PullStream, which will expose the `cancel` before consuming.
+
+**usage**
+
+``` typescript
+import { PushStream, EmitType, Cancel } from "collection-query";
+import { createFrom } from "collection-query/push";
+
+// Create a PullStream from [1, 2, 3, 4]
+const s: PushStream<number> = createFrom([1, 2, 3, 4]);
+
+let cancel: Cancel;
+
+// Consume the PullStream
+s(
+  (t: EmitType, x?: number) => {
+    switch (t) {
+      case EmitType.Next:
+        console.log("next", x);
+        if (x! > 2) {
+          cancel(); // Close the stream
+        }
+        break;
+      case EmitType.Complete:
+        console.log("completed");
+        break;
+      case EmitType.Error:
+        console.log("error", x);
+        break;
+    }
+  },
+  // Expose the cancel
+  (c) => (cancel = c)
+);
+
+// Print:
+
+// next 1
+// next 2
+// next 3
+
+```
+
+### create PullStream
+
+## AsyncPushStream
+
+``` typescript
+
+```

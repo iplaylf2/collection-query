@@ -47,8 +47,8 @@ for (const x of new_s()) {
 Pull and push are inspired by rxjs.
 
 There are 2 ways to generate data.
-- `pull` data: produced passively, consumed actively
-- `push` data: produced actively, consumed passively
+- `pull` data: Produced passively, consumed actively
+- `push` data: Produced actively, consumed passively
 
 `collection-query` provides 4 streams to implement the pull and push respectively.
 
