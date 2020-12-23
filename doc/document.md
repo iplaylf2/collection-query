@@ -48,7 +48,7 @@
     - [Throw exception in receiver](#throw-exception-in-receiver)
   - [cancel](#cancel)
   - [expose](#expose)
-  - [create PullStream](#create-pullstream)
+  - [PushStream create](#pushstream-create)
 - [AsyncPushStream](#asyncpushstream)
 
 ## transfer
@@ -382,10 +382,10 @@ When a exception thrown in receiver, the stream will be closed and throw it out 
 import { PushStream, EmitType } from "collection-query";
 import { createFrom } from "collection-query/push";
 
-// Create a PullStream from [1, 2, 3, 4]
+// Create a PushStream from [1, 2, 3, 4]
 const s: PushStream<number> = createFrom([1, 2, 3, 4]);
 
-// Consume the PullStream
+// Consume the PushStream
 s((t: EmitType, x?: number) => {
   switch (t) {
     case EmitType.Next:
@@ -426,7 +426,7 @@ PushStream accepts `receiver` and return the `cancel` function. Call the `cancel
 import { PushStream, EmitType } from "collection-query";
 import { create } from "collection-query/push";
 
-// Create a PullStream
+// Create a PushStream
 const s: PushStream<number> = create<number>((emit) => {
   emit(EmitType.Next, 1);
   emit(EmitType.Next, 2);
@@ -441,7 +441,7 @@ const s: PushStream<number> = create<number>((emit) => {
   }, 10);
 });
 
-// Consume the PullStream
+// Consume the PushStream
 const cancel = s((t: EmitType, x?: number) => {
   switch (t) {
     case EmitType.Next:
@@ -478,12 +478,12 @@ cancel();
 import { PushStream, EmitType, Cancel } from "collection-query";
 import { createFrom } from "collection-query/push";
 
-// Create a PullStream from [1, 2, 3, 4]
+// Create a PushStream from [1, 2, 3, 4]
 const s: PushStream<number> = createFrom([1, 2, 3, 4]);
 
 let cancel: Cancel;
 
-// Consume the PullStream
+// Consume the PushStream
 s(
   (t: EmitType, x?: number) => {
     switch (t) {
@@ -513,7 +513,16 @@ s(
 
 ```
 
-### create PullStream
+### PushStream create
+
+**Type of create:**
+
+``` typescript
+function create<T>(executor: Executor<T>): PushStream<T>
+```
+
+`executor` is a function to be executed when stream starts to consume.
+
 
 ## AsyncPushStream
 
