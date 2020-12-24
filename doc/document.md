@@ -427,7 +427,7 @@ import { PushStream, EmitType } from "collection-query";
 import { create } from "collection-query/push";
 
 // Create a PushStream
-const s: PushStream<number> = create<number>((emit) => {
+const s: PushStream<number> = create((emit) => {
   emit(EmitType.Next, 1);
   emit(EmitType.Next, 2);
   emit(EmitType.Next, 3);
@@ -523,6 +523,62 @@ function create<T>(executor: Executor<T>): PushStream<T>
 
 `executor` is a function to be executed when stream starts to consume.
 
+**Type of executor:**
+
+``` typescript
+function executor<T>(emit: EmitForm<T>): void
+```
+
+At the time when the stream starts to consume, it will pass its `emit` to executor and execute. Stream generates data by its `emit`.
+
+**usage**
+
+``` typescript
+import { PushStream, EmitType } from "collection-query";
+import { create } from "collection-query/push";
+
+// Create a PushStream
+const s: PushStream<number> = create((emit) => {
+  //Do not execute immediately.
+  console.log("executor is executed");
+  emit(EmitType.Next, 1);
+  emit(EmitType.Next, 2);
+  emit(EmitType.Next, 3);
+  emit(EmitType.Next, 4);
+  emit(EmitType.Complete);
+});
+
+console.log("after creating stream");
+
+console.log("start to consume");
+
+// Consume the stream
+s((t, x?) => {
+  switch (t) {
+    case EmitType.Next:
+      console.log("next", x);
+      break;
+    case EmitType.Complete:
+      console.log("completed");
+      break;
+    case EmitType.Error:
+      console.log("error", x);
+      break;
+  }
+});
+
+// Print:
+
+// after creating stream
+// start to consume
+// executor is executed
+// next 1
+// next 2
+// next 3
+// next 4
+// completed
+
+```
 
 ## AsyncPushStream
 
