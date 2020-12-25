@@ -29,8 +29,7 @@ class EmitterHandler<T> {
     try {
       executor(receiver);
     } catch (e) {
-      this.cancel();
-      throw e;
+      this.error(e);
     }
   }
 
