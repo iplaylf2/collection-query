@@ -49,6 +49,7 @@
   - [cancel](#cancel)
   - [expose](#expose)
   - [PushStream create](#pushstream-create)
+    - [Throw exception in executor](#throw-exception-in-executor)
 - [AsyncPushStream](#asyncpushstream)
 
 ## transfer
@@ -579,6 +580,14 @@ s((t, x?) => {
 // completed
 
 ```
+
+#### Throw exception in executor
+
+When a exception thrown in executor, the stream will emit error sign with exception.
+
+
+
+
 
 ## AsyncPushStream
 
