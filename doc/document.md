@@ -51,6 +51,7 @@
   - [executor](#executor)
     - [Throw exception in executor](#throw-exception-in-executor)
     - [Return of emit](#return-of-emit)
+  - [Unicast](#unicast)
 - [AsyncPushStream](#asyncpushstream)
 
 ## transfer
@@ -621,6 +622,7 @@ s((t, x?) => {
 });
 
 // Print:
+
 // next 1
 // next 2
 // error some errors
@@ -673,10 +675,81 @@ s(
 );
 
 // Print:
+
 // next 0
 // next 1
 // next 2
 // next 3
+
+```
+
+### Unicast
+
+PushStream is unicast that each consumed receiver owns an independent execution of the PushStream.
+
+**example**
+
+``` typescript
+import { PushStream, EmitType } from "collection-query";
+import { create } from "collection-query/push";
+
+// Create a PushStream
+const s: PushStream<number> = create(async (emit) => {
+  let count = 5;
+  while (0 < count--) {
+    emit(EmitType.Next, count);
+    // delay 100ms
+    await new Promise((r) => setTimeout(r, 100));
+  }
+  emit(EmitType.Complete);
+});
+
+console.log("consume first");
+
+// Consume the stream
+s((t, x?) => {
+  switch (t) {
+    case EmitType.Next:
+      console.log("receiver1", "next", x);
+      break;
+    case EmitType.Complete:
+      console.log("receiver1", "completed");
+      break;
+    case EmitType.Error:
+      console.log("receiver1", "error", x);
+      break;
+  }
+});
+
+console.log("consume twice");
+
+// Consume the stream
+s((t, x?) => {
+  switch (t) {
+    case EmitType.Next:
+      console.log("receiver2", "next", x);
+      break;
+    case EmitType.Complete:
+      console.log("receiver2", "completed");
+      break;
+    case EmitType.Error:
+      console.log("receiver2", "error", x);
+      break;
+  }
+});
+
+// Print:
+
+// consume first
+// receiver1 next 2
+// consume twice
+// receiver2 next 2
+// receiver1 next 1
+// receiver2 next 1
+// receiver1 next 0
+// receiver2 next 0
+// receiver1 completed
+// receiver2 completed
 
 ```
 
