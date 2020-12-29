@@ -48,8 +48,9 @@
     - [Throw exception in receiver](#throw-exception-in-receiver)
   - [cancel](#cancel)
   - [expose](#expose)
-  - [PushStream create](#pushstream-create)
+  - [executor](#executor)
     - [Throw exception in executor](#throw-exception-in-executor)
+    - [Return of emit](#return-of-emit)
 - [AsyncPushStream](#asyncpushstream)
 
 ## transfer
@@ -392,6 +393,7 @@ s((t: EmitType, x?: number) => {
     case EmitType.Next:
       console.log("next", x);
       if (x! > 2) {
+        // Throw exception in receiver
         throw "x > 2";
       }
       break;
@@ -514,7 +516,7 @@ s(
 
 ```
 
-### PushStream create
+### executor
 
 **Type of create:**
 
@@ -585,7 +587,46 @@ s((t, x?) => {
 
 When a exception thrown in executor, the stream will emit error sign with exception.
 
+**usage**
 
+``` typescript
+import { PushStream, EmitType } from "collection-query";
+import { create } from "collection-query/push";
+
+// Create a PushStream
+const s: PushStream<number> = create((emit) => {
+  emit(EmitType.Next, 1);
+  emit(EmitType.Next, 2);
+  // Throw exception in executor
+  throw "some errors";
+  emit(EmitType.Next, 3);
+  emit(EmitType.Next, 4);
+  emit(EmitType.Complete);
+});
+
+// Consume the stream
+s((t, x?) => {
+  switch (t) {
+    case EmitType.Next:
+      console.log("next", x);
+      break;
+    case EmitType.Complete:
+      console.log("completed");
+      break;
+    case EmitType.Error:
+      console.log("error", x);
+      break;
+  }
+});
+
+// Print:
+// next 1
+// next 2
+// error some errors
+
+```
+
+#### Return of emit
 
 
 
