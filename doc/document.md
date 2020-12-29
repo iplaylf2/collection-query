@@ -53,6 +53,7 @@
     - [Return of emit](#return-of-emit)
   - [Unicast](#unicast)
 - [AsyncPushStream](#asyncpushstream)
+  - [receiver](#receiver-1)
 
 ## transfer
 
@@ -695,7 +696,7 @@ import { create } from "collection-query/push";
 
 // Create a PushStream
 const s: PushStream<number> = create(async (emit) => {
-  let count = 5;
+  let count = 3;
   while (0 < count--) {
     emit(EmitType.Next, count);
     // delay 100ms
@@ -704,57 +705,58 @@ const s: PushStream<number> = create(async (emit) => {
   emit(EmitType.Complete);
 });
 
-console.log("consume first");
+console.log("consume A");
 
 // Consume the stream
 s((t, x?) => {
   switch (t) {
     case EmitType.Next:
-      console.log("receiver1", "next", x);
+      console.log("receiverA", "next", x);
       break;
     case EmitType.Complete:
-      console.log("receiver1", "completed");
+      console.log("receiverA", "completed");
       break;
     case EmitType.Error:
-      console.log("receiver1", "error", x);
+      console.log("receiverA", "error", x);
       break;
   }
 });
 
-console.log("consume twice");
+console.log("consume B");
 
 // Consume the stream
 s((t, x?) => {
   switch (t) {
     case EmitType.Next:
-      console.log("receiver2", "next", x);
+      console.log("receiverB", "next", x);
       break;
     case EmitType.Complete:
-      console.log("receiver2", "completed");
+      console.log("receiverB", "completed");
       break;
     case EmitType.Error:
-      console.log("receiver2", "error", x);
+      console.log("receiverB", "error", x);
       break;
   }
 });
 
 // Print:
 
-// consume first
-// receiver1 next 2
-// consume twice
-// receiver2 next 2
-// receiver1 next 1
-// receiver2 next 1
-// receiver1 next 0
-// receiver2 next 0
-// receiver1 completed
-// receiver2 completed
+// consume A
+// receiverA next 2
+// consume B
+// receiverB next 2
+// receiverA next 1
+// receiverB next 1
+// receiverA next 0
+// receiverB next 0
+// receiverA completed
+// receiverB completed
 
 ```
 
 ## AsyncPushStream
 
-``` typescript
+AsyncPushStream is similar to PushStream.
 
-```
+### receiver
+
