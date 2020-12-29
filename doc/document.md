@@ -493,7 +493,8 @@ s(
       case EmitType.Next:
         console.log("next", x);
         if (x! > 2) {
-          cancel(); // Close the stream
+          // Close the stream
+          cancel(); 
         }
         break;
       case EmitType.Complete:
@@ -628,7 +629,56 @@ s((t, x?) => {
 
 #### Return of emit
 
+`emit` return a boolean value to show whether the stream is open.
 
+**usage**
+
+``` typescript
+import { PushStream, EmitType, Cancel } from "collection-query";
+import { create } from "collection-query/push";
+
+// Create a PushStream
+const s: PushStream<number> = create((emit) => {
+  let count = 0;
+  while (true) {
+    const open = emit(EmitType.Next, count++);
+    if (!open) {
+      return;
+    }
+  }
+});
+
+let cancel!: Cancel;
+// Consume the stream
+s(
+  (t, x?) => {
+    switch (t) {
+      case EmitType.Next:
+        console.log("next", x);
+        if (x > 2) {
+          // Close the stream
+          cancel();
+        }
+        break;
+      case EmitType.Complete:
+        console.log("completed");
+        break;
+      case EmitType.Error:
+        console.log("error", x);
+        break;
+    }
+  },
+  // Expose the cancel
+  (c) => (cancel = c)
+);
+
+// Print:
+// next 0
+// next 1
+// next 2
+// next 3
+
+```
 
 ## AsyncPushStream
 
