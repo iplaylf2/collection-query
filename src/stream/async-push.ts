@@ -109,6 +109,10 @@ export function _flatten<T>() {
   return relay_next<T[], T>((emit) => core.flatten(emit));
 }
 
+export function scan<T, K>(f: Aggregate<T, K> | AsyncAggregate<T, K>, v: K) {
+  return relay_next<T, K>((emit) => core.scan(emit, f, v));
+}
+
 export function incubate<T>(
   s: AsyncPushStream<Promise<T>>
 ): AsyncPushStream<T> {

@@ -89,6 +89,10 @@ export function _flatten<T>() {
   return relay_next<T[], T>((emit) => core.flatten(emit));
 }
 
+export function scan<T, K>(f: Aggregate<T, K>, v: K) {
+  return relay_next<T, K>((emit) => core.scan(emit, f, v));
+}
+
 export function groupBy<T, K>(f: Selector<T, K>) {
   return (s: PushStream<T>): PushStream<[K, PushStream<T>]> =>
     relay((emit, expose) => core.groupBy(s, emit, expose, f));
