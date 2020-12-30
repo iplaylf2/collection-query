@@ -62,6 +62,10 @@ export function _flatten<T>() {
   };
 }
 
+export function scan<T, K>(f: Aggregate<T, K>, v: K) {
+  return (s: PullStream<T>): PullStream<K> => () => core.scan(s(), f, v);
+}
+
 export function concat<T>(s1: PullStream<T>, s2: PullStream<T>): PullStream<T> {
   return () => core.concat(s1, s2);
 }

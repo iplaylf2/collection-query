@@ -1,4 +1,4 @@
-import { Selector, Predicate, Func } from "../../type";
+import { Selector, Predicate, Func, Aggregate } from "../../type";
 import { PartitionCollector } from "../common/partition-collector";
 import { PartitionByCollector } from "../common/partition-by-collector/partition-by-collector";
 
@@ -109,6 +109,18 @@ export function* flatten<T>(iterator: IterableIterator<T[]>) {
     for (const x of xx) {
       yield x;
     }
+  }
+}
+
+export function* scan<T, K>(
+  iterator: IterableIterator<T>,
+  f: Aggregate<T, K>,
+  v: K
+) {
+  let r = v;
+  for (const x of iterator) {
+    r = f(r, x);
+    yield r;
   }
 }
 

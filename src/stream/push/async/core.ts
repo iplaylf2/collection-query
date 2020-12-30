@@ -239,6 +239,24 @@ export function flatten<T>(emit: EmitForm<T>) {
   };
 }
 
+export function scan<T, K>(
+  emit: EmitForm<K>,
+  f: Aggregate<T, K> | AsyncAggregate<T, K>,
+  v: K
+) {
+  let r = v;
+  return async (x: T) => {
+    try {
+      r = await f(r, x);
+    } catch (e) {
+      emit(EmitType.Error, e);
+      return;
+    }
+
+    await emit(EmitType.Next, r);
+  };
+}
+
 export function incubate<T>(
   emitter: Emitter<Promise<T>>,
   emit: EmitForm<T>,

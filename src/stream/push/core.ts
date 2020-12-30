@@ -214,6 +214,20 @@ export function flatten<T>(emit: EmitForm<T>) {
 
 export * from "./core/group-by";
 
+export function scan<T, K>(emit: EmitForm<K>, f: Aggregate<T, K>, v: K) {
+  let r = v;
+  return (x: T) => {
+    try {
+      r = f(r, x);
+    } catch (e) {
+      emit(EmitType.Error, e);
+      return;
+    }
+
+    emit(EmitType.Next, r);
+  };
+}
+
 export function incubate<T>(
   emitter: Emitter<Promise<T>>,
   emit: EmitForm<T>,
