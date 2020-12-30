@@ -1,6 +1,6 @@
 {
   "name": "collection-query",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A collection processing library.",
   "main": "./collection-query.js",
   "types": "./collection-query.d.ts",
