@@ -5,23 +5,24 @@ A collection processing library.
 English | [中文](https://github.com/Iplaylf2/collection-query/blob/master/doc/README.cn.md)
 -
 
-## feature
+## Feature
 
 - Simple to use.
 - The entity which represent the collection is close to the native object.
 - Methods are few and common.
 
-## install
+## Install
 
 ``` bash
 npm install collection-query
 ```
 
-## usage
+## Usage
 
 ``` typescript
 import { take } from "collection-query/pull";
 
+// Create a pull stream
 const s = function* () {
   let count = 0;
   while (true) {
@@ -29,29 +30,31 @@ const s = function* () {
   }
 };
 
+// Convert the stream to another
 const new_s = take(3)(s);
 
+// Each the pull stream
 for (const x of new_s()) {
   console.log(x);
 }
 
 
-//print 0 1 2
+// Print 0 1 2
 ```
 
-## pull and push
+## Pull and push
 
 Pull and push are inspired by rxjs.
 
 There are 2 ways to generate data.
-- `pull` data: produced passively, consumed actively
-- `push` data: produced actively, consumed passively
+- `pull` data: Produced passively, consumed actively
+- `push` data: Produced actively, consumed passively
 
 `collection-query` provides 4 streams to implement the pull and push respectively.
 
 "pull", "async-pull", "push", "async-push"
 
-### pull
+### Pull
 
 The streams `pull` and `async-pull` base on javascript generator.
 
@@ -71,7 +74,7 @@ const async_pull_stream = async function* () {
 
 Async pull stream always generates data asynchronously.
 
-### push
+### Push
 
 The streams `push` and `async-push` base on `Emitter`
 
@@ -93,7 +96,7 @@ const async_push_stream = create_async(function (emit) {
 
 Async push stream always generates data asynchronously.
 
-## method
+## Method
 
 `collection-query` provides different set of methods to access the stream, but they almost always have the same name and the same semantics.
 
@@ -103,7 +106,7 @@ import * as asyncPull from "collection-query/async-pull";
 import * as push from "collection-query/push";
 import * as asyncPush from "collection-query/async-push";
 
-//For example, they all have a "take" method.
+// For example, they all have a "take" method.
 ```
 
 [Document](https://github.com/Iplaylf2/collection-query/blob/master/doc/document.md)

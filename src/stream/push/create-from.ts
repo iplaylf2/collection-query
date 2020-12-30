@@ -3,13 +3,22 @@ import { EmitType } from "./type";
 
 export function createFrom<T>(i: Iterable<T>) {
   return create<T>(function (emit) {
-    try {
-      for (const x of i) {
-        emit(EmitType.Next, x);
+    const iterator = i[Symbol.iterator]();
+    while (true) {
+      let item: IteratorResult<T, any>;
+      try {
+        item = iterator.next();
+      } catch (e) {
+        emit(EmitType.Error, e);
+        return;
       }
-      emit(EmitType.Complete);
-    } catch (e) {
-      emit(EmitType.Error, e);
+
+      if (item.done) {
+        emit(EmitType.Complete);
+        return;
+      } else {
+        emit(EmitType.Next, item.value);
+      }
     }
   });
 }

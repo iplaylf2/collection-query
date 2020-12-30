@@ -22,6 +22,7 @@ npm install collection-query
 ``` typescript
 import { take } from "collection-query/pull";
 
+// 创建一个 pull 流
 const s = function* () {
   let count = 0;
   while (true) {
@@ -29,17 +30,19 @@ const s = function* () {
   }
 };
 
+// 将流转化成另一个流
 const new_s = take(3)(s);
 
+// 遍历 pull 流里的数据
 for (const x of new_s()) {
   console.log(x);
 }
 
 
-//打印 0 1 2
+// 打印 0 1 2
 ```
 
-## pull 和 push
+## Pull 和 push
 
 Pull 和 push 启发自 rxjs.
 
@@ -51,7 +54,7 @@ Pull 和 push 启发自 rxjs.
 
 "pull", "async-pull", "push", "async-push"
 
-### pull
+### Pull
 
 流 `pull` and `async-pull` 基于 javascript 的 generator.
 
@@ -71,7 +74,7 @@ const async_pull_stream = async function* () {
 
 Async pull 流以异步的方式生产数据.
 
-### push
+### Push
 
 流 `push` and `async-push` 基于 `Emitter`
 
@@ -93,7 +96,7 @@ const async_push_stream = create_async(function (emit) {
 
 Async push 流以异步的方式生产数据.
 
-## method
+## Method
 
 虽然 `collection-query` 用不同的方法集去操作流，但是这些方法基本上拥有同样的名字，也有同样的语义。
 
@@ -103,7 +106,7 @@ import * as asyncPull from "collection-query/async-pull";
 import * as push from "collection-query/push";
 import * as asyncPush from "collection-query/async-push";
 
-//例如, 他们都有同样的“take”方法.
+// 例如, 他们都有同样的“take”方法.
 ```
 
 [文档](https://github.com/Iplaylf2/collection-query/blob/master/doc/document.cn.md)
