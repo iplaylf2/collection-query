@@ -16,6 +16,7 @@
     - [skipWhile](#skipwhile)
     - [partition](#partition)
     - [flatten](#flatten)
+    - [scan](#scan)
   - [stream[] -> stream](#stream---stream-1)
     - [concat](#concat)
     - [concatAll](#concatall)
@@ -167,6 +168,12 @@ function partition<T>(n: number): (s: Stream<T>) => Stream<T[]>
 
 ``` typescript
 function flatten<T>(s: Stream<T[]>): Stream<T>
+```
+
+#### scan
+
+``` typescript
+function scan<T, K>(f: Aggregate<T, K>, v: K): (s: Stream<T>) => Stream<K>>
 ```
 
 ### stream[] -> stream
