@@ -54,6 +54,7 @@
   - [Unicast](#unicast)
 - [AsyncPushStream](#asyncpushstream)
   - [receiver](#receiver-1)
+  - [emit](#emit)
 
 ## transfer
 
@@ -756,7 +757,103 @@ s((t, x?) => {
 
 ## AsyncPushStream
 
-AsyncPushStream is similar to PushStream.
+AsyncPushStream is similar to PushStream. There will show difference following.
 
 ### receiver
 
+AsyncPushStream's receiver return a promise that will block next data of the stream.
+
+**usage**
+
+``` typescript
+import { AsyncPushStream, EmitType } from "collection-query";
+import { createFrom } from "collection-query/async-push";
+
+// Create a AsyncPushStream from [1, 2, 3, 4]
+const s: AsyncPushStream<number> = createFrom([1, 2, 3, 4]);
+
+// Consume the AsyncPushStream
+s(async (t, x?) => {
+  switch (t) {
+    case EmitType.Next:
+      console.log("next", x);
+      // delay 100ms
+      await new Promise((r) => setTimeout(r, 100));
+      console.log("100ms later", x);
+      break;
+    case EmitType.Complete:
+      console.log("completed");
+      break;
+    case EmitType.Error:
+      console.log("error", x);
+      break;
+  }
+});
+
+// Print:
+
+// next 1
+// 100ms later 1
+// next 2
+// 100ms later 2
+// next 3
+// 100ms later 3
+// next 4
+// 100ms later 4
+// completed
+
+```
+
+### emit
+
+The return of emit is a promise that can be await for consuming.
+
+**usage**
+
+``` typescript
+import { AsyncPushStream, EmitType } from "collection-query";
+import { create } from "collection-query/async-push";
+
+// Create a AsyncPushStream
+const s: AsyncPushStream<number> = create(async (emit) => {
+  let count = 3;
+  while (0 < count--) {
+    // await util this consumption is over
+    await emit(EmitType.Next, count);
+    console.log("after emit", count);
+  }
+  emit(EmitType.Complete);
+});
+
+// Consume the AsyncPushStream
+s(async (t, x?) => {
+  switch (t) {
+    case EmitType.Next:
+      console.log("next", x);
+      // delay 100ms
+      await new Promise((r) => setTimeout(r, 100));
+      console.log("100ms later", x);
+      break;
+    case EmitType.Complete:
+      console.log("completed");
+      break;
+    case EmitType.Error:
+      console.log("error", x);
+      break;
+  }
+});
+
+// Print:
+
+// next 2
+// 100ms later 2
+// after emit 2
+// next 1
+// 100ms later 1
+// after emit 1
+// next 0
+// 100ms later 0
+// after emit 0
+// completed
+
+```
