@@ -4,6 +4,8 @@ import {
   Predicate,
   AsyncPredicate,
   Func,
+  Aggregate,
+  AsyncAggregate,
 } from "../../../type";
 import { PartitionCollector } from "../../common/partition-collector";
 import { AsyncPartitionByCollector } from "../../common/partition-by-collector/async-partition-by-collector";
@@ -139,6 +141,18 @@ export async function* flatten<T>(iterator: AsyncIterableIterator<T[]>) {
     for (const x of xx) {
       yield x;
     }
+  }
+}
+
+export async function* scan<T, K>(
+  iterator: AsyncIterableIterator<T>,
+  f: Aggregate<T, K> | AsyncAggregate<T, K>,
+  v: K
+) {
+  let r = v;
+  for await (const x of iterator) {
+    r = await f(r, x);
+    yield r;
   }
 }
 
