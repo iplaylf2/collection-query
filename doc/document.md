@@ -409,7 +409,8 @@ s((t: EmitType, x?: number) => {
   }
 });
 
-console.log("after consume"); // No print
+// No print
+console.log("after consume");
 
 // Print:
 
@@ -442,8 +443,10 @@ const s: PushStream<number> = create((emit) => {
     // Stream is already closed
 
     console.log("after 10 ms");
-    emit(EmitType.Next, 4); // Execute the statement, but do nothing
-    emit(EmitType.Next, 5); // Execute the statement, but do nothing
+    // Execute the statement, but do nothing
+    emit(EmitType.Next, 4);
+    // Execute the statement, but do nothing
+    emit(EmitType.Next, 5);
   }, 10);
 });
 
@@ -546,7 +549,7 @@ import { create } from "collection-query/push";
 
 // Create a PushStream
 const s: PushStream<number> = create((emit) => {
-  //Do not execute immediately.
+  // Do not execute immediately.
   console.log("executor is executed");
   emit(EmitType.Next, 1);
   emit(EmitType.Next, 2);
@@ -559,7 +562,7 @@ console.log("after creating stream");
 
 console.log("start to consume");
 
-// Consume the stream
+// Consume the PushStream
 s((t, x?) => {
   switch (t) {
     case EmitType.Next:
@@ -608,7 +611,7 @@ const s: PushStream<number> = create((emit) => {
   emit(EmitType.Complete);
 });
 
-// Consume the stream
+// Consume the PushStream
 s((t, x?) => {
   switch (t) {
     case EmitType.Next:
@@ -653,7 +656,7 @@ const s: PushStream<number> = create((emit) => {
 });
 
 let cancel!: Cancel;
-// Consume the stream
+// Consume the PushStream
 s(
   (t, x?) => {
     switch (t) {
@@ -700,7 +703,7 @@ const s: PushStream<number> = create(async (emit) => {
   let count = 3;
   while (0 < count--) {
     emit(EmitType.Next, count);
-    // delay 100ms
+    // Delay 100ms
     await new Promise((r) => setTimeout(r, 100));
   }
   emit(EmitType.Complete);
@@ -708,7 +711,7 @@ const s: PushStream<number> = create(async (emit) => {
 
 console.log("consume A");
 
-// Consume the stream
+// Consume the PushStream
 s((t, x?) => {
   switch (t) {
     case EmitType.Next:
@@ -725,7 +728,7 @@ s((t, x?) => {
 
 console.log("consume B");
 
-// Consume the stream
+// Consume the PushStream
 s((t, x?) => {
   switch (t) {
     case EmitType.Next:
@@ -777,7 +780,7 @@ s(async (t, x?) => {
   switch (t) {
     case EmitType.Next:
       console.log("next", x);
-      // delay 100ms
+      // Delay 100ms
       await new Promise((r) => setTimeout(r, 100));
       console.log("100ms later", x);
       break;
@@ -830,7 +833,7 @@ s(async (t, x?) => {
   switch (t) {
     case EmitType.Next:
       console.log("next", x);
-      // delay 100ms
+      // Delay 100ms
       await new Promise((r) => setTimeout(r, 100));
       console.log("100ms later", x);
       break;
