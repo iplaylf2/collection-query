@@ -13,5 +13,5 @@ export interface EmitForm<T> {
 }
 
 export interface Executor<T> {
-  (emit: EmitForm<T>): void;
+  (emit: EmitForm<T>): undefined | Cancel;
 }
