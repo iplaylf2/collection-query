@@ -159,6 +159,7 @@ export function partition<T>(
         break;
       case EmitType.Error:
         emit(EmitType.Error, x);
+        break;
     }
   }, expose);
 }
@@ -200,6 +201,7 @@ export function partitionBy<T>(
         break;
       case EmitType.Error:
         emit(EmitType.Error, x);
+        break;
     }
   }, expose);
 }
@@ -264,7 +266,6 @@ export function incubate<T>(
         break;
       case EmitType.Error:
         emit(EmitType.Error, x);
-
         break;
     }
   }, expose);
@@ -351,7 +352,9 @@ export function race<T>(
             break;
         }
       },
-      (c) => cancel_list.push(c)
+      (c) => {
+        cancel_list.push(c);
+      }
     );
   }
 }
