@@ -14,11 +14,11 @@ class EmitterHandler<T> {
   constructor(
     executor: Executor<T>,
     receiver: ReceiveForm<T>,
-    expose?: Selector<Cancel, Cancel | undefined>
+    expose?: Selector<Cancel, void | Cancel>
   ) {
     this.receive = receiver;
     if (expose) {
-      this._dispose = expose(this.cancel.bind(this));
+      this._dispose = expose(this.cancel.bind(this)) as Cancel;
     }
 
     this.open = true;

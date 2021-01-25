@@ -20,10 +20,7 @@ export interface ReceiveForm<T> {
 }
 
 export interface Emitter<T> {
-  (
-    receiver: ReceiveForm<T>,
-    expose?: Selector<Cancel, undefined | Cancel>
-  ): Cancel;
+  (receiver: ReceiveForm<T>, expose?: Selector<Cancel, void | Cancel>): Cancel;
 }
 
 export interface EmitForm<T> {
