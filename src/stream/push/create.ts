@@ -1,3 +1,4 @@
+import { Selector } from "../../type";
 import {
   Cancel,
   EmitItem,
@@ -8,29 +9,28 @@ import {
 } from "./type";
 
 export function create<T>(executor: Executor<T>): Emitter<T> {
-  return (receiver, expose) => {
-    const handler = new EmitterHandler(receiver);
-    const cancel = handler.cancel.bind(handler);
+  return (receiver, expose?) => {
+    const handler = new EmitterHandler(executor, receiver, expose);
 
-    if (expose) {
-      expose(cancel);
-    }
-    handler.start(executor);
-
-    return cancel;
+    return handler.cancel.bind(handler);
   };
 }
 
 class EmitterHandler<T> {
-  constructor(receiver: ReceiveForm<T>) {
+  constructor(
+    executor: Executor<T>,
+    receiver: ReceiveForm<T>,
+    expose?: Selector<Cancel, Cancel | undefined>
+  ) {
     this.receive = receiver;
-    this.open = true;
-  }
+    if (expose) {
+      this._dispose = expose(this.cancel.bind(this));
+    }
 
-  start(executor: Executor<T>) {
-    const receiver = this.handle.bind(this);
+    this.open = true;
+
     try {
-      this.dispose = executor(receiver);
+      executor(this.handle.bind(this));
     } catch (e) {
       if (this.open) {
         this.error(e);
@@ -43,11 +43,7 @@ class EmitterHandler<T> {
   cancel() {
     this.receive = null!;
     this.open = false;
-    if (this.dispose) {
-      const dispose = this.dispose;
-      this.dispose = null!;
-      dispose();
-    }
+    this.dispose();
   }
 
   private handle(...[t, x]: EmitItem<T>) {
@@ -92,8 +88,15 @@ class EmitterHandler<T> {
     }
   }
 
-  private receive: ReceiveForm<T>;
+  private dispose() {
+    if (this._dispose) {
+      const dispose = this._dispose;
+      this._dispose = null!;
+      dispose();
+    }
+  }
 
+  private receive: ReceiveForm<T>;
+  private _dispose?: Cancel;
   private open: boolean;
-  private dispose?: Cancel;
 }
