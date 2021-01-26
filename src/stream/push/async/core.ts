@@ -24,7 +24,7 @@ export function map<T, K>(
     try {
       r = await f(x);
     } catch (e) {
-      emit(EmitType.Error, e);
+      await emit(EmitType.Error, e);
       return;
     }
 
@@ -41,7 +41,7 @@ export function filter<T>(
     try {
       p = await f(x);
     } catch (e) {
-      emit(EmitType.Error, e);
+      await emit(EmitType.Error, e);
       return;
     }
 
@@ -60,7 +60,7 @@ export function remove<T>(
     try {
       p = await f(x);
     } catch (e) {
-      emit(EmitType.Error, e);
+      await emit(EmitType.Error, e);
       return;
     }
 
@@ -76,12 +76,12 @@ export function take<T>(emit: EmitForm<T>, n: number) {
       await emit(EmitType.Next, x);
       n--;
       if (n === 0) {
-        emit(EmitType.Complete);
+        await emit(EmitType.Complete);
       }
     };
   } else {
     return async () => {
-      emit(EmitType.Complete);
+      await emit(EmitType.Complete);
     };
   }
 }
@@ -95,14 +95,14 @@ export function takeWhile<T>(
     try {
       p = await f(x);
     } catch (e) {
-      emit(EmitType.Error, e);
+      await emit(EmitType.Error, e);
       return;
     }
 
     if (p) {
       await emit(EmitType.Next, x);
     } else {
-      emit(EmitType.Complete);
+      await emit(EmitType.Complete);
     }
   };
 }
@@ -138,7 +138,7 @@ export function skipWhile<T>(
       try {
         p = await f(x);
       } catch (e) {
-        emit(EmitType.Error, e);
+        await emit(EmitType.Error, e);
         return;
       }
 
@@ -181,11 +181,12 @@ export function partition<T>(
             await emit(EmitType.Next, partition!);
           }
 
-          emit(EmitType.Complete);
+          await emit(EmitType.Complete);
         }
         break;
       case EmitType.Error:
-        emit(EmitType.Error, x);
+        await emit(EmitType.Error, x);
+        break;
     }
   }, expose);
 }
@@ -206,7 +207,7 @@ export function partitionBy<T>(
           try {
             [full, partition] = await collector.collect(x);
           } catch (e) {
-            emit(EmitType.Error, e);
+            await emit(EmitType.Error, e);
             return;
           }
 
@@ -222,11 +223,12 @@ export function partitionBy<T>(
             await emit(EmitType.Next, partition!);
           }
 
-          emit(EmitType.Complete);
+          await emit(EmitType.Complete);
         }
         break;
       case EmitType.Error:
-        emit(EmitType.Error, x);
+        await emit(EmitType.Error, x);
+        break;
     }
   }, expose);
 }
@@ -249,7 +251,7 @@ export function scan<T, K>(
     try {
       r = await f(r, x);
     } catch (e) {
-      emit(EmitType.Error, e);
+      await emit(EmitType.Error, e);
       return;
     }
 
@@ -287,12 +289,12 @@ export function incubate<T>(
       case EmitType.Complete:
         exhausted = true;
         if (0 === count) {
-          emit(EmitType.Complete);
+          await emit(EmitType.Complete);
         }
 
         break;
       case EmitType.Error:
-        emit(EmitType.Error, x);
+        await emit(EmitType.Error, x);
 
         break;
     }
@@ -325,7 +327,7 @@ export function concat<T>(
           emitter2(emit as any, (c) => (cancel2 = c));
           break;
         case EmitType.Error:
-          emit(EmitType.Error, x);
+          await emit(EmitType.Error, x);
           break;
       }
     },
@@ -378,7 +380,9 @@ export function zip<T>(
             break;
         }
       },
-      (c) => cancel_list.push(c)
+      (c) => {
+        cancel_list.push(c);
+      }
     );
     index++;
   }
@@ -438,7 +442,9 @@ export function race<T>(
             break;
         }
       },
-      (c) => cancel_list.push(c)
+      (c) => {
+        cancel_list.push(c);
+      }
     );
   }
 
@@ -447,9 +453,9 @@ export function race<T>(
       for await (const x of handler) {
         await emit(EmitType.Next, x);
       }
-      emit(EmitType.Complete);
+      await emit(EmitType.Complete);
     } catch (e) {
-      emit(EmitType.Error, e);
+      await emit(EmitType.Error, e);
     }
   })();
 }
