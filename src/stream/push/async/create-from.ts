@@ -9,12 +9,12 @@ export function createFrom<T>(i: Iterable<T>) {
       try {
         item = iterator.next();
       } catch (e) {
-        await emit(EmitType.Error, e);
+        emit(EmitType.Error, e);
         return;
       }
 
       if (item.done) {
-        await emit(EmitType.Complete);
+        emit(EmitType.Complete);
         return;
       } else {
         await emit(EmitType.Next, item.value);
