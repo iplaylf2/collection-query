@@ -381,8 +381,10 @@ s((t: EmitType, x?: number) => {
 
 有3种 emit 枚举有表示3种状况。
 - `EmitType.Next`: 从流接收数据，此时 x 代表数据。
-- `EmitType.Complete`: 从关闭的流接收完成的信号，此时 x 是空当。
-- `EmitType.Error`:  从关闭的流接收出错的信号，此时 x 代表错误。
+- `EmitType.Complete`: 从流接收完成的信号，此时 x 为空。
+- `EmitType.Error`:  从流接收出错的信号，此时 x 代表错误。
+
+在收到 `EmitType.Complete` 或 `EmitType.Error` 后，流就会被关闭。
 
 #### 从 receiver 中抛出异常
 

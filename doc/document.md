@@ -381,8 +381,10 @@ When the stream emits data, `receiver` will be called repeatedly until it is clo
 
 There are three emit enums that represents three states.
 - `EmitType.Next`: Received data from the stream, and x is the data.
-- `EmitType.Complete`: Received completed sign from the closed stream, and x is void.
-- `EmitType.Error`: Received error from the closed stream, and x is the error.
+- `EmitType.Complete`: Received completed sign from the stream, and x is void.
+- `EmitType.Error`: Received error from the stream, and x is the error.
+
+After receive `EmitType.Complete` or `EmitType.Error` , the stream will be closed.
 
 #### Throw exception in receiver
 
