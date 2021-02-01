@@ -1,4 +1,4 @@
-import { Selector } from "../../type";
+import { Action } from "../../type";
 
 export enum EmitType {
   Next,
@@ -20,7 +20,7 @@ export interface ReceiveForm<T> {
 }
 
 export interface Emitter<T> {
-  (receiver: ReceiveForm<T>, expose?: Selector<Cancel, void | Cancel>): Cancel;
+  (receiver: ReceiveForm<T>, expose?: Action<Cancel>): Cancel;
 }
 
 export interface EmitForm<T> {
@@ -28,5 +28,5 @@ export interface EmitForm<T> {
 }
 
 export interface Executor<T> {
-  (emit: EmitForm<T>): void;
+  (emit: EmitForm<T>): void | Cancel;
 }
