@@ -17,7 +17,10 @@ export function createFrom<T>(i: Iterable<T>) {
         emit(EmitType.Complete);
         return;
       } else {
-        emit(EmitType.Next, item.value);
+        const open = emit(EmitType.Next, item.value);
+        if (!open) {
+          return;
+        }
       }
     }
   });
