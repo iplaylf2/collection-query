@@ -16,10 +16,10 @@ export function relayNext<T, K = T>(handler: RelayNextHandler<T, K>) {
             await handle_next(x);
             break;
           case EmitType.Complete:
-            emit(t);
+            await emit(t);
             break;
           case EmitType.Error:
-            emit(t, x);
+            await emit(t, x);
             break;
         }
       }, expose);

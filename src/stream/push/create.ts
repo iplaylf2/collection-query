@@ -1,29 +1,40 @@
-import { EmitItem, Emitter, EmitType, Executor, ReceiveForm } from "./type";
+import { Action } from "../../type";
+import {
+  Cancel,
+  EmitItem,
+  Emitter,
+  EmitType,
+  Executor,
+  ReceiveForm,
+} from "./type";
 
 export function create<T>(executor: Executor<T>): Emitter<T> {
-  return (receiver, expose) => {
-    const handler = new EmitterHandler(receiver);
-    const cancel = handler.cancel.bind(handler);
+  return (receiver, expose?) => {
+    const handler = new EmitterHandler(executor, receiver, expose);
 
-    if (expose) {
-      expose(cancel);
-    }
-    handler.start(executor);
-
-    return cancel;
+    return handler.cancel;
   };
 }
 
 class EmitterHandler<T> {
-  constructor(receiver: ReceiveForm<T>) {
+  constructor(
+    executor: Executor<T>,
+    receiver: ReceiveForm<T>,
+    expose?: Action<Cancel>
+  ) {
     this.receive = receiver;
-    this.open = true;
-  }
+    this.cancel = this._cancel.bind(this);
+    if (expose) {
+      expose(this.cancel);
+    }
 
-  start(executor: Executor<T>) {
-    const receiver = this.handle.bind(this);
+    this.open = true;
+
     try {
-      executor(receiver);
+      this._dispose = executor(this.handle.bind(this)) as Cancel;
+      if (!this.open) {
+        this.dispose();
+      }
     } catch (e) {
       if (this.open) {
         this.error(e);
@@ -33,10 +44,7 @@ class EmitterHandler<T> {
     }
   }
 
-  cancel() {
-    this.receive = null!;
-    this.open = false;
-  }
+  readonly cancel: Cancel;
 
   private handle(...[t, x]: EmitItem<T>) {
     if (this.open) {
@@ -59,24 +67,42 @@ class EmitterHandler<T> {
     try {
       this.receive(EmitType.Next, x);
     } catch (e) {
-      this.cancel();
+      this._cancel();
       throw e;
     }
   }
 
   private complete() {
-    const receive = this.receive;
-    this.cancel();
-    receive(EmitType.Complete);
+    try {
+      this.receive(EmitType.Complete);
+    } finally {
+      this._cancel();
+    }
   }
 
   private error(x: any) {
-    const receive = this.receive;
-    this.cancel();
-    receive(EmitType.Error, x);
+    try {
+      this.receive(EmitType.Error, x);
+    } finally {
+      this._cancel();
+    }
+  }
+
+  private dispose() {
+    if (this._dispose) {
+      const dispose = this._dispose;
+      this._dispose = null!;
+      dispose();
+    }
+  }
+
+  private _cancel() {
+    this.receive = null!;
+    this.open = false;
+    this.dispose();
   }
 
   private receive: ReceiveForm<T>;
-
+  private _dispose?: Cancel;
   private open: boolean;
 }

@@ -1,33 +1,35 @@
 import { Action } from "../../../type";
 import { ReceiveForm, Emitter, Executor } from "./type";
-import { EmitItem, EmitType } from "../type";
+import { Cancel, EmitItem, EmitType } from "../type";
 
 export function create<T>(executor: Executor<T>): Emitter<T> {
-  return (receiver, expose) => {
-    const handler = new EmitterHandler(receiver);
-    const cancel = handler.cancel.bind(handler);
+  return (receiver, expose?) => {
+    const handler = new EmitterHandler(executor, receiver, expose);
 
-    if (expose) {
-      expose(cancel);
-    }
-    handler.start(executor);
-
-    return cancel;
+    return handler.cancel;
   };
 }
 
 class EmitterHandler<T> {
-  constructor(receiver: ReceiveForm<T>) {
+  constructor(
+    executor: Executor<T>,
+    receiver: ReceiveForm<T>,
+    expose?: Action<Cancel>
+  ) {
     this.receive = receiver;
+    this.cancel = this._cancel.bind(this);
+    if (expose) {
+      expose(this.cancel);
+    }
+
     this.open = true;
-
     this.lastBlock = Promise.resolve();
-  }
 
-  start(executor: Executor<T>) {
-    const receiver = this.handle.bind(this);
     try {
-      executor(receiver);
+      this._dispose = executor(this.handleWithQueue.bind(this)) as Cancel;
+      if (!this.open) {
+        this.dispose();
+      }
     } catch (e) {
       if (this.open) {
         this.error(e);
@@ -37,12 +39,9 @@ class EmitterHandler<T> {
     }
   }
 
-  cancel() {
-    this.receive = null!;
-    this.open = false;
-  }
+  readonly cancel: Cancel;
 
-  private async handle(...item: EmitItem<T>) {
+  private async handleWithQueue(...item: EmitItem<T>) {
     let resolve!: Action<void>;
     const new_block = new Promise<void>((r) => (resolve = r));
 
@@ -52,23 +51,23 @@ class EmitterHandler<T> {
     await last_block;
 
     try {
-      return await this.handleReceive(...item);
+      return await this.handle(...item);
     } finally {
       resolve();
     }
   }
 
-  private async handleReceive(...[t, x]: EmitItem<T>) {
+  private async handle(...[t, x]: EmitItem<T>) {
     if (this.open) {
       switch (t) {
         case EmitType.Next:
           await this.next(x);
           break;
         case EmitType.Complete:
-          this.complete();
+          await this.complete();
           break;
         case EmitType.Error:
-          this.error(x);
+          await this.error(x);
           break;
       }
     }
@@ -79,24 +78,43 @@ class EmitterHandler<T> {
     try {
       await this.receive(EmitType.Next, x);
     } catch (e) {
-      this.cancel();
+      this._cancel();
       throw e;
     }
   }
 
-  private complete() {
-    const receive = this.receive;
-    this.cancel();
-    receive(EmitType.Complete);
+  private async complete() {
+    try {
+      await this.receive(EmitType.Complete);
+    } finally {
+      this._cancel();
+    }
   }
 
-  private error(x: any) {
-    const receive = this.receive;
-    this.cancel();
-    receive(EmitType.Error, x);
+  private async error(x: any) {
+    try {
+      await this.receive(EmitType.Error, x);
+    } finally {
+      this._cancel();
+    }
+  }
+
+  private dispose() {
+    if (this._dispose) {
+      const dispose = this._dispose;
+      this._dispose = null!;
+      dispose();
+    }
+  }
+
+  private _cancel() {
+    this.receive = null!;
+    this.open = false;
+    this.dispose();
   }
 
   private receive: ReceiveForm<T>;
+  private _dispose?: Cancel;
   private open: boolean;
   private lastBlock: Promise<void>;
 }

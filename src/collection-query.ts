@@ -5,7 +5,6 @@ export {
   AsyncPushStream,
 } from "./stream/type";
 
-export { IterateItem } from "./stream/pull/type";
 export { EmitType, EmitItem, Cancel } from "./stream/push/type";
 
 type Map<T, K> = (x: T) => K;

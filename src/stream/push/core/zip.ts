@@ -74,7 +74,9 @@ export function zip<T>(
             break;
         }
       },
-      (c) => cancel_list.push(c)
+      (c) => {
+        cancel_list.push(c);
+      }
     );
 
     index++;

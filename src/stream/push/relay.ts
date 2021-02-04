@@ -8,36 +8,25 @@ export interface RelayHandler<T> {
 
 export function relay<T>(handler: RelayHandler<T>): Emitter<T> {
   return (receiver, expose) => {
-    const cancel = function () {
-      relay_cancel();
-      source_cancel();
+    let relay_emit!: EmitForm<T>;
+    let _source_cancel: Cancel;
+    const source_cancel = function () {
+      _source_cancel();
     };
 
-    let source_cancel!: Cancel;
-
     const relay_emitter = create<T>((emit) => {
-      handler(
-        (...x) => {
-          const open = emit(...x);
-
-          if (!open) {
-            source_cancel();
-          }
-          return open;
-        },
-        (c) => {
-          source_cancel = c;
-        }
-      );
+      relay_emit = emit;
+      return source_cancel;
     });
 
-    let relay_cancel!: Cancel;
-    relay_emitter(receiver, (c) => {
-      relay_cancel = c;
-
+    const cancel = relay_emitter(receiver, (c) => {
       if (expose) {
-        expose(cancel);
+        expose(c);
       }
+    });
+
+    handler(relay_emit, (c) => {
+      _source_cancel = c;
     });
 
     return cancel;
