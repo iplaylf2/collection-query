@@ -50,6 +50,7 @@
   - [cancel](#cancel)
   - [expose](#expose)
   - [executor](#executor)
+    - [executor 的返回值](#executor-的返回值)
     - [从 executor 中抛出异常](#从-executor-中抛出异常)
     - [emit 的返回值](#emit-的返回值)
   - [单播](#单播)
@@ -545,7 +546,7 @@ function create<T>(executor: Executor<T>): PushStream<T>
 **executor 的声明：**
 
 ``` typescript
-function executor<T>(emit: EmitForm<T>): void
+function executor<T>(emit: EmitForm<T>): void | Cancel
 ```
 
 当流开始消费时，会把它的`emit`传入 executor 并执行。流通过`emit`生成数据。
@@ -598,6 +599,56 @@ s((t, x?) => {
 // completed
 
 ```
+
+#### executor 的返回值
+
+如果 executor 返回了一个 cancel 函数，该函数会在流被关闭后执行。
+
+**usage**
+
+``` typescript
+import { PushStream, EmitType } from "collection-query";
+import { create } from "collection-query/push";
+
+// 创建一个 PushStream
+const s: PushStream<number> = create((emit) => {
+  emit(EmitType.Next, 1);
+  emit(EmitType.Next, 2);
+  emit(EmitType.Next, 3);
+  emit(EmitType.Next, 4);
+  emit(EmitType.Complete);
+
+  return () => {
+    console.log("dispose something");
+  };
+});
+
+// 消费 PushStream
+s((t, x?) => {
+  switch (t) {
+    case EmitType.Next:
+      console.log("next", x);
+      break;
+    case EmitType.Complete:
+      console.log("completed");
+      break;
+    case EmitType.Error:
+      console.log("error", x);
+      break;
+  }
+});
+
+// 打印：
+
+// next 1
+// next 2
+// next 3
+// next 4
+// completed
+// dispose something
+
+```
+
 
 #### 从 executor 中抛出异常
 

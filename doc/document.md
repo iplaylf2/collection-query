@@ -50,6 +50,7 @@
   - [cancel](#cancel)
   - [expose](#expose)
   - [executor](#executor)
+    - [Return of executor](#return-of-executor)
     - [Throw exception in executor](#throw-exception-in-executor)
     - [Return of emit](#return-of-emit)
   - [Unicast](#unicast)
@@ -545,7 +546,7 @@ function create<T>(executor: Executor<T>): PushStream<T>
 **Type of executor:**
 
 ``` typescript
-function executor<T>(emit: EmitForm<T>): void
+function executor<T>(emit: EmitForm<T>): void | Cancel
 ```
 
 At the time when the stream starts to consume, it will pass its `emit` to executor and execute. Stream generates data by its `emit`.
@@ -596,6 +597,55 @@ s((t, x?) => {
 // next 3
 // next 4
 // completed
+
+```
+
+#### Return of executor
+
+If a cancel function return by executor, it will be executed after the stream is closed.
+
+**usage**
+
+``` typescript
+import { PushStream, EmitType } from "collection-query";
+import { create } from "collection-query/push";
+
+// Create a PushStream
+const s: PushStream<number> = create((emit) => {
+  emit(EmitType.Next, 1);
+  emit(EmitType.Next, 2);
+  emit(EmitType.Next, 3);
+  emit(EmitType.Next, 4);
+  emit(EmitType.Complete);
+
+  return () => {
+    console.log("dispose something");
+  };
+});
+
+// Consume the PushStream
+s((t, x?) => {
+  switch (t) {
+    case EmitType.Next:
+      console.log("next", x);
+      break;
+    case EmitType.Complete:
+      console.log("completed");
+      break;
+    case EmitType.Error:
+      console.log("error", x);
+      break;
+  }
+});
+
+// Print:
+
+// next 1
+// next 2
+// next 3
+// next 4
+// completed
+// dispose something
 
 ```
 
